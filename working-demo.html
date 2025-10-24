@@ -4,6 +4,48 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Working Poker Player Token DApp</title>
+    
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { getFirestore, doc, setDoc, getDoc, collection, addDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        // Firebase configuration
+        const firebaseConfig = {
+            // You'll need to replace this with your actual Firebase config
+            apiKey: "your-api-key",
+            authDomain: "your-project.firebaseapp.com",
+            projectId: "your-project-id",
+            storageBucket: "your-project.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "your-app-id"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Make Firebase available globally
+        window.firebaseAuth = auth;
+        window.firebaseDb = db;
+        window.firebaseAuthFunctions = {
+            createUserWithEmailAndPassword,
+            signInWithEmailAndPassword,
+            signOut,
+            onAuthStateChanged
+        };
+        window.firebaseDbFunctions = {
+            doc,
+            setDoc,
+            getDoc,
+            collection,
+            addDoc
+        };
+    </script>
+    
     <style>
         * {
             margin: 0;
@@ -676,9 +718,24 @@
     </div>
 
     <script>
-        // Authentication system
+        // Firebase Authentication system
         let currentUser = null;
-        let userAccounts = JSON.parse(localStorage.getItem('pokerDappUsers')) || {};
+        let firebaseReady = false;
+
+        // Wait for Firebase to be ready
+        function waitForFirebase() {
+            return new Promise((resolve) => {
+                const checkFirebase = () => {
+                    if (window.firebaseAuth && window.firebaseDb && window.firebaseAuthFunctions) {
+                        firebaseReady = true;
+                        resolve();
+                    } else {
+                        setTimeout(checkFirebase, 100);
+                    }
+                };
+                checkFirebase();
+            });
+        }
 
         // Authentication functions
         function showAuthSection() {
@@ -694,8 +751,8 @@
             document.getElementById('register-form').style.display = 'none';
             document.getElementById('login-form').style.display = 'none';
             
-            document.getElementById('user-display-name').textContent = user.name;
-            document.getElementById('user-display-username').textContent = user.username;
+            document.getElementById('user-display-name').textContent = user.displayName || user.name;
+            document.getElementById('user-display-username').textContent = user.username || user.email;
         }
 
         function showRegisterForm() {
@@ -713,76 +770,171 @@
             document.getElementById('login-form').style.display = 'none';
         }
 
-        function registerUser(name, username, password) {
-            if (userAccounts[username]) {
-                showMessage('Username already exists! Please choose a different username.', 'error');
+        async function registerUser(name, username, password) {
+            if (!firebaseReady) {
+                showMessage('Firebase is not ready yet. Please wait a moment and try again.', 'error');
                 return false;
             }
 
-            const user = {
-                name: name,
-                username: username,
-                password: password, // In a real app, this would be hashed
-                createdAt: new Date().toISOString(),
-                accountType: 'Demo User'
-            };
+            try {
+                // Create Firebase user with email (using username as email for demo)
+                const email = `${username}@poker-dapp-demo.com`;
+                const userCredential = await window.firebaseAuthFunctions.createUserWithEmailAndPassword(
+                    window.firebaseAuth, 
+                    email, 
+                    password
+                );
 
-            userAccounts[username] = user;
-            localStorage.setItem('pokerDappUsers', JSON.stringify(userAccounts));
-            
-            currentUser = user;
-            localStorage.setItem('pokerDappCurrentUser', JSON.stringify(user));
-            
-            showLoggedInUser(user);
-            showMessage(`Welcome ${name}! Your account has been created successfully.`, 'success');
-            return true;
-        }
+                const user = userCredential.user;
 
-        function loginUser(username, password) {
-            const user = userAccounts[username];
-            
-            if (!user) {
-                showMessage('Username not found! Please check your username or create an account.', 'error');
-                return false;
-            }
+                // Update user profile with display name
+                await user.updateProfile({
+                    displayName: name
+                });
 
-            if (user.password !== password) {
-                showMessage('Incorrect password! Please try again.', 'error');
-                return false;
-            }
+                // Save additional user data to Firestore
+                const userData = {
+                    name: name,
+                    username: username,
+                    email: email,
+                    createdAt: new Date().toISOString(),
+                    accountType: 'Demo User',
+                    uid: user.uid
+                };
 
-            currentUser = user;
-            localStorage.setItem('pokerDappCurrentUser', JSON.stringify(user));
-            
-            showLoggedInUser(user);
-            showMessage(`Welcome back, ${user.name}!`, 'success');
-            return true;
-        }
+                await window.firebaseDbFunctions.setDoc(
+                    window.firebaseDbFunctions.doc(window.firebaseDb, 'users', user.uid),
+                    userData
+                );
 
-        function logoutUser() {
-            currentUser = null;
-            localStorage.removeItem('pokerDappCurrentUser');
-            showAuthSection();
-            showMessage('You have been logged out successfully.', 'success');
-        }
+                currentUser = { ...user, ...userData };
+                showLoggedInUser(currentUser);
+                showMessage(`Welcome ${name}! Your account has been created successfully.`, 'success');
+                return true;
 
-        function checkExistingLogin() {
-            const savedUser = localStorage.getItem('pokerDappCurrentUser');
-            if (savedUser) {
-                try {
-                    currentUser = JSON.parse(savedUser);
-                    showLoggedInUser(currentUser);
-                } catch (error) {
-                    console.error('Error parsing saved user:', error);
-                    localStorage.removeItem('pokerDappCurrentUser');
+            } catch (error) {
+                console.error('Registration error:', error);
+                let errorMessage = 'Registration failed. Please try again.';
+                
+                if (error.code === 'auth/email-already-in-use') {
+                    errorMessage = 'Username already exists! Please choose a different username.';
+                } else if (error.code === 'auth/weak-password') {
+                    errorMessage = 'Password is too weak. Please choose a stronger password.';
+                } else if (error.code === 'auth/invalid-email') {
+                    errorMessage = 'Invalid username format. Please use only letters and numbers.';
                 }
+                
+                showMessage(errorMessage, 'error');
+                return false;
             }
+        }
+
+        async function loginUser(username, password) {
+            if (!firebaseReady) {
+                showMessage('Firebase is not ready yet. Please wait a moment and try again.', 'error');
+                return false;
+            }
+
+            try {
+                const email = `${username}@poker-dapp-demo.com`;
+                const userCredential = await window.firebaseAuthFunctions.signInWithEmailAndPassword(
+                    window.firebaseAuth,
+                    email,
+                    password
+                );
+
+                const user = userCredential.user;
+
+                // Get additional user data from Firestore
+                const userDoc = await window.firebaseDbFunctions.getDoc(
+                    window.firebaseDbFunctions.doc(window.firebaseDb, 'users', user.uid)
+                );
+
+                if (userDoc.exists()) {
+                    const userData = userDoc.data();
+                    currentUser = { ...user, ...userData };
+                } else {
+                    currentUser = user;
+                }
+
+                showLoggedInUser(currentUser);
+                showMessage(`Welcome back, ${currentUser.displayName || currentUser.name}!`, 'success');
+                return true;
+
+            } catch (error) {
+                console.error('Login error:', error);
+                let errorMessage = 'Login failed. Please try again.';
+                
+                if (error.code === 'auth/user-not-found') {
+                    errorMessage = 'Username not found! Please check your username or create an account.';
+                } else if (error.code === 'auth/wrong-password') {
+                    errorMessage = 'Incorrect password! Please try again.';
+                } else if (error.code === 'auth/invalid-email') {
+                    errorMessage = 'Invalid username format.';
+                }
+                
+                showMessage(errorMessage, 'error');
+                return false;
+            }
+        }
+
+        async function logoutUser() {
+            if (!firebaseReady) {
+                showMessage('Firebase is not ready yet. Please wait a moment and try again.', 'error');
+                return;
+            }
+
+            try {
+                await window.firebaseAuthFunctions.signOut(window.firebaseAuth);
+                currentUser = null;
+                showAuthSection();
+                showMessage('You have been logged out successfully.', 'success');
+            } catch (error) {
+                console.error('Logout error:', error);
+                showMessage('Logout failed. Please try again.', 'error');
+            }
+        }
+
+        function setupAuthStateListener() {
+            if (!firebaseReady) return;
+
+            window.firebaseAuthFunctions.onAuthStateChanged(window.firebaseAuth, async (user) => {
+                if (user) {
+                    // User is signed in
+                    try {
+                        // Get additional user data from Firestore
+                        const userDoc = await window.firebaseDbFunctions.getDoc(
+                            window.firebaseDbFunctions.doc(window.firebaseDb, 'users', user.uid)
+                        );
+
+                        if (userDoc.exists()) {
+                            const userData = userDoc.data();
+                            currentUser = { ...user, ...userData };
+                        } else {
+                            currentUser = user;
+                        }
+
+                        showLoggedInUser(currentUser);
+                    } catch (error) {
+                        console.error('Error getting user data:', error);
+                        currentUser = user;
+                        showLoggedInUser(currentUser);
+                    }
+                } else {
+                    // User is signed out
+                    currentUser = null;
+                    showAuthSection();
+                }
+            });
         }
 
         // Authentication event listeners
-        document.addEventListener('DOMContentLoaded', function() {
-            // Check if user is already logged in
-            checkExistingLogin();
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Wait for Firebase to be ready
+            await waitForFirebase();
+            
+            // Setup Firebase auth state listener
+            setupAuthStateListener();
 
             // Show register form
             document.getElementById('show-register-btn').addEventListener('click', function() {
