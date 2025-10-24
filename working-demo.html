@@ -1052,15 +1052,33 @@
                         }
 
                         showLoggedInUser(currentUser);
+                        
+                        // Refresh UI to show user-specific data
+                        updatePortfolio();
+                        updateOrderBook();
+                        updateMarketplace();
+                        updateTradingStats();
                     } catch (error) {
                         console.error('Error getting user data:', error);
                         currentUser = user;
                         showLoggedInUser(currentUser);
+                        
+                        // Refresh UI to show user-specific data
+                        updatePortfolio();
+                        updateOrderBook();
+                        updateMarketplace();
+                        updateTradingStats();
                     }
                 } else {
                     // User is signed out
                     currentUser = null;
                     showAuthSection();
+                    
+                    // Refresh UI to show anonymous data
+                    updatePortfolio();
+                    updateOrderBook();
+                    updateMarketplace();
+                    updateTradingStats();
                 }
             });
         }
@@ -1992,10 +2010,18 @@
             portfolioGrid.innerHTML = '';
             
             // Get user's outstanding buy orders (orders they created that are still active)
-            const userBuyOrders = orders.filter(order => order.status === 'active' && order.type === 'buy' && order.createdBy === 'user');
+            const userBuyOrders = orders.filter(order => 
+                order.status === 'active' && 
+                order.type === 'buy' && 
+                isCurrentUserOrder(order)
+            );
             
             // Get user's outstanding sell orders (orders they created that are still active)
-            const userSellOrders = orders.filter(order => order.status === 'active' && order.type === 'sell' && order.createdBy === 'user');
+            const userSellOrders = orders.filter(order => 
+                order.status === 'active' && 
+                order.type === 'sell' && 
+                isCurrentUserOrder(order)
+            );
             
             console.log('Portfolio update - User buy orders:', userBuyOrders);
             console.log('Portfolio update - User sell orders:', userSellOrders);
@@ -2015,8 +2041,11 @@
             const totalPendingSellValue = userSellOrders.reduce((sum, order) => sum + order.total, 0);
             const totalPendingSellWinnings = totalPendingSellValue * 3.5;
             
-            // Get executed orders for summary
-            const executedOrders = orders.filter(order => order.status === 'executed');
+            // Get executed orders for summary (only current user's orders)
+            const executedOrders = orders.filter(order => 
+                order.status === 'executed' && 
+                isCurrentUserOrder(order)
+            );
             const totalExecutedValue = executedOrders.reduce((sum, order) => sum + order.total, 0);
             const totalExecutedWinnings = totalExecutedValue * 3.5;
             
@@ -2141,10 +2170,10 @@
             
             orderBookContainer.innerHTML = '';
             
-            // Filter active orders (only show sell orders and buy orders from other users)
+            // Filter active orders (only show current user's orders)
             const activeOrders = orders.filter(order => 
                 order.status === 'active' && 
-                (order.type === 'sell' || (order.type === 'buy' && order.createdBy === 'other'))
+                isCurrentUserOrder(order)
             );
             
             if (activeOrders.length === 0) {
@@ -2223,10 +2252,10 @@
             const typeFilter = document.getElementById('marketplace-type-filter').value;
             const sortBy = document.getElementById('marketplace-sort').value;
             
-            // Filter orders that user can be counterparty to
+            // Filter orders that user can be counterparty to (exclude current user's orders)
             let availableOrders = orders.filter(order => 
                 order.status === 'active' && 
-                order.createdBy !== 'user' // Only show orders from other users
+                !isCurrentUserOrder(order) // Only show orders from other users
             );
             
             // Apply token filter
@@ -2485,6 +2514,16 @@
                 percentage: percentage,
                 hasTokens: freefloat > 0
             };
+        };
+
+        // Helper function to check if an order belongs to the current user
+        window.isCurrentUserOrder = function(order) {
+            if (!currentUser) {
+                // If no user is logged in, only show orders marked as 'user' (legacy)
+                return order.createdBy === 'user';
+            }
+            // If user is logged in, check by user ID
+            return order.createdByUserId === currentUser.uid;
         };
 
         // Firestore Order Management Functions
@@ -2888,7 +2927,7 @@
                 price: pricePerToken,
                 total: totalCost,
                 status: 'active',
-                createdBy: 'user', // Mark as created by current user
+                createdBy: currentUser ? 'user' : 'anonymous', // Mark as created by current user or anonymous
                 ethSource: ethSource // Track which ETH source was used
             };
             
