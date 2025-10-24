@@ -1,0 +1,1927 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Working Poker Player Token DApp</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .card h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ecf0f1;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+        
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .order-item {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            padding: 20px;
+            border-radius: 15px;
+            border-left: 5px solid #3498db;
+            margin-bottom: 15px;
+        }
+        
+        .order-item.buy {
+            border-left-color: #27ae60;
+        }
+        
+        .order-item.sell {
+            border-left-color: #e74c3c;
+        }
+        
+        .order-item h4 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+        }
+        
+        .order-item p {
+            color: #7f8c8d;
+            margin-bottom: 5px;
+        }
+        
+        .success-message {
+            background: linear-gradient(135deg, #00b894, #00a085);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            text-align: center;
+        }
+        
+        .error-message {
+            background: linear-gradient(135deg, #e17055, #d63031);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            text-align: center;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .tabs {
+            display: flex;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 20px;
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 12px 24px;
+            background: transparent;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .tab.active {
+            background: white;
+            color: #333;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .tab-content.hidden {
+            display: none !important;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎮 Poker Player Token DApp</h1>
+            <p>Working Demo - Create tokens, trade them, and share tournament winnings!</p>
+            
+            <!-- Wallet Connection Section -->
+            <div id="wallet-section" style="margin-top: 20px; padding: 20px; background: rgba(255, 255, 255, 0.1); border-radius: 15px; backdrop-filter: blur(10px);">
+                <div id="wallet-not-connected" style="text-align: center;">
+                    <h3>🔗 Connect Your Wallet</h3>
+                    <p>Choose your preferred wallet to interact with the DApp</p>
+                    <div style="display: flex; justify-content: center; gap: 15px; margin: 20px 0; flex-wrap: wrap;">
+                        <button id="connect-metamask-btn" class="btn btn-success" style="margin: 10px; min-width: 180px;">
+                            🦊 Connect MetaMask
+                        </button>
+                        <button id="connect-coinbase-btn" class="btn" style="margin: 10px; min-width: 180px; background: #0052ff; color: white;">
+                            🔵 Connect Coinbase Wallet
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="wallet-connected" style="display: none; text-align: center;">
+                    <h3>✅ Wallet Connected</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 15px 0;">
+                        <div style="background: rgba(255, 255, 255, 0.1); padding: 15px; border-radius: 10px;">
+                            <strong>Account</strong><br>
+                            <span id="wallet-address" style="font-family: monospace; font-size: 0.9rem;"></span>
+                        </div>
+                        <div style="background: rgba(255, 255, 255, 0.1); padding: 15px; border-radius: 10px;">
+                            <strong>Network</strong><br>
+                            <span id="wallet-network"></span>
+                        </div>
+                <div style="background: rgba(255, 255, 255, 0.1); padding: 15px; border-radius: 10px;">
+                    <strong>Sepolia Balance</strong><br>
+                    <span id="wallet-balance"></span>
+                </div>
+                <div style="background: rgba(255, 255, 255, 0.1); padding: 15px; border-radius: 10px;">
+                    <strong>Demo ETH Balance</strong><br>
+                    <span id="demo-balance"></span>
+                </div>
+                    </div>
+                    <div style="margin: 15px 0;">
+                        <button id="switch-to-sepolia-connected-btn" class="btn" style="background: #28a745; color: white; margin: 5px;">
+                            🌐 Switch to Sepolia
+                        </button>
+                        <button id="refresh-balance-btn" class="btn" style="background: #17a2b8; color: white; margin: 5px;">
+                            🔄 Refresh Balance
+                        </button>
+                        <button id="add-demo-eth-btn" class="btn" style="background: #ffc107; color: #212529; margin: 5px;">
+                            💰 Add Demo ETH
+                        </button>
+                        <button id="disconnect-wallet-btn" class="btn" style="margin: 5px;">
+                            🔌 Disconnect
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="wallet-error" style="display: none; text-align: center; color: #e74c3c;">
+                    <h3>❌ Wallet Error</h3>
+                    <p id="wallet-error-message"></p>
+                    <div id="metamask-install-instructions" style="display: none; margin: 20px 0; padding: 20px; background: rgba(255, 255, 255, 0.1); border-radius: 10px; text-align: left;">
+                        <h4>📥 How to Install MetaMask:</h4>
+                        <div style="background: rgba(255, 140, 0, 0.1); padding: 15px; border-radius: 8px; margin: 15px 0;">
+                            <h5 style="color: #ff8c00; margin: 0 0 10px 0;">🦊 Browser Extension (Recommended)</h5>
+                            <ol style="text-align: left; margin: 10px 0;">
+                                <li><strong>Chrome/Edge:</strong> <a href="https://chrome.google.com/webstore/detail/metamask/nkbihfbeogaeaoehlefnkodbefgpgknn" target="_blank" style="color: #3498db;">Install from Chrome Web Store</a></li>
+                                <li><strong>Firefox:</strong> <a href="https://addons.mozilla.org/en-US/firefox/addon/ether-metamask/" target="_blank" style="color: #3498db;">Install from Firefox Add-ons</a></li>
+                                <li><strong>Brave:</strong> <a href="https://chrome.google.com/webstore/detail/metamask/nkbihfbeogaeaoehlefnkodbefgpgknn" target="_blank" style="color: #3498db;">Install from Chrome Web Store</a></li>
+                            </ol>
+                        </div>
+                        
+                        <div style="background: rgba(255, 140, 0, 0.1); padding: 15px; border-radius: 8px; margin: 15px 0;">
+                            <h5 style="color: #ff8c00; margin: 0 0 10px 0;">📱 Mobile App (Alternative)</h5>
+                            <ol style="text-align: left; margin: 10px 0;">
+                                <li><strong>iOS:</strong> <a href="https://apps.apple.com/us/app/metamask/id1438144202" target="_blank" style="color: #3498db;">Download from App Store</a></li>
+                                <li><strong>Android:</strong> <a href="https://play.google.com/store/apps/details?id=io.metamask" target="_blank" style="color: #3498db;">Download from Google Play</a></li>
+                            </ol>
+                        </div>
+                        
+                        <p><strong>🔧 Setup Steps After Installation:</strong></p>
+                        <ol style="text-align: left; margin: 10px 0;">
+                            <li><strong>Open MetaMask:</strong> Click the MetaMask fox icon in your browser toolbar</li>
+                            <li><strong>Create Account:</strong> Choose "Create a new wallet" or "Import an existing wallet"</li>
+                            <li><strong>Set Password:</strong> Create a strong password for your wallet</li>
+                            <li><strong>Backup Phrase:</strong> Write down your 12-word recovery phrase and store it safely</li>
+                            <li><strong>Verify Backup:</strong> Confirm your recovery phrase to complete setup</li>
+                            <li><strong>Connect to DApp:</strong> Refresh this page and click "Connect MetaMask"</li>
+                        </ol>
+                        
+                        <div style="background: rgba(255, 193, 7, 0.1); padding: 15px; border-radius: 8px; margin: 15px 0;">
+                            <h5 style="color: #ffc107; margin: 0 0 10px 0;">💡 Testing Tips:</h5>
+                            <ul style="text-align: left; margin: 10px 0;">
+                                <li><strong>Use Testnet:</strong> Switch to Sepolia testnet for free testing</li>
+                                <li><strong>Get Test ETH:</strong> Use <a href="https://sepoliafaucet.com/" target="_blank" style="color: #3498db;">Sepolia Faucet</a> for free test tokens</li>
+                                <li><strong>Network Switch:</strong> Click the network dropdown in MetaMask to change networks</li>
+                            </ul>
+                        </div>
+                        
+                        <div style="background: rgba(40, 167, 69, 0.1); padding: 15px; border-radius: 8px; margin: 15px 0;">
+                            <h5 style="color: #28a745; margin: 0 0 10px 0;">🌐 Switch to Sepolia Testnet:</h5>
+                            <button id="switch-to-sepolia-btn" class="btn" style="background: #28a745; color: white; margin: 10px 0;">
+                                🔄 Switch to Sepolia Testnet
+                            </button>
+                            <p style="margin: 10px 0; font-size: 0.9rem;">
+                                <strong>After switching:</strong> Get free test ETH from <a href="https://sepoliafaucet.com/" target="_blank" style="color: #3498db;">Sepolia Faucet</a>
+                            </p>
+                        </div>
+                        
+                        <div style="background: rgba(40, 167, 69, 0.1); padding: 15px; border-radius: 8px; margin: 15px 0;">
+                            <h5 style="color: #28a745; margin: 0 0 10px 0;">🔒 Security Reminders:</h5>
+                            <ul style="text-align: left; margin: 10px 0;">
+                                <li><strong>Never share</strong> your 12-word recovery phrase with anyone</li>
+                                <li><strong>Store backup phrase</strong> in a secure, offline location</li>
+                                <li><strong>Use strong passwords</strong> and enable biometric authentication if available</li>
+                                <li><strong>Verify URLs</strong> before connecting to any DApp</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div id="troubleshooting-section" style="display: none; margin: 20px 0; padding: 20px; background: rgba(255, 255, 255, 0.1); border-radius: 10px; text-align: left;">
+                        <h4>🔧 Troubleshooting Coinbase Wallet Connection Issues:</h4>
+                        
+                        <div style="background: rgba(220, 53, 69, 0.1); padding: 15px; border-radius: 8px; margin: 15px 0;">
+                            <h5 style="color: #dc3545; margin: 0 0 10px 0;">🚨 Common Issues & Solutions:</h5>
+                            <ul style="text-align: left; margin: 10px 0;">
+                                <li><strong>Wallet is locked:</strong> Click the blue Coinbase Wallet icon and enter your password</li>
+                                <li><strong>No accounts found:</strong> Create a new wallet or import an existing one in Coinbase Wallet</li>
+                                <li><strong>Connection popup not appearing:</strong> Check if popups are blocked in your browser settings</li>
+                                <li><strong>Connection rejected:</strong> Make sure to click "Connect" in the Coinbase Wallet popup</li>
+                                <li><strong>Extension not responding:</strong> Try refreshing the page or restarting your browser</li>
+                                <li><strong>Wrong network:</strong> Click the network dropdown in Coinbase Wallet and switch to Ethereum Mainnet or Sepolia testnet</li>
+                                <li><strong>Browser permissions:</strong> Ensure Coinbase Wallet has permission to access this site</li>
+                            </ul>
+                        </div>
+                        
+                        <div style="background: rgba(0, 123, 255, 0.1); padding: 15px; border-radius: 8px; margin: 15px 0;">
+                            <h5 style="color: #007bff; margin: 0 0 10px 0;">🔧 Step-by-Step Troubleshooting:</h5>
+                            <ol style="text-align: left; margin: 10px 0;">
+                                <li><strong>Check Extension:</strong> Look for the blue Coinbase Wallet icon in your browser toolbar</li>
+                                <li><strong>Verify Login:</strong> Click the extension and make sure you're logged in</li>
+                                <li><strong>Clear Cache:</strong> Try refreshing this page (Ctrl+F5 or Cmd+Shift+R)</li>
+                                <li><strong>Check Network:</strong> Ensure you're connected to Ethereum Mainnet or Sepolia testnet</li>
+                                <li><strong>Try Again:</strong> Click "Connect Coinbase Wallet" and approve the connection</li>
+                                <li><strong>Restart Browser:</strong> If all else fails, close and reopen your browser</li>
+                            </ol>
+                        </div>
+                        
+                        <div style="background: rgba(255, 193, 7, 0.1); padding: 15px; border-radius: 8px; margin: 15px 0;">
+                            <h5 style="color: #ffc107; margin: 0 0 10px 0;">💡 Pro Tips:</h5>
+                            <ul style="text-align: left; margin: 10px 0;">
+                                <li><strong>Mobile Sync:</strong> If using mobile, make sure your browser extension is synced with your mobile app</li>
+                                <li><strong>Multiple Accounts:</strong> If you have multiple accounts, make sure you're using the correct one</li>
+                                <li><strong>Testnet First:</strong> Try connecting on Sepolia testnet first to test the connection</li>
+                                <li><strong>Update Extension:</strong> Make sure you have the latest version of Coinbase Wallet</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <button id="retry-wallet-btn" class="btn btn-warning" style="margin: 10px;">
+                        🔄 Retry Connection
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Navigation -->
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('demo', this)">🎮 Demo</button>
+            <button class="tab" onclick="showTab('trading', this)">📈 Trading</button>
+            <button class="tab" onclick="showTab('portfolio', this)">💼 Portfolio</button>
+        </div>
+
+        <!-- Demo Tab -->
+        <div id="demo-tab" class="tab-content active">
+            <div class="card">
+                <h2>🎯 Interactive Demo</h2>
+                <p>This is a fully working version of the Poker Player Token DApp demo.</p>
+                <div style="text-align: center; margin-top: 30px;">
+                    <button class="btn btn-success" onclick="showCreateToken()">
+                        🏆 Create Player Token
+                    </button>
+                    <button class="btn btn-warning" onclick="showTournamentList()">
+                        📋 View Tournaments
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tournament List -->
+        <div id="tournament-list" class="tab-content hidden">
+            <div class="card">
+                <h2>🏆 Available Tournaments</h2>
+                <p>Select a tournament to create your player token for:</p>
+                
+                <div class="grid">
+                    <div class="order-item" onclick="selectTournament('World Series of Poker', 'WSOP', '10 ETH')">
+                        <h4>🏆 World Series of Poker</h4>
+                        <p><strong>Buy-in:</strong> 10 ETH</p>
+                        <p><strong>Prize Pool:</strong> 1,000 ETH</p>
+                        <p><strong>Players:</strong> 100</p>
+                    </div>
+                    
+                    <div class="order-item" onclick="selectTournament('European Poker Tour', 'EPT', '5 ETH')">
+                        <h4>🌍 European Poker Tour</h4>
+                        <p><strong>Buy-in:</strong> 5 ETH</p>
+                        <p><strong>Prize Pool:</strong> 500 ETH</p>
+                        <p><strong>Players:</strong> 100</p>
+                    </div>
+                    
+                    <div class="order-item" onclick="selectTournament('Crypto Poker Championship', 'CPC', '2 ETH')">
+                        <h4>₿ Crypto Poker Championship</h4>
+                        <p><strong>Buy-in:</strong> 2 ETH</p>
+                        <p><strong>Prize Pool:</strong> 200 ETH</p>
+                        <p><strong>Players:</strong> 100</p>
+                    </div>
+                    
+                    <div class="order-item" onclick="selectTournament('High Roller Series', 'HRS', '25 ETH')">
+                        <h4>💎 High Roller Series</h4>
+                        <p><strong>Buy-in:</strong> 25 ETH</p>
+                        <p><strong>Prize Pool:</strong> 2,500 ETH</p>
+                        <p><strong>Players:</strong> 100</p>
+                    </div>
+                </div>
+                
+                <div style="text-align: center; margin-top: 30px;">
+                    <button class="btn" onclick="showMainMenu()">← Back to Main Menu</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Create Token Form -->
+        <div id="create-token" class="tab-content hidden">
+            <div class="card">
+                <h2>🏆 Create Player Token for <span id="selected-tournament-name"></span></h2>
+                <div class="success-message">
+                    <h4>Tournament Details:</h4>
+                    <p><strong>Name:</strong> <span id="tournament-name"></span></p>
+                    <p><strong>Buy-in:</strong> <span id="tournament-buyin"></span></p>
+                    <p><strong>Symbol:</strong> <span id="tournament-symbol"></span></p>
+                </div>
+                
+                <form id="token-form">
+                    <div class="form-group">
+                        <label for="player-name">🎮 Your Player Name:</label>
+                        <input type="text" id="player-name" placeholder="e.g., Alice the Poker Pro" required>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="token-count">🪙 Number of Tokens to Create:</label>
+                            <input type="number" id="token-count" placeholder="e.g., 100" min="1" max="10000" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="payout-percentage">💰 Payout Percentage to Investors:</label>
+                            <input type="number" id="payout-percentage" placeholder="e.g., 35" min="1" max="100" required>
+                        </div>
+                    </div>
+                    
+                    <div style="text-align: center; margin-top: 30px;">
+                        <button type="button" class="btn" onclick="showTournamentList()">← Back</button>
+                        <button type="submit" class="btn btn-success">🚀 Create Token & Go to Trading</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Token Created Success -->
+        <div id="token-created" class="tab-content hidden">
+            <div class="card">
+                <h2>🎉 Token Created Successfully!</h2>
+                <div class="success-message">
+                    <h4>Your token has been created and is now tradeable!</h4>
+                    <p>Token: <span id="created-token-name"></span> | Symbol: <span id="created-token-symbol"></span></p>
+                </div>
+                
+                <div class="success-message">
+                    <h4>🎯 Next Steps:</h4>
+                    <p>1. Your tokens are now available for trading on the built-in exchange</p>
+                    <p>2. Investors can buy your tokens to fund your tournament buy-in</p>
+                    <p>3. You can trade tokens with other users</p>
+                    <p>4. If you win the tournament, token holders will receive their share of winnings</p>
+                </div>
+                
+                <div style="text-align: center; margin-top: 30px;">
+                    <button class="btn btn-success" onclick="goToTrading()">📈 Go to Trading</button>
+                    <button class="btn" onclick="showMainMenu()">← Back to Main Menu</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Trading Tab -->
+        <div id="trading-tab" class="tab-content">
+            <div class="card">
+                <h2>📈 Built-in Exchange</h2>
+                <p>Trade player tokens on our built-in exchange.</p>
+                
+                <div class="grid">
+                    <!-- Order Book -->
+                    <div>
+                        <h3>📋 Order Book</h3>
+                        <div id="order-book-container">
+                            <!-- Orders will be generated dynamically -->
+                        </div>
+                    </div>
+                    
+                    <!-- Create Order -->
+                    <div>
+                        <h3>📝 Create Order</h3>
+                        <form id="order-form">
+                            <div class="form-group">
+                                <label for="token-select">Select Token to Trade:</label>
+                                <select id="token-select" onchange="updateTokenInfo()">
+                                    <option value="">Choose a token...</option>
+                                    <option value="alice">🏆 Alice Token (ALICE) - Alice the Poker Pro</option>
+                                    <option value="bob">🎯 Bob Token (BOB) - Bob the Bluffer</option>
+                                    <option value="charlie">💎 Charlie Token (CHAR) - Charlie the Shark</option>
+                                    <option value="diana">👑 Diana Token (DIA) - Diana the Queen</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="order-type">Order Type:</label>
+                                <select id="order-type" onchange="updateOrderForm()">
+                                    <option value="buy">🟢 Buy Order</option>
+                                    <option value="sell">🔴 Sell Order</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="token-amount">Token Amount:</label>
+                                    <input type="number" id="token-amount" placeholder="e.g., 50" min="1" oninput="calculateEthAmount()">
+                                </div>
+                                <div class="form-group">
+                                    <label for="price-per-token">Price per Token (ETH):</label>
+                                    <input type="number" id="price-per-token" placeholder="e.g., 0.012" step="0.001" min="0.001" oninput="calculateEthAmount()">
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="eth-source">ETH Source:</label>
+                                <select id="eth-source" required>
+                                    <option value="demo">Demo ETH (Virtual Balance)</option>
+                                    <option value="sepolia">Sepolia ETH (Real Wallet)</option>
+                                </select>
+                                <small style="color: #666; font-size: 0.9rem; display: block; margin-top: 5px;">
+                                    <strong>Demo ETH:</strong> Virtual balance for testing (no real ETH spent)<br>
+                                    <strong>Sepolia ETH:</strong> Real testnet ETH from your wallet
+                                </small>
+                            </div>
+                            
+                            <div class="form-group" id="eth-amount-group" style="display: none;">
+                                <label for="eth-amount">ETH Amount:</label>
+                                <input type="number" id="eth-amount" placeholder="0.6" step="0.001" min="0.001" readonly>
+                            </div>
+                            
+                            <div class="form-group" id="token-balance-group" style="display: none;">
+                                <label>Your Token Balance:</label>
+                                <div id="token-balance-display" style="background: #f8f9fa; padding: 10px; border-radius: 5px; color: #2c3e50; font-weight: bold;">
+                                    Select a token to see your balance
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-success">Create Order</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Portfolio Tab -->
+        <div id="portfolio-tab" class="tab-content">
+            <div class="card">
+                <h2>💼 Your Portfolio</h2>
+                <div id="portfolio-grid" class="grid">
+                    <!-- Portfolio items will be generated dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Token data (available tokens for trading)
+        const tokenData = {
+            alice: { name: 'Alice Token (ALICE)', player: 'Alice the Poker Pro', price: 0.012 },
+            bob: { name: 'Bob Token (BOB)', player: 'Bob the Bluffer', price: 0.015 },
+            charlie: { name: 'Charlie Token (CHAR)', player: 'Charlie the Shark', price: 0.011 },
+            diana: { name: 'Diana Token (DIA)', player: 'Diana the Queen', price: 0.018 }
+        };
+
+        // User's portfolio (tokens they own)
+        const userPortfolio = {
+            alice: { name: 'Alice Token (ALICE)', player: 'Alice the Poker Pro', balance: 20, price: 0.012 },
+            bob: { name: 'Bob Token (BOB)', player: 'Bob the Bluffer', balance: 15, price: 0.015 },
+            charlie: { name: 'Charlie Token (CHAR)', player: 'Charlie the Shark', balance: 10, price: 0.011 },
+            diana: { name: 'Diana Token (DIA)', player: 'Diana the Queen', balance: 5, price: 0.018 }
+        };
+
+        // Wallet connection state
+        let walletConnected = false;
+        let currentAccount = null;
+        let currentNetwork = null;
+        let demoETHBalance = 0; // Demo ETH balance for testing
+
+        // Order storage
+        let orderIdCounter = 4; // Start after the existing orders
+        const orders = [
+            { id: 1, type: 'buy', tokenId: 'alice', amount: 50, price: 0.012, total: 0.6, status: 'active', createdBy: 'other' },
+            { id: 2, type: 'sell', tokenId: 'bob', amount: 30, price: 0.015, total: 0.45, status: 'active', createdBy: 'other' },
+            { id: 3, type: 'buy', tokenId: 'charlie', amount: 25, price: 0.011, total: 0.275, status: 'active', createdBy: 'other' }
+        ];
+
+        // Dual Wallet Integration Functions
+        window.checkMetaMask = function() {
+            console.log('Checking for MetaMask...');
+            console.log('window.ethereum exists:', typeof window.ethereum !== 'undefined');
+            
+            if (typeof window.ethereum !== 'undefined') {
+                console.log('Ethereum provider detected!');
+                console.log('Provider properties:', {
+                    isMetaMask: window.ethereum.isMetaMask,
+                    isCoinbaseWallet: window.ethereum.isCoinbaseWallet,
+                    providers: window.ethereum.providers
+                });
+                
+                // Check if it's MetaMask or compatible
+                if (window.ethereum.isMetaMask) {
+                    console.log('MetaMask detected!');
+                    return true;
+                } else if (window.ethereum.providers && window.ethereum.providers.length > 0) {
+                    // Check if MetaMask is in providers array
+                    const metaMaskProvider = window.ethereum.providers.find(provider => provider.isMetaMask);
+                    if (metaMaskProvider) {
+                        console.log('MetaMask found in providers array');
+                        window.ethereum = metaMaskProvider;
+                        return true;
+                    }
+                } else {
+                    // Accept any ethereum provider (many wallets are MetaMask-compatible)
+                    console.log('Using available ethereum provider (MetaMask-compatible)');
+                    return true;
+                }
+            }
+            
+            console.log('MetaMask not detected');
+            showWalletError('MetaMask not detected. Please install MetaMask extension and refresh the page.');
+            return false;
+        };
+
+        window.checkCoinbaseWallet = function() {
+            console.log('Checking for Coinbase Wallet...');
+            console.log('window.ethereum exists:', typeof window.ethereum !== 'undefined');
+            
+            if (typeof window.ethereum !== 'undefined') {
+                console.log('Ethereum provider detected!');
+                console.log('Provider properties:', {
+                    isMetaMask: window.ethereum.isMetaMask,
+                    isCoinbaseWallet: window.ethereum.isCoinbaseWallet,
+                    providers: window.ethereum.providers
+                });
+                
+                // Check if it's Coinbase Wallet
+                if (window.ethereum.isCoinbaseWallet) {
+                    console.log('Coinbase Wallet detected!');
+                    return true;
+                } else if (window.ethereum.providers && window.ethereum.providers.length > 0) {
+                    // Check if Coinbase Wallet is in providers array
+                    const coinbaseProvider = window.ethereum.providers.find(provider => provider.isCoinbaseWallet);
+                    if (coinbaseProvider) {
+                        console.log('Coinbase Wallet found in providers array');
+                        window.ethereum = coinbaseProvider;
+                        return true;
+                    }
+                }
+            }
+            
+            // Check alternative Coinbase Wallet objects
+            const coinbaseObjects = [
+                window.coinbaseWalletExtension,
+                window.coinbase,
+                window.coinbaseWallet
+            ];
+            
+            for (const obj of coinbaseObjects) {
+                if (obj && typeof obj.request === 'function') {
+                    console.log('Alternative Coinbase Wallet object found');
+                    window.ethereum = obj;
+                    return true;
+                }
+            }
+            
+            console.log('Coinbase Wallet not detected');
+            showWalletError('Coinbase Wallet not detected. Please install Coinbase Wallet extension and refresh the page.');
+            return false;
+        };
+
+        window.connectMetaMask = async function() {
+            console.log('🦊 MetaMask button clicked!');
+            console.log('Attempting to connect MetaMask...');
+            console.log('window.ethereum available:', typeof window.ethereum !== 'undefined');
+            
+            if (!checkMetaMask()) {
+                console.log('MetaMask check failed');
+                return;
+            }
+            
+            console.log('MetaMask check passed, proceeding with connection...');
+            await performWalletConnection('MetaMask');
+        };
+
+        window.connectCoinbaseWallet = async function() {
+            console.log('🔵 Coinbase Wallet button clicked!');
+            console.log('Attempting to connect Coinbase Wallet...');
+            console.log('window.ethereum available:', typeof window.ethereum !== 'undefined');
+            
+            if (!checkCoinbaseWallet()) {
+                console.log('Coinbase Wallet check failed');
+                return;
+            }
+            
+            console.log('Coinbase Wallet check passed, proceeding with connection...');
+            await performWalletConnection('Coinbase Wallet');
+        };
+
+        async function performWalletConnection(walletType) {
+            try {
+                console.log(`Requesting account access for ${walletType}...`);
+                
+                // Check if wallet is locked
+                const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+                console.log('Current accounts:', accounts);
+                
+                if (accounts.length === 0) {
+                    console.log('No accounts found, requesting access...');
+                    const newAccounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    console.log('New accounts after request:', newAccounts);
+                    
+                    if (newAccounts.length === 0) {
+                        showWalletError(`No accounts found. Please create an account in ${walletType} or unlock your wallet.`);
+                        return;
+                    }
+                    currentAccount = newAccounts[0];
+                } else {
+                    currentAccount = accounts[0];
+                }
+                
+                walletConnected = true;
+                console.log(`${walletType} connected with account:`, currentAccount);
+                
+                // Get network info
+                const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+                console.log('Chain ID:', chainId);
+                currentNetwork = getNetworkName(chainId);
+                
+            // Get balance
+            const balance = await window.ethereum.request({
+                method: 'eth_getBalance',
+                params: [currentAccount, 'latest']
+            });
+            console.log('Balance:', balance);
+            
+            // Set demo balance to real balance for demo purposes
+            const realBalanceETH = parseInt(balance, 16) / Math.pow(10, 18);
+            setDemoETHBalance(realBalanceETH);
+            
+            updateWalletUI(currentAccount, currentNetwork, balance, walletType);
+            showMessage(`${walletType} connected successfully!`, 'success');
+                
+                // Listen for account changes
+                window.ethereum.on('accountsChanged', handleAccountsChanged);
+                window.ethereum.on('chainChanged', handleChainChanged);
+                
+            } catch (error) {
+                console.error(`Error connecting ${walletType}:`, error);
+                
+                // Provide specific error messages based on error type
+                let errorMessage = `Failed to connect ${walletType}: `;
+                if (error.code === 4001) {
+                    errorMessage = `Connection rejected. Please approve the connection in ${walletType}.`;
+                } else if (error.code === -32002) {
+                    errorMessage = `Connection request already pending. Please check ${walletType}.`;
+                } else if (error.message.includes('User rejected')) {
+                    errorMessage = `Connection rejected. Please try again and approve the connection.`;
+                } else if (error.message.includes('Already processing')) {
+                    errorMessage = `${walletType} is already processing a request. Please wait and try again.`;
+                } else {
+                    errorMessage += error.message;
+                }
+                
+                showWalletError(errorMessage);
+            }
+        };
+
+        window.disconnectWallet = function() {
+            walletConnected = false;
+            currentAccount = null;
+            currentNetwork = null;
+            
+            // Remove event listeners
+            if (window.ethereum) {
+                window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
+                window.ethereum.removeListener('chainChanged', handleChainChanged);
+            }
+            
+            showWalletNotConnected();
+            showMessage('Wallet disconnected', 'success');
+        };
+
+        function getNetworkName(chainId) {
+            const networks = {
+                '0x1': 'Ethereum Mainnet',
+                '0x3': 'Ropsten Testnet',
+                '0x4': 'Rinkeby Testnet',
+                '0x5': 'Goerli Testnet',
+                '0xaa36a7': 'Sepolia Testnet',
+                '0x89': 'Polygon Mainnet',
+                '0x13881': 'Polygon Mumbai Testnet',
+                '0x38': 'BSC Mainnet',
+                '0x61': 'BSC Testnet',
+                '0x7a69': 'Localhost (Hardhat)'
+            };
+            return networks[chainId] || `Unknown Network (${chainId})`;
+        }
+
+        window.refreshBalance = async function() {
+            if (!window.ethereum || !walletConnected || !currentAccount) {
+                showMessage('Please connect your wallet first!', 'error');
+                return;
+            }
+
+            try {
+                console.log('Refreshing balance...');
+                const balance = await window.ethereum.request({
+                    method: 'eth_getBalance',
+                    params: [currentAccount, 'latest']
+                });
+                
+                const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+                currentNetwork = getNetworkName(chainId);
+                
+                // Update demo balance to match real balance
+                const realBalanceETH = parseInt(balance, 16) / Math.pow(10, 18);
+                setDemoETHBalance(realBalanceETH);
+                
+                updateWalletUI(currentAccount, currentNetwork, balance);
+                showMessage('Balance refreshed successfully!', 'success');
+                console.log('Balance refreshed:', balance, 'Real balance:', realBalanceETH, 'ETH');
+            } catch (error) {
+                console.error('Error refreshing balance:', error);
+                showMessage('Failed to refresh balance', 'error');
+            }
+        };
+
+        // Demo ETH balance management functions
+        function deductETHFromBalance(amount) {
+            demoETHBalance = Math.max(0, demoETHBalance - amount);
+            console.log(`Deducted ${amount} ETH from demo balance. New balance: ${demoETHBalance}`);
+            
+            // Update the demo balance display
+            if (walletConnected) {
+                document.getElementById('demo-balance').textContent = demoETHBalance.toFixed(4) + ' ETH';
+                console.log(`Updated demo balance display to: ${demoETHBalance} ETH`);
+            }
+        }
+
+        function addETHToBalance(amount) {
+            demoETHBalance += amount;
+            console.log(`Added ${amount} ETH to demo balance. New balance: ${demoETHBalance}`);
+            
+            // Update the demo balance display
+            if (walletConnected) {
+                document.getElementById('demo-balance').textContent = demoETHBalance.toFixed(4) + ' ETH';
+                console.log(`Updated demo balance display to: ${demoETHBalance} ETH`);
+            }
+        }
+
+        function setDemoETHBalance(amount) {
+            demoETHBalance = amount;
+            console.log(`Set demo ETH balance to: ${demoETHBalance}`);
+            
+            // Update the demo balance display
+            if (walletConnected) {
+                document.getElementById('demo-balance').textContent = demoETHBalance.toFixed(4) + ' ETH';
+                console.log(`Updated demo balance display to: ${demoETHBalance} ETH`);
+            }
+        }
+
+        window.addDemoETH = function() {
+            if (!walletConnected) {
+                showMessage('Please connect your wallet first!', 'error');
+                return;
+            }
+            
+            // Add 1 ETH to demo balance for testing
+            addETHToBalance(1.0);
+            showMessage('Added 1.0 ETH to demo balance for testing!', 'success');
+        };
+
+        window.switchToSepolia = async function() {
+            if (!window.ethereum) {
+                showMessage('Please connect your wallet first!', 'error');
+                return;
+            }
+
+            try {
+                console.log('Switching to Sepolia testnet...');
+                
+                // Sepolia testnet configuration
+                const sepoliaConfig = {
+                    chainId: '0xaa36a7', // 11155111 in decimal
+                    chainName: 'Sepolia Test Network',
+                    nativeCurrency: {
+                        name: 'Sepolia Ether',
+                        symbol: 'SEP',
+                        decimals: 18,
+                    },
+                    rpcUrls: ['https://sepolia.infura.io/v3/'],
+                    blockExplorerUrls: ['https://sepolia.etherscan.io/'],
+                };
+
+                // Try to switch to Sepolia
+                await window.ethereum.request({
+                    method: 'wallet_switchEthereumChain',
+                    params: [{ chainId: sepoliaConfig.chainId }],
+                });
+
+                showMessage('Successfully switched to Sepolia testnet!', 'success');
+                
+                // Update the UI to show the new network and fetch balance
+                if (walletConnected) {
+                    const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+                    currentNetwork = getNetworkName(chainId);
+                    
+                    // Fetch the actual balance from the new network
+                    try {
+                        const balance = await window.ethereum.request({
+                            method: 'eth_getBalance',
+                            params: [currentAccount, 'latest']
+                        });
+                        const realBalanceETH = parseInt(balance, 16) / Math.pow(10, 18);
+                        setDemoETHBalance(realBalanceETH);
+                        updateWalletUI(currentAccount, currentNetwork, balance);
+                        console.log('Balance updated for Sepolia:', balance, 'Real balance:', realBalanceETH, 'ETH');
+                    } catch (error) {
+                        console.error('Error fetching balance:', error);
+                        setDemoETHBalance(0);
+                        updateWalletUI(currentAccount, currentNetwork, '0x0');
+                    }
+                }
+
+            } catch (error) {
+                console.error('Error switching to Sepolia:', error);
+                
+                if (error.code === 4902) {
+                    // Network not added, try to add it
+                    try {
+                        await window.ethereum.request({
+                            method: 'wallet_addEthereumChain',
+                            params: [sepoliaConfig],
+                        });
+                        showMessage('Sepolia testnet added and switched successfully!', 'success');
+                        
+                        // Update the UI to show the new network and fetch balance
+                        if (walletConnected) {
+                            const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+                            currentNetwork = getNetworkName(chainId);
+                            
+                            // Fetch the actual balance from the new network
+                            try {
+                                const balance = await window.ethereum.request({
+                                    method: 'eth_getBalance',
+                                    params: [currentAccount, 'latest']
+                                });
+                                const realBalanceETH = parseInt(balance, 16) / Math.pow(10, 18);
+                                setDemoETHBalance(realBalanceETH);
+                                updateWalletUI(currentAccount, currentNetwork, balance);
+                                console.log('Balance updated for Sepolia after adding network:', balance, 'Real balance:', realBalanceETH, 'ETH');
+                            } catch (error) {
+                                console.error('Error fetching balance after adding network:', error);
+                                setDemoETHBalance(0);
+                                updateWalletUI(currentAccount, currentNetwork, '0x0');
+                            }
+                        }
+                    } catch (addError) {
+                        console.error('Error adding Sepolia network:', addError);
+                        showMessage('Failed to add Sepolia network. Please add it manually in your wallet.', 'error');
+                    }
+                } else {
+                    showMessage(`Failed to switch to Sepolia: ${error.message}`, 'error');
+                }
+            }
+        };
+
+        function updateWalletUI(account, network, balance, walletType = 'Wallet') {
+            document.getElementById('wallet-not-connected').style.display = 'none';
+            document.getElementById('wallet-connected').style.display = 'block';
+            document.getElementById('wallet-error').style.display = 'none';
+            
+            document.getElementById('wallet-address').textContent = 
+                account.substring(0, 6) + '...' + account.substring(account.length - 4);
+            document.getElementById('wallet-network').textContent = network;
+            
+            // Display Sepolia balance (real wallet balance)
+            const sepoliaBalance = (parseInt(balance, 16) / Math.pow(10, 18)).toFixed(4);
+            document.getElementById('wallet-balance').textContent = sepoliaBalance + ' ETH';
+            
+            // Display Demo ETH balance
+            document.getElementById('demo-balance').textContent = demoETHBalance.toFixed(4) + ' ETH';
+            
+            // Update the connected wallet title
+            const connectedTitle = document.querySelector('#wallet-connected h3');
+            if (connectedTitle) {
+                connectedTitle.textContent = `✅ ${walletType} Connected`;
+            }
+        }
+
+        function showWalletNotConnected() {
+            document.getElementById('wallet-not-connected').style.display = 'block';
+            document.getElementById('wallet-connected').style.display = 'none';
+            document.getElementById('wallet-error').style.display = 'none';
+        }
+
+        function showWalletError(message) {
+            document.getElementById('wallet-not-connected').style.display = 'none';
+            document.getElementById('wallet-connected').style.display = 'none';
+            document.getElementById('wallet-error').style.display = 'block';
+            document.getElementById('wallet-error-message').textContent = message;
+            
+            // Show installation instructions if MetaMask is not installed
+            const installInstructions = document.getElementById('metamask-install-instructions');
+            const troubleshootingSection = document.getElementById('troubleshooting-section');
+            
+            if (message.includes('not detected') || message.includes('Please install')) {
+                installInstructions.style.display = 'block';
+                troubleshootingSection.style.display = 'none';
+            } else {
+                installInstructions.style.display = 'none';
+                troubleshootingSection.style.display = 'block';
+            }
+        }
+
+        function handleAccountsChanged(accounts) {
+            if (accounts.length === 0) {
+                disconnectWallet();
+            } else if (accounts[0] !== currentAccount) {
+                currentAccount = accounts[0];
+                connectWallet();
+            }
+        }
+
+        function handleChainChanged(chainId) {
+            currentNetwork = getNetworkName(chainId);
+            if (walletConnected) {
+                updateWalletUI(currentAccount, currentNetwork, '0x0');
+                showMessage('Network changed to ' + currentNetwork, 'success');
+            }
+        }
+
+
+        function initializeWallet() {
+            // Add event listeners for wallet buttons
+            const connectMetaMaskBtn = document.getElementById('connect-metamask-btn');
+            const connectCoinbaseBtn = document.getElementById('connect-coinbase-btn');
+            const disconnectBtn = document.getElementById('disconnect-wallet-btn');
+            const retryBtn = document.getElementById('retry-wallet-btn');
+            
+            if (connectMetaMaskBtn) {
+                console.log('MetaMask button found, adding event listener');
+                connectMetaMaskBtn.addEventListener('click', connectMetaMask);
+            } else {
+                console.log('MetaMask button NOT found');
+            }
+            
+            if (connectCoinbaseBtn) {
+                console.log('Coinbase button found, adding event listener');
+                connectCoinbaseBtn.addEventListener('click', connectCoinbaseWallet);
+            } else {
+                console.log('Coinbase button NOT found');
+            }
+            
+            if (disconnectBtn) {
+                disconnectBtn.addEventListener('click', disconnectWallet);
+            }
+            
+            if (retryBtn) {
+                retryBtn.addEventListener('click', () => {
+                    // Try to auto-detect which wallet to use
+                    if (window.ethereum && window.ethereum.isMetaMask) {
+                        connectMetaMask();
+                    } else if (window.ethereum && window.ethereum.isCoinbaseWallet) {
+                        connectCoinbaseWallet();
+                    } else {
+                        showWalletError('Please choose a specific wallet to connect.');
+                    }
+                });
+            }
+            
+            // Add event listener for Sepolia switch button
+            const switchToSepoliaBtn = document.getElementById('switch-to-sepolia-btn');
+            if (switchToSepoliaBtn) {
+                console.log('Sepolia switch button found, adding event listener');
+                switchToSepoliaBtn.addEventListener('click', switchToSepolia);
+            } else {
+                console.log('Sepolia switch button NOT found');
+            }
+            
+            // Add event listener for connected wallet's Sepolia button
+            const switchToSepoliaConnectedBtn = document.getElementById('switch-to-sepolia-connected-btn');
+            if (switchToSepoliaConnectedBtn) {
+                console.log('Connected wallet Sepolia button found, adding event listener');
+                switchToSepoliaConnectedBtn.addEventListener('click', switchToSepolia);
+            } else {
+                console.log('Connected wallet Sepolia button NOT found');
+            }
+            
+            // Add event listener for refresh balance button
+            const refreshBalanceBtn = document.getElementById('refresh-balance-btn');
+            if (refreshBalanceBtn) {
+                console.log('Refresh balance button found, adding event listener');
+                refreshBalanceBtn.addEventListener('click', refreshBalance);
+            } else {
+                console.log('Refresh balance button NOT found');
+            }
+            
+            // Add event listener for demo ETH button
+            const addDemoETHBtn = document.getElementById('add-demo-eth-btn');
+            if (addDemoETHBtn) {
+                console.log('Add demo ETH button found, adding event listener');
+                addDemoETHBtn.addEventListener('click', addDemoETH);
+            } else {
+                console.log('Add demo ETH button NOT found');
+            }
+            
+            // Don't auto-connect - let user choose their wallet
+            console.log('Wallet initialization complete. User can now choose their preferred wallet.');
+        }
+
+        // Make functions globally accessible
+        window.showTab = function(tabName, clickedElement) {
+            console.log('showTab called with:', tabName);
+            
+            // Hide all sections first (but not tab contents)
+            const sections = ['tournament-list', 'create-token', 'token-created'];
+            sections.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.classList.add('hidden');
+                    element.style.display = 'none';
+                }
+            });
+            
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+                tab.style.display = 'none';
+            });
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab content
+            const targetTab = document.getElementById(tabName + '-tab');
+            if (targetTab) {
+                targetTab.classList.remove('hidden');
+                targetTab.classList.add('active');
+                targetTab.style.display = 'block';
+                console.log('Showing tab:', tabName, 'Element:', targetTab);
+            } else {
+                console.error('Tab not found:', tabName + '-tab');
+            }
+            
+            // Add active class to clicked tab button
+            if (clickedElement) {
+                clickedElement.classList.add('active');
+            }
+        };
+
+        // Demo functions - make globally accessible
+        window.startDemo = function() {
+            showMessage('Demo started! This is a fully working version.', 'success');
+        };
+
+        window.showCreateToken = function() {
+            console.log('showCreateToken called');
+            showMessage('Loading tournaments...', 'success');
+            showTournamentList();
+        };
+
+        window.showTournamentList = function() {
+            console.log('showTournamentList called');
+            hideAllSections();
+            const tournamentList = document.getElementById('tournament-list');
+            tournamentList.classList.remove('hidden');
+            tournamentList.style.display = 'block';
+            console.log('Tournament list should now be visible');
+        };
+
+        window.showMainMenu = function() {
+            console.log('showMainMenu called');
+            hideAllSections();
+            const demoTab = document.getElementById('demo-tab');
+            demoTab.classList.remove('hidden');
+            demoTab.style.display = 'block';
+            
+            // Also update the tab navigation to show demo as active
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelector('.tab[onclick*="demo"]').classList.add('active');
+            
+            showMessage('Back to main menu!', 'success');
+            console.log('Demo tab should now be visible');
+        };
+
+        window.selectTournament = function(name, symbol, buyin) {
+            selectedTournament = { name, symbol, buyin };
+            
+            // Update the form with tournament details
+            document.getElementById('selected-tournament-name').textContent = name;
+            document.getElementById('tournament-name').textContent = name;
+            document.getElementById('tournament-buyin').textContent = buyin;
+            document.getElementById('tournament-symbol').textContent = symbol;
+            
+            hideAllSections();
+            const createToken = document.getElementById('create-token');
+            createToken.classList.remove('hidden');
+            createToken.style.display = 'block';
+        };
+
+        function hideAllSections() {
+            const sections = ['demo-tab', 'tournament-list', 'create-token', 'token-created', 'trading-tab', 'portfolio-tab'];
+            sections.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.classList.add('hidden');
+                    element.style.display = 'none';
+                }
+            });
+        }
+
+        window.goToTrading = function() {
+            console.log('goToTrading called');
+            hideAllSections();
+            const tradingTab = document.getElementById('trading-tab');
+            tradingTab.classList.remove('hidden');
+            tradingTab.style.display = 'block';
+            
+            // Also update the tab navigation to show trading as active
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelector('.tab[onclick*="trading"]').classList.add('active');
+            
+            showMessage('Welcome to the trading interface!', 'success');
+            console.log('Trading tab should now be visible');
+        };
+
+        let selectedTournament = {};
+
+        // Trading functions - make globally accessible
+        window.updateTokenInfo = function() {
+            const selectedToken = document.getElementById('token-select').value;
+            const tokenBalanceGroup = document.getElementById('token-balance-group');
+            const tokenBalanceDisplay = document.getElementById('token-balance-display');
+            
+            if (selectedToken && tokenData[selectedToken]) {
+                const token = tokenData[selectedToken];
+                const userBalance = userPortfolio[selectedToken] ? userPortfolio[selectedToken].balance : 0;
+                tokenBalanceGroup.style.display = 'block';
+                tokenBalanceDisplay.innerHTML = `
+                    <strong>${token.name}</strong><br>
+                    Player: ${token.player}<br>
+                    Your Balance: ${userBalance} tokens<br>
+                    Current Price: ${token.price} ETH/token
+                `;
+            } else {
+                tokenBalanceGroup.style.display = 'none';
+            }
+        };
+
+        window.updateOrderForm = function() {
+            const orderType = document.getElementById('order-type').value;
+            const ethAmountGroup = document.getElementById('eth-amount-group');
+            
+            if (orderType === 'buy') {
+                ethAmountGroup.style.display = 'block';
+            } else {
+                ethAmountGroup.style.display = 'none';
+            }
+        };
+
+        window.calculateEthAmount = function() {
+            const tokenAmount = parseFloat(document.getElementById('token-amount').value) || 0;
+            const pricePerToken = parseFloat(document.getElementById('price-per-token').value) || 0;
+            const ethAmount = tokenAmount * pricePerToken;
+            document.getElementById('eth-amount').value = ethAmount.toFixed(6);
+        };
+
+        window.executeOrder = function(orderId, action, tokenSymbol) {
+            console.log('executeOrder called:', orderId, action, tokenSymbol);
+            
+            // Find the order
+            const order = orders.find(o => o.id === orderId);
+            if (!order) {
+                showMessage('Order not found!', 'error');
+                return;
+            }
+            
+            const tokenInfo = tokenData[tokenSymbol];
+            if (!tokenInfo) {
+                showMessage('Token not found!', 'error');
+                return;
+            }
+            
+            const message = `Executing ${action} order #${orderId} for ${tokenInfo.name}...`;
+            showMessage(message, 'success');
+            
+            setTimeout(() => {
+                // Mark order as executed
+                order.status = 'executed';
+                
+                // Update user's portfolio based on the action
+                if (action === 'buy') {
+                    // User is buying tokens - add to their portfolio
+                    if (!userPortfolio[order.tokenId]) {
+                        userPortfolio[order.tokenId] = {
+                            name: tokenInfo.name,
+                            player: tokenInfo.player,
+                            balance: 0,
+                            price: tokenInfo.price
+                        };
+                    }
+                    userPortfolio[order.tokenId].balance = (userPortfolio[order.tokenId].balance || 0) + order.amount;
+                    
+                    // For buy orders, we don't actually deduct real ETH (it's a demo)
+                    // But we show a message about the transaction
+                    showMessage(`Bought ${order.amount} ${tokenInfo.name} tokens for ${order.total} ETH!`, 'success');
+                    
+                } else if (action === 'sell') {
+                    // User is selling tokens - remove from their portfolio
+                    if (!userPortfolio[order.tokenId] || userPortfolio[order.tokenId].balance < order.amount) {
+                        showMessage('Insufficient token balance!', 'error');
+                        order.status = 'active'; // Restore order if insufficient balance
+                        return;
+                    }
+                    userPortfolio[order.tokenId].balance -= order.amount;
+                    
+                    // For sell orders, we don't actually add real ETH (it's a demo)
+                    // But we show a message about the transaction
+                    showMessage(`Sold ${order.amount} ${tokenInfo.name} tokens for ${order.total} ETH!`, 'success');
+                }
+                
+                // Update displays
+                updateOrderBook();
+                updatePortfolio();
+                
+                showMessage(`Order #${orderId} for ${tokenInfo.name} executed successfully!`, 'success');
+                console.log('Order execution completed, navigation should still work');
+            }, 1000);
+        };
+
+        window.sellTokens = function(symbol, amount) {
+            const tokenInfo = Object.values(tokenData).find(token => token.name.includes(symbol));
+            const playerName = tokenInfo ? tokenInfo.player : 'Unknown Player';
+            const message = `Creating sell order for ${amount} ${symbol} tokens (${playerName})...`;
+            showMessage(message, 'success');
+            
+            setTimeout(() => {
+                showMessage(`Sell order created for ${amount} ${symbol} tokens!`, 'success');
+            }, 1000);
+        };
+
+        // Function to update portfolio display
+        window.updatePortfolio = function() {
+            const portfolioGrid = document.getElementById('portfolio-grid');
+            if (!portfolioGrid) return;
+            
+            portfolioGrid.innerHTML = '';
+            
+            // Get user's outstanding buy orders (orders they created that are still active)
+            const userBuyOrders = orders.filter(order => order.status === 'active' && order.type === 'buy' && order.createdBy === 'user');
+            
+            // Get user's outstanding sell orders (orders they created that are still active)
+            const userSellOrders = orders.filter(order => order.status === 'active' && order.type === 'sell' && order.createdBy === 'user');
+            
+            console.log('Portfolio update - User buy orders:', userBuyOrders);
+            console.log('Portfolio update - User sell orders:', userSellOrders);
+            
+            // Only show tokens that the user actually owns (has a balance > 0)
+            const ownedTokens = Object.entries(userPortfolio).filter(([tokenId, token]) => token.balance > 0);
+            
+            // If no tokens owned and no outstanding sell orders
+            if (ownedTokens.length === 0 && userSellOrders.length === 0) {
+                portfolioGrid.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">No tokens owned and no outstanding sell orders. Buy some tokens to see them here!</p>';
+                return;
+            }
+            
+            // Add portfolio summary
+            const totalCurrentValue = ownedTokens.reduce((sum, [tokenId, token]) => sum + (token.balance * token.price), 0);
+            const totalCurrentWinnings = totalCurrentValue * 3.5;
+            const totalPendingSellValue = userSellOrders.reduce((sum, order) => sum + order.total, 0);
+            const totalPendingSellWinnings = totalPendingSellValue * 3.5;
+            
+            // Get executed orders for summary
+            const executedOrders = orders.filter(order => order.status === 'executed');
+            const totalExecutedValue = executedOrders.reduce((sum, order) => sum + order.total, 0);
+            const totalExecutedWinnings = totalExecutedValue * 3.5;
+            
+            const summaryItem = document.createElement('div');
+            summaryItem.className = 'order-item';
+            summaryItem.style.borderLeft = '5px solid #27ae60';
+            summaryItem.style.marginBottom = '20px';
+            summaryItem.innerHTML = `
+                <h4>📊 Portfolio Summary</h4>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 15px 0;">
+                    <div style="text-align: center; padding: 10px; background: rgba(39, 174, 96, 0.1); border-radius: 5px;">
+                        <strong>Current Value</strong><br>
+                        ${totalCurrentValue.toFixed(3)} ETH
+                    </div>
+                    <div style="text-align: center; padding: 10px; background: rgba(39, 174, 96, 0.1); border-radius: 5px;">
+                        <strong>Current Potential Winnings</strong><br>
+                        ${totalCurrentWinnings.toFixed(3)} ETH
+                    </div>
+                    <div style="text-align: center; padding: 10px; background: rgba(52, 152, 219, 0.1); border-radius: 5px;">
+                        <strong>Executed Orders</strong><br>
+                        ${executedOrders.length} orders (${totalExecutedValue.toFixed(3)} ETH)
+                    </div>
+                    <div style="text-align: center; padding: 10px; background: rgba(52, 152, 219, 0.1); border-radius: 5px;">
+                        <strong>Executed Potential Winnings</strong><br>
+                        ${totalExecutedWinnings.toFixed(3)} ETH
+                    </div>
+                    <div style="text-align: center; padding: 10px; background: rgba(231, 76, 60, 0.1); border-radius: 5px;">
+                        <strong>Pending Sell Orders</strong><br>
+                        ${userSellOrders.length} orders (${totalPendingSellValue.toFixed(3)} ETH)
+                    </div>
+                    <div style="text-align: center; padding: 10px; background: rgba(231, 76, 60, 0.1); border-radius: 5px;">
+                        <strong>Pending Sell Potential Winnings</strong><br>
+                        ${totalPendingSellWinnings.toFixed(3)} ETH
+                    </div>
+                </div>
+            `;
+            portfolioGrid.appendChild(summaryItem);
+            
+            // Show owned tokens
+            ownedTokens.forEach(([tokenId, token]) => {
+                // Calculate potential impact from outstanding orders
+                const buyOrdersForToken = userBuyOrders.filter(order => order.tokenId === tokenId);
+                const sellOrdersForToken = userSellOrders.filter(order => order.tokenId === tokenId);
+                
+                const totalBuyAmount = buyOrdersForToken.reduce((sum, order) => sum + order.amount, 0);
+                const totalSellAmount = sellOrdersForToken.reduce((sum, order) => sum + order.amount, 0);
+                
+                const currentBalance = token.balance;
+                const potentialBalance = currentBalance + totalBuyAmount - totalSellAmount;
+                const currentValue = currentBalance * token.price;
+                const potentialValue = potentialBalance * token.price;
+                const currentWinnings = currentValue * 3.5;
+                const potentialWinnings = potentialValue * 3.5;
+                
+                const portfolioItem = document.createElement('div');
+                portfolioItem.className = 'order-item';
+                
+                let orderInfo = '';
+                if (buyOrdersForToken.length > 0 || sellOrdersForToken.length > 0) {
+                    orderInfo = `
+                        <div style="background: rgba(52, 152, 219, 0.1); padding: 10px; border-radius: 5px; margin: 10px 0;">
+                            <strong>📊 Outstanding Orders:</strong><br>
+                            ${buyOrdersForToken.length > 0 ? `🟢 ${buyOrdersForToken.length} buy order(s) for ${totalBuyAmount} tokens<br>` : ''}
+                            ${sellOrdersForToken.length > 0 ? `🔴 ${sellOrdersForToken.length} sell order(s) for ${totalSellAmount} tokens<br>` : ''}
+                            <strong>Potential Balance:</strong> ${potentialBalance} tokens<br>
+                            <strong>Potential Value:</strong> ${potentialValue.toFixed(3)} ETH<br>
+                            <strong>Potential Winnings:</strong> ${potentialWinnings.toFixed(3)} ETH
+                        </div>
+                    `;
+                }
+                
+                portfolioItem.innerHTML = `
+                    <h4>🏆 ${token.name}</h4>
+                    <p><strong>Player:</strong> ${token.player}</p>
+                    <p><strong>Current Balance:</strong> ${currentBalance} tokens</p>
+                    <p><strong>Current Value:</strong> ${currentValue.toFixed(3)} ETH</p>
+                    <p><strong>Current Potential Winnings:</strong> ${currentWinnings.toFixed(3)} ETH</p>
+                    ${orderInfo}
+                    <button class="btn btn-warning" onclick="sellTokens('${tokenId}', ${currentBalance})">Sell</button>
+                `;
+                portfolioGrid.appendChild(portfolioItem);
+            });
+            
+            // Show outstanding sell orders
+            if (userSellOrders.length > 0) {
+                const pendingItem = document.createElement('div');
+                pendingItem.className = 'order-item';
+                pendingItem.style.borderLeft = '5px solid #e74c3c';
+                
+                let pendingOrdersHtml = '';
+                userSellOrders.forEach(order => {
+                    const tokenInfo = tokenData[order.tokenId];
+                    if (tokenInfo) {
+                        const potentialValue = order.amount * order.price;
+                        const potentialWinnings = potentialValue * 3.5;
+                        pendingOrdersHtml += `
+                            <div style="margin: 10px 0; padding: 10px; background: rgba(231, 76, 60, 0.1); border-radius: 5px;">
+                                <strong>🔴 Pending Sell Order #${order.id}</strong><br>
+                                <strong>Token:</strong> ${tokenInfo.name}<br>
+                                <strong>Amount:</strong> ${order.amount} tokens<br>
+                                <strong>Price:</strong> ${order.price} ETH/token<br>
+                                <strong>Total Value:</strong> ${order.total} ETH<br>
+                                <strong>Potential Winnings:</strong> ${potentialWinnings.toFixed(3)} ETH
+                            </div>
+                        `;
+                    }
+                });
+                
+                pendingItem.innerHTML = `
+                    <h4>⏳ Pending Sell Orders</h4>
+                    <p>These orders will remove tokens from your portfolio when executed:</p>
+                    ${pendingOrdersHtml}
+                `;
+                portfolioGrid.appendChild(pendingItem);
+            }
+        };
+
+        // Function to update order book display
+        window.updateOrderBook = function() {
+            const orderBookContainer = document.getElementById('order-book-container');
+            if (!orderBookContainer) return;
+            
+            orderBookContainer.innerHTML = '';
+            
+            // Filter active orders (only show sell orders and buy orders from other users)
+            const activeOrders = orders.filter(order => 
+                order.status === 'active' && 
+                (order.type === 'sell' || (order.type === 'buy' && order.createdBy === 'other'))
+            );
+            
+            if (activeOrders.length === 0) {
+                orderBookContainer.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">No active orders</p>';
+                return;
+            }
+            
+            activeOrders.forEach(order => {
+                const tokenInfo = tokenData[order.tokenId];
+                if (!tokenInfo) return;
+                
+                const orderItem = document.createElement('div');
+                orderItem.className = `order-item ${order.type}`;
+                
+                const orderTypeIcon = order.type === 'buy' ? '🟢' : '🔴';
+                const orderTypeText = order.type === 'buy' ? 'Buy Order' : 'Sell Order';
+                const buttonText = order.type === 'buy' ? 'Sell to' : 'Buy from';
+                const buttonClass = order.type === 'buy' ? 'btn-success' : 'btn-warning';
+                const oppositeAction = order.type === 'buy' ? 'sell' : 'buy';
+                
+                orderItem.innerHTML = `
+                    <h4>${orderTypeIcon} ${orderTypeText} #${order.id} - ${tokenInfo.name.split(' ')[0].toUpperCase()}</h4>
+                    <p><strong>Token:</strong> ${tokenInfo.name}</p>
+                    <p><strong>Amount:</strong> ${order.amount} tokens</p>
+                    <p><strong>Price:</strong> ${order.price} ETH/token</p>
+                    <p><strong>Total:</strong> ${order.total} ETH</p>
+                    <button class="btn ${buttonClass}" onclick="executeOrder(${order.id}, '${oppositeAction}', '${order.tokenId}')">${buttonText}</button>
+                `;
+                
+                orderBookContainer.appendChild(orderItem);
+            });
+        };
+
+        window.showMessage = function(message, type) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = type === 'success' ? 'success-message' : 'error-message';
+            messageDiv.textContent = message;
+            messageDiv.style.position = 'fixed';
+            messageDiv.style.top = '20px';
+            messageDiv.style.left = '50%';
+            messageDiv.style.transform = 'translateX(-50%)';
+            messageDiv.style.zIndex = '1000';
+            messageDiv.style.minWidth = '300px';
+            messageDiv.style.textAlign = 'center';
+            
+            document.body.appendChild(messageDiv);
+            
+            setTimeout(() => {
+                if (messageDiv.parentNode) {
+                    messageDiv.remove();
+                }
+            }, 3000);
+        };
+
+
+        // Function to force show tab content
+        window.forceShowTab = function(tabName) {
+            console.log('Force showing tab:', tabName);
+            const targetTab = document.getElementById(tabName + '-tab');
+            if (targetTab) {
+                // Remove all hidden classes and ensure visibility
+                targetTab.classList.remove('hidden');
+                targetTab.style.display = 'block';
+                targetTab.style.visibility = 'visible';
+                targetTab.style.opacity = '1';
+                console.log('Tab content forced to be visible:', tabName);
+            }
+        };
+
+        // Function to ensure navigation is working
+        window.ensureNavigation = function() {
+            console.log('Ensuring navigation is working...');
+            
+            // Make sure all tab functions are available
+            if (typeof window.showTab !== 'function') {
+                console.error('showTab function is missing!');
+                return false;
+            }
+            
+            // Make sure all tabs are clickable
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                if (!tab.onclick) {
+                    const tabName = tab.textContent.includes('Demo') ? 'demo' : 
+                                   tab.textContent.includes('Trading') ? 'trading' : 
+                                   tab.textContent.includes('Portfolio') ? 'portfolio' : null;
+                    if (tabName) {
+                        tab.onclick = function() { showTab(tabName, this); };
+                    }
+                }
+            });
+            
+            // Ensure at least one tab is visible
+            const visibleTabs = document.querySelectorAll('.tab-content[style*="block"], .tab-content.active');
+            if (visibleTabs.length === 0) {
+                console.log('No tabs visible, showing demo tab');
+                showTab('demo');
+            }
+            
+            console.log('Navigation check completed');
+            return true;
+        };
+
+        // Emergency reset function
+        window.resetDemo = function() {
+            console.log('Resetting demo to initial state');
+            hideAllSections();
+            const demoTab = document.getElementById('demo-tab');
+            demoTab.classList.remove('hidden');
+            demoTab.style.display = 'block';
+            
+            // Reset tab navigation
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelector('.tab[onclick*="demo"]').classList.add('active');
+            
+            // Ensure navigation is working
+            ensureNavigation();
+            
+            showMessage('Demo reset to initial state!', 'success');
+        };
+
+        // Initialize when page loads
+        window.addEventListener('load', function() {
+            console.log('Working demo loaded successfully');
+            
+            // Set up event listeners for forms
+            const tokenForm = document.getElementById('token-form');
+            const orderForm = document.getElementById('order-form');
+            
+            if (tokenForm) {
+                tokenForm.addEventListener('submit', handleTokenFormSubmit);
+            }
+            
+            if (orderForm) {
+                orderForm.addEventListener('submit', handleOrderFormSubmit);
+            }
+            
+            // Test that functions are working
+            console.log('Available functions:', Object.keys(window).filter(key => typeof window[key] === 'function' && key.startsWith('show')));
+            
+            // Initialize portfolio and order book
+            updatePortfolio();
+            updateOrderBook();
+            
+            // Initialize wallet connection
+            initializeWallet();
+            
+            // Show initial message
+            setTimeout(() => {
+                showMessage('Demo loaded successfully! All functions are now working.', 'success');
+            }, 500);
+            
+            // Add emergency reset button (for debugging)
+            const resetBtn = document.createElement('button');
+            resetBtn.textContent = '🔄 Reset Demo';
+            resetBtn.style.position = 'fixed';
+            resetBtn.style.top = '10px';
+            resetBtn.style.right = '10px';
+            resetBtn.style.zIndex = '9999';
+            resetBtn.style.padding = '10px';
+            resetBtn.style.background = '#e74c3c';
+            resetBtn.style.color = 'white';
+            resetBtn.style.border = 'none';
+            resetBtn.style.borderRadius = '5px';
+            resetBtn.style.cursor = 'pointer';
+            resetBtn.onclick = resetDemo;
+            document.body.appendChild(resetBtn);
+        });
+
+        function handleTokenFormSubmit(e) {
+            e.preventDefault();
+            
+            // Check if wallet is connected
+            if (!walletConnected) {
+                showMessage('Please connect your wallet first!', 'error');
+                return;
+            }
+            
+            const playerName = document.getElementById('player-name').value;
+            const tokenCount = parseInt(document.getElementById('token-count').value);
+            const payoutPercentage = parseInt(document.getElementById('payout-percentage').value);
+            
+            // Create a unique token ID
+            const tokenId = playerName.toLowerCase().replace(/\s+/g, '');
+            const tokenSymbol = selectedTournament.symbol;
+            
+            // Add the new token to the tokenData object (available for trading)
+            tokenData[tokenId] = {
+                name: `${playerName} Token (${tokenSymbol})`,
+                player: playerName,
+                price: 0.01 // Default price
+            };
+            
+            // Add the new token to the dropdown
+            const tokenSelect = document.getElementById('token-select');
+            const newOption = document.createElement('option');
+            newOption.value = tokenId;
+            newOption.textContent = `🏆 ${playerName} Token (${tokenSymbol}) - ${playerName}`;
+            tokenSelect.appendChild(newOption);
+            
+            // Note: Creating a token doesn't automatically give you ownership
+            // You need to buy tokens to own them and see them in your portfolio
+            
+            // Update the success page with token details
+            document.getElementById('created-token-name').textContent = playerName;
+            document.getElementById('created-token-symbol').textContent = selectedTournament.symbol;
+            
+            const message = `Creating token for ${playerName} with ${tokenCount} tokens and ${payoutPercentage}% payout...`;
+            showMessage(message, 'success');
+            
+            setTimeout(() => {
+                hideAllSections();
+                const tokenCreated = document.getElementById('token-created');
+                tokenCreated.classList.remove('hidden');
+                tokenCreated.style.display = 'block';
+                console.log('Token created section should now be visible');
+                console.log('New token added to dropdown:', tokenData[tokenId]);
+            }, 1000);
+        }
+
+        async function handleOrderFormSubmit(e) {
+            e.preventDefault();
+            console.log('Order form submitted');
+            
+            // Check if wallet is connected
+            if (!walletConnected) {
+                showMessage('Please connect your wallet first!', 'error');
+                return;
+            }
+            
+            const selectedToken = document.getElementById('token-select').value;
+            const orderType = document.getElementById('order-type').value;
+            const tokenAmount = parseInt(document.getElementById('token-amount').value);
+            const pricePerToken = parseFloat(document.getElementById('price-per-token').value);
+            const ethSource = document.getElementById('eth-source').value;
+            
+            if (!selectedToken) {
+                showMessage('Please select a token to trade!', 'error');
+                return;
+            }
+            
+            if (!tokenAmount || !pricePerToken) {
+                showMessage('Please fill in all required fields!', 'error');
+                return;
+            }
+            
+            const tokenInfo = tokenData[selectedToken];
+            if (!tokenInfo) {
+                showMessage('Token not found!', 'error');
+                return;
+            }
+            
+            const totalCost = tokenAmount * pricePerToken;
+            
+            // Check if user has sufficient balance for buy orders
+            if (orderType === 'buy') {
+                if (ethSource === 'sepolia') {
+                    // For Sepolia ETH, check real wallet balance
+                    try {
+                        const realBalance = await window.ethereum.request({
+                            method: 'eth_getBalance',
+                            params: [currentAccount, 'latest']
+                        });
+                        const realBalanceETH = parseInt(realBalance, 16) / Math.pow(10, 18);
+                        
+                        if (realBalanceETH < totalCost) {
+                            showMessage(`Insufficient Sepolia ETH balance! You need ${totalCost.toFixed(4)} ETH but only have ${realBalanceETH.toFixed(4)} ETH. Get more test ETH from Sepolia faucet.`, 'error');
+                            return;
+                        }
+                    } catch (error) {
+                        console.error('Error checking real balance:', error);
+                        showMessage('Error checking wallet balance. Please try again.', 'error');
+                        return;
+                    }
+                } else if (ethSource === 'demo') {
+                    // For Demo ETH, check demo balance
+                    if (demoETHBalance < totalCost) {
+                        showMessage(`Insufficient Demo ETH balance! You need ${totalCost.toFixed(4)} ETH but only have ${demoETHBalance.toFixed(4)} ETH. Click "Add Demo ETH" to get more virtual ETH.`, 'error');
+                        return;
+                    }
+                }
+            }
+            
+            // Check if user has sufficient tokens for sell orders
+            if (orderType === 'sell') {
+                const userTokenBalance = userPortfolio[selectedToken] ? userPortfolio[selectedToken].balance : 0;
+                if (userTokenBalance < tokenAmount) {
+                    showMessage(`Insufficient token balance! You need ${tokenAmount} tokens but only have ${userTokenBalance} tokens.`, 'error');
+                    return;
+                }
+            }
+            
+            const ethSourceText = ethSource === 'demo' ? 'Demo ETH' : 'Sepolia ETH';
+            const message = `Creating ${orderType} order for ${tokenAmount} ${tokenInfo.name} tokens at ${pricePerToken} ETH/token using ${ethSourceText}...`;
+            showMessage(message, 'success');
+            
+            // Add the order to the order book
+            const newOrder = {
+                id: orderIdCounter++,
+                type: orderType,
+                tokenId: selectedToken,
+                amount: tokenAmount,
+                price: pricePerToken,
+                total: totalCost,
+                status: 'active',
+                createdBy: 'user', // Mark as created by current user
+                ethSource: ethSource // Track which ETH source was used
+            };
+            
+            orders.push(newOrder);
+            console.log('New order added:', newOrder);
+            console.log('All orders after adding:', orders);
+            
+            setTimeout(async () => {
+                if (orderType === 'buy') {
+                    // For buy orders, execute immediately and add to portfolio
+                    newOrder.status = 'executed';
+                    
+                    // Add tokens to user's portfolio
+                    if (!userPortfolio[selectedToken]) {
+                        userPortfolio[selectedToken] = {
+                            name: tokenInfo.name,
+                            player: tokenInfo.player,
+                            balance: 0,
+                            price: tokenInfo.price
+                        };
+                    }
+                    userPortfolio[selectedToken].balance = (userPortfolio[selectedToken].balance || 0) + tokenAmount;
+                    
+                    // Deduct ETH based on source selection
+                    if (ethSource === 'demo') {
+                        // Deduct from demo balance (simulating the transaction)
+                        deductETHFromBalance(totalCost);
+                        showMessage(`Buy order #${newOrder.id} executed immediately! Added ${tokenAmount} ${tokenInfo.name} tokens to your portfolio. Deducted ${totalCost} ETH from demo balance.`, 'success');
+                    } else if (ethSource === 'sepolia') {
+                        // For Sepolia ETH, we don't actually deduct real ETH (it's a demo)
+                        // But we show a message about the transaction
+                        showMessage(`Buy order #${newOrder.id} executed immediately! Added ${tokenAmount} ${tokenInfo.name} tokens to your portfolio. (Sepolia ETH validation passed - no real ETH spent in demo)`, 'success');
+                    }
+                    
+                    // Update portfolio to show the new tokens
+                    updatePortfolio();
+                    
+                } else {
+                    // For sell orders, just add to order book
+                    showMessage(`${orderType.charAt(0).toUpperCase() + orderType.slice(1)} order #${newOrder.id} created successfully!`, 'success');
+                    
+                    // Update portfolio to show the new pending order
+                    updatePortfolio();
+                }
+                
+                // Update order book display
+                updateOrderBook();
+                
+                // Reset form
+                document.getElementById('order-form').reset();
+                document.getElementById('eth-amount-group').style.display = 'none';
+                document.getElementById('token-balance-group').style.display = 'none';
+                
+                // Ensure navigation is still working and show trading tab
+                ensureNavigation();
+                
+                // Force show the trading tab since that's where the order was created
+                setTimeout(() => {
+                    showTab('trading');
+                    console.log('Forced trading tab to be visible after order completion');
+                }, 100);
+                
+                console.log('Order completed, navigation should still work');
+            }, 1000);
+        }
+    </script>
+</body>
+</html>

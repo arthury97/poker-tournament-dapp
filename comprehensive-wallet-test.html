@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comprehensive Wallet Diagnostic Tool</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 5px;
+            font-size: 16px;
+        }
+        .btn:hover {
+            background: #0056b3;
+        }
+        .btn-success {
+            background: #28a745;
+        }
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
+        }
+        .btn-danger {
+            background: #dc3545;
+        }
+        .btn-info {
+            background: #17a2b8;
+        }
+        .result {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 15px 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .success {
+            background: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background: #d1ecf1;
+            border-color: #bee5eb;
+            color: #0c5460;
+        }
+        .warning {
+            background: #fff3cd;
+            border-color: #ffeaa7;
+            color: #856404;
+        }
+        .copy-btn {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+        .section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+        }
+        .section h3 {
+            margin-top: 0;
+            color: #495057;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Comprehensive Wallet Diagnostic Tool</h1>
+        <p>This tool will perform a complete analysis of your wallet setup and provide detailed instructions for fixing any issues.</p>
+        
+        <div class="section">
+            <h3>🔧 Diagnostic Tests</h3>
+            <button class="btn btn-success" onclick="runFullDiagnostic()">🚀 Run Full Diagnostic</button>
+            <button class="btn btn-info" onclick="testCoinbaseWallet()">🔵 Test Coinbase Wallet</button>
+            <button class="btn btn-warning" onclick="testMetaMask()">🦊 Test MetaMask</button>
+            <button class="btn" onclick="refreshWalletDetection()" style="background: #6f42c1; color: white;">🔄 Refresh Detection</button>
+            <button class="btn btn-danger" onclick="clearResults()">🗑️ Clear Results</button>
+        </div>
+        
+        <div class="section">
+            <h3>📋 Results</h3>
+            <button class="copy-btn" onclick="copyResults()">📋 Copy Results</button>
+            <div id="results"></div>
+        </div>
+        
+        <div class="section">
+            <h3>🛠️ Solutions</h3>
+            <div id="solutions"></div>
+        </div>
+    </div>
+
+    <script>
+        let diagnosticResults = [];
+
+        function addResult(message, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `result ${type}`;
+            div.textContent = message;
+            results.appendChild(div);
+            results.scrollTop = results.scrollHeight;
+            
+            diagnosticResults.push({ message, type, timestamp: new Date().toISOString() });
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+            document.getElementById('solutions').innerHTML = '';
+            diagnosticResults = [];
+        }
+
+        function copyResults() {
+            const text = diagnosticResults.map(r => `[${r.type.toUpperCase()}] ${r.message}`).join('\n');
+            navigator.clipboard.writeText(text).then(() => {
+                addResult('Results copied to clipboard!', 'success');
+            });
+        }
+
+        async function runFullDiagnostic() {
+            clearResults();
+            addResult('🚀 STARTING COMPREHENSIVE WALLET DIAGNOSTIC', 'info');
+            addResult('='.repeat(60), 'info');
+            
+            // Test 1: Basic Environment
+            addResult('📋 TEST 1: Basic Environment Check', 'info');
+            addResult(`User Agent: ${navigator.userAgent}`, 'info');
+            addResult(`Platform: ${navigator.platform}`, 'info');
+            addResult(`Language: ${navigator.language}`, 'info');
+            addResult(`Online: ${navigator.onLine}`, 'info');
+            
+            // Test 2: Window Objects
+            addResult('', 'info');
+            addResult('📋 TEST 2: Window Objects Check', 'info');
+            const windowObjects = [
+                'window.ethereum',
+                'window.coinbaseWalletExtension', 
+                'window.coinbase',
+                'window.web3',
+                'window.MetaMask'
+            ];
+            
+            windowObjects.forEach(obj => {
+                const exists = typeof window[obj.replace('window.', '')] !== 'undefined';
+                addResult(`${obj}: ${exists ? '✅ EXISTS' : '❌ NOT FOUND'}`, exists ? 'success' : 'error');
+            });
+            
+            // Test 3: Ethereum Provider Analysis
+            addResult('', 'info');
+            addResult('📋 TEST 3: Ethereum Provider Analysis', 'info');
+            
+            if (typeof window.ethereum !== 'undefined') {
+                addResult('✅ window.ethereum found', 'success');
+                addResult(`isCoinbaseWallet: ${window.ethereum.isCoinbaseWallet}`, 'info');
+                addResult(`isMetaMask: ${window.ethereum.isMetaMask}`, 'info');
+                addResult(`isRabby: ${window.ethereum.isRabby}`, 'info');
+                addResult(`isBraveWallet: ${window.ethereum.isBraveWallet}`, 'info');
+                addResult(`providers: ${window.ethereum.providers ? window.ethereum.providers.length : 'undefined'}`, 'info');
+                
+                if (window.ethereum.providers && window.ethereum.providers.length > 0) {
+                    addResult('📋 Available Providers:', 'info');
+                    window.ethereum.providers.forEach((provider, index) => {
+                        addResult(`  Provider ${index}:`, 'info');
+                        addResult(`    isCoinbaseWallet: ${provider.isCoinbaseWallet}`, 'info');
+                        addResult(`    isMetaMask: ${provider.isMetaMask}`, 'info');
+                        addResult(`    isRabby: ${provider.isRabby}`, 'info');
+                    });
+                }
+                
+                // Test account access
+                try {
+                    const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+                    addResult(`Current accounts: ${accounts.length}`, accounts.length > 0 ? 'success' : 'warning');
+                    if (accounts.length > 0) {
+                        addResult(`First account: ${accounts[0]}`, 'info');
+                    }
+                } catch (error) {
+                    addResult(`❌ Error getting accounts: ${error.message}`, 'error');
+                }
+                
+                // Test chain ID
+                try {
+                    const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+                    addResult(`Current chain ID: ${chainId}`, 'info');
+                } catch (error) {
+                    addResult(`❌ Error getting chain ID: ${error.message}`, 'error');
+                }
+                
+            } else {
+                addResult('❌ window.ethereum not found', 'error');
+            }
+            
+            // Test 4: Coinbase Wallet Specific
+            addResult('', 'info');
+            addResult('📋 TEST 4: Coinbase Wallet Specific Check', 'info');
+            
+            const coinbaseObjects = [
+                'window.coinbaseWalletExtension',
+                'window.coinbase',
+                'window.coinbaseWallet'
+            ];
+            
+            let coinbaseFound = false;
+            coinbaseObjects.forEach(obj => {
+                const exists = typeof window[obj.replace('window.', '')] !== 'undefined';
+                if (exists) {
+                    coinbaseFound = true;
+                    addResult(`✅ ${obj} found`, 'success');
+                } else {
+                    addResult(`❌ ${obj} not found`, 'error');
+                }
+            });
+            
+            if (!coinbaseFound) {
+                addResult('❌ No Coinbase Wallet objects found', 'error');
+            }
+            
+            // Test 5: Connection Attempts
+            addResult('', 'info');
+            addResult('📋 TEST 5: Connection Attempts', 'info');
+            
+            const connectionMethods = [
+                { name: 'window.ethereum', obj: window.ethereum },
+                { name: 'window.coinbaseWalletExtension', obj: window.coinbaseWalletExtension },
+                { name: 'window.coinbase', obj: window.coinbase }
+            ];
+            
+            for (const method of connectionMethods) {
+                if (method.obj) {
+                    addResult(`🔄 Testing ${method.name}...`, 'info');
+                    try {
+                        const accounts = await method.obj.request({ method: 'eth_requestAccounts' });
+                        if (accounts.length > 0) {
+                            addResult(`✅ ${method.name} connection successful!`, 'success');
+                            addResult(`Account: ${accounts[0]}`, 'info');
+                        } else {
+                            addResult(`⚠️ ${method.name} returned no accounts`, 'warning');
+                        }
+                    } catch (error) {
+                        addResult(`❌ ${method.name} connection failed: ${error.message}`, 'error');
+                        addResult(`Error code: ${error.code}`, 'error');
+                    }
+                } else {
+                    addResult(`❌ ${method.name} not available`, 'error');
+                }
+            }
+            
+            addResult('', 'info');
+            addResult('🏁 DIAGNOSTIC COMPLETE', 'info');
+            addResult('='.repeat(60), 'info');
+            
+            // Generate solutions
+            generateSolutions();
+        }
+
+        async function testCoinbaseWallet() {
+            addResult('🔵 TESTING COINBASE WALLET SPECIFICALLY', 'info');
+            
+            if (typeof window.coinbaseWalletExtension !== 'undefined') {
+                addResult('✅ window.coinbaseWalletExtension found', 'success');
+                try {
+                    const accounts = await window.coinbaseWalletExtension.request({ method: 'eth_requestAccounts' });
+                    addResult(`✅ Connection successful! Accounts: ${accounts.length}`, 'success');
+                } catch (error) {
+                    addResult(`❌ Connection failed: ${error.message}`, 'error');
+                }
+            } else if (typeof window.coinbase !== 'undefined') {
+                addResult('✅ window.coinbase found', 'success');
+                try {
+                    const accounts = await window.coinbase.request({ method: 'eth_requestAccounts' });
+                    addResult(`✅ Connection successful! Accounts: ${accounts.length}`, 'success');
+                } catch (error) {
+                    addResult(`❌ Connection failed: ${error.message}`, 'error');
+                }
+            } else {
+                addResult('❌ No Coinbase Wallet objects found', 'error');
+                addResult('💡 Try refreshing the page or reinstalling Coinbase Wallet', 'info');
+            }
+        }
+
+        async function testMetaMask() {
+            addResult('🦊 TESTING METAMASK', 'info');
+            
+            if (typeof window.ethereum !== 'undefined' && window.ethereum.isMetaMask) {
+                addResult('✅ MetaMask detected', 'success');
+                try {
+                    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    addResult(`✅ MetaMask connection successful! Accounts: ${accounts.length}`, 'success');
+                } catch (error) {
+                    addResult(`❌ MetaMask connection failed: ${error.message}`, 'error');
+                }
+            } else {
+                addResult('❌ MetaMask not detected', 'error');
+            }
+        }
+
+        async function refreshWalletDetection() {
+            addResult('🔄 REFRESHING WALLET DETECTION', 'info');
+            addResult('Checking for wallet objects...', 'info');
+            
+            // Check all possible wallet objects
+            const walletObjects = [
+                'window.ethereum',
+                'window.coinbaseWalletExtension', 
+                'window.coinbase',
+                'window.web3',
+                'window.MetaMask'
+            ];
+            
+            let foundAny = false;
+            walletObjects.forEach(obj => {
+                const exists = typeof window[obj.replace('window.', '')] !== 'undefined';
+                if (exists) {
+                    foundAny = true;
+                    addResult(`✅ ${obj} found!`, 'success');
+                    
+                    // Get more details about the wallet
+                    const wallet = window[obj.replace('window.', '')];
+                    if (wallet.isCoinbaseWallet) {
+                        addResult(`  → This is Coinbase Wallet`, 'success');
+                    } else if (wallet.isMetaMask) {
+                        addResult(`  → This is MetaMask`, 'warning');
+                    } else {
+                        addResult(`  → Unknown wallet type`, 'info');
+                    }
+                } else {
+                    addResult(`❌ ${obj} not found`, 'error');
+                }
+            });
+            
+            if (foundAny) {
+                addResult('✅ Wallet objects detected! You can now run the full diagnostic.', 'success');
+            } else {
+                addResult('❌ No wallet objects found. Try refreshing the page or checking your extension.', 'error');
+            }
+        }
+
+        function generateSolutions() {
+            const solutions = document.getElementById('solutions');
+            solutions.innerHTML = '';
+            
+            const hasEthereum = typeof window.ethereum !== 'undefined';
+            const hasCoinbase = typeof window.coinbaseWalletExtension !== 'undefined' || typeof window.coinbase !== 'undefined';
+            const hasMetaMask = hasEthereum && window.ethereum && window.ethereum.isMetaMask;
+            
+            let solutionHTML = '<h4>🛠️ Recommended Solutions:</h4>';
+            
+            if (!hasEthereum && !hasCoinbase) {
+                solutionHTML += `
+                    <div class="result error">
+                        <strong>❌ No wallet detected</strong><br>
+                        1. Install Coinbase Wallet extension from Chrome Web Store<br>
+                        2. Refresh this page<br>
+                        3. Try connecting again
+                    </div>
+                `;
+            } else if (hasMetaMask && !hasCoinbase) {
+                solutionHTML += `
+                    <div class="result warning">
+                        <strong>⚠️ MetaMask detected, but Coinbase Wallet preferred</strong><br>
+                        1. Install Coinbase Wallet extension<br>
+                        2. Or temporarily disable MetaMask<br>
+                        3. Refresh this page and try again
+                    </div>
+                `;
+            } else if (hasCoinbase) {
+                solutionHTML += `
+                    <div class="result success">
+                        <strong>✅ Coinbase Wallet detected</strong><br>
+                        1. Make sure Coinbase Wallet is unlocked<br>
+                        2. Try the connection again<br>
+                        3. Check if popups are blocked
+                    </div>
+                `;
+            }
+            
+            solutionHTML += `
+                <div class="result info">
+                    <strong>💡 General Troubleshooting Steps:</strong><br>
+                    1. Refresh the page (Ctrl+F5 or Cmd+Shift+R)<br>
+                    2. Check if Coinbase Wallet extension is enabled<br>
+                    3. Make sure you're logged into Coinbase Wallet<br>
+                    4. Check browser popup settings<br>
+                    5. Try disabling other wallet extensions temporarily<br>
+                    6. Restart your browser
+                </div>
+            `;
+            
+            solutions.innerHTML = solutionHTML;
+        }
+
+        // Wait for wallet injection with retry logic
+        async function waitForWalletInjection(maxAttempts = 10, delay = 500) {
+            for (let i = 0; i < maxAttempts; i++) {
+                if (typeof window.ethereum !== 'undefined') {
+                    addResult(`✅ Wallet detected after ${i + 1} attempts`, 'success');
+                    return true;
+                }
+                addResult(`⏳ Attempt ${i + 1}: Waiting for wallet injection...`, 'info');
+                await new Promise(resolve => setTimeout(resolve, delay));
+            }
+            addResult('❌ Wallet not detected after maximum attempts', 'error');
+            return false;
+        }
+
+        // Auto-run diagnostic on page load with wallet detection
+        window.addEventListener('load', async () => {
+            addResult('🚀 Page loaded - checking for wallet injection...', 'info');
+            
+            // Wait a bit for wallet injection
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // Check if wallet is available
+            if (typeof window.ethereum !== 'undefined') {
+                addResult('✅ Wallet detected immediately', 'success');
+                addResult('Click "Run Full Diagnostic" to start comprehensive analysis', 'info');
+            } else {
+                addResult('⏳ Wallet not detected immediately, waiting...', 'warning');
+                await waitForWalletInjection();
+            }
+        });
+    </script>
+</body>
+</html>

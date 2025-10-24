@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 10px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn:hover {
+            background: #0056b3;
+        }
+        .result {
+            background: #e9ecef;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 Debug Demo</h1>
+    
+    <div class="test-section">
+        <h3>Basic Functionality Test</h3>
+        <button class="btn" onclick="testBasicFunction()">Test Basic Function</button>
+        <div id="basic-result" class="result">Click button to test</div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Tab Navigation Test</h3>
+        <button class="btn" onclick="testTabNavigation()">Test Tab Navigation</button>
+        <div id="tab-result" class="result">Click button to test</div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Form Elements Test</h3>
+        <button class="btn" onclick="testFormElements()">Test Form Elements</button>
+        <div id="form-result" class="result">Click button to test</div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Console Log Test</h3>
+        <button class="btn" onclick="testConsoleLog()">Test Console Log</button>
+        <div id="console-result" class="result">Check browser console (F12)</div>
+    </div>
+
+    <script>
+        function testBasicFunction() {
+            const result = document.getElementById('basic-result');
+            try {
+                result.innerHTML = '✅ Basic JavaScript is working!<br>Time: ' + new Date().toLocaleTimeString();
+            } catch (error) {
+                result.innerHTML = '❌ Error: ' + error.message;
+            }
+        }
+        
+        function testTabNavigation() {
+            const result = document.getElementById('tab-result');
+            try {
+                // Test if we can access elements
+                const container = document.querySelector('.container');
+                if (container) {
+                    result.innerHTML = '✅ Container element found';
+                } else {
+                    result.innerHTML = '❌ Container element not found';
+                }
+            } catch (error) {
+                result.innerHTML = '❌ Error: ' + error.message;
+            }
+        }
+        
+        function testFormElements() {
+            const result = document.getElementById('form-result');
+            try {
+                // Test form element access
+                const tokenSelect = document.getElementById('token-select');
+                const orderType = document.getElementById('order-type');
+                
+                if (tokenSelect && orderType) {
+                    result.innerHTML = '✅ Form elements found';
+                } else {
+                    result.innerHTML = '❌ Form elements not found (expected in main demo)';
+                }
+            } catch (error) {
+                result.innerHTML = '❌ Error: ' + error.message;
+            }
+        }
+        
+        function testConsoleLog() {
+            console.log('🔧 Debug: Console logging is working!');
+            console.log('🔧 Debug: Current time:', new Date().toISOString());
+            console.log('🔧 Debug: User agent:', navigator.userAgent);
+            
+            const result = document.getElementById('console-result');
+            result.innerHTML = '✅ Check browser console (F12) for debug messages';
+        }
+        
+        // Auto-run basic test on load
+        window.addEventListener('load', function() {
+            console.log('🔧 Debug page loaded successfully');
+            testBasicFunction();
+        });
+    </script>
+</body>
+</html>
+

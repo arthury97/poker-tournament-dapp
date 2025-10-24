@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Poker Player Token DApp Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+        }
+        
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+        }
+        
+        .card h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ecf0f1;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+        
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+        
+        .tournament-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .tournament-card {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            padding: 20px;
+            border-radius: 15px;
+            border-left: 5px solid #3498db;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .tournament-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        
+        .tournament-card h4 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+        }
+        
+        .tournament-card p {
+            color: #7f8c8d;
+            margin-bottom: 5px;
+        }
+        
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .result-card {
+            background: linear-gradient(135deg, #00b894, #00a085);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+        }
+        
+        .result-card h4 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .result-card p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+        
+        .step {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #ecf0f1;
+            color: #7f8c8d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 10px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .step.active {
+            background: #3498db;
+            color: white;
+        }
+        
+        .step.completed {
+            background: #27ae60;
+            color: white;
+        }
+        
+        .step-line {
+            width: 50px;
+            height: 2px;
+            background: #ecf0f1;
+            margin-top: 19px;
+        }
+        
+        .step-line.completed {
+            background: #27ae60;
+        }
+        
+        .back-btn {
+            background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+            margin-right: 20px;
+        }
+        
+        .info-box {
+            background: linear-gradient(135deg, #74b9ff, #0984e3);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+        
+        .info-box h4 {
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+        }
+        
+        .address {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 10px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            word-break: break-all;
+            margin: 10px 0;
+        }
+        
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .container {
+                padding: 10px;
+            }
+            
+            .step-indicator {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎮 Interactive Poker Player Token DApp</h1>
+            <p>Create tokens, fund tournaments, and share winnings!</p>
+        </div>
+
+        <!-- Step Indicator -->
+        <div class="step-indicator">
+            <div class="step active" id="step1">1</div>
+            <div class="step-line"></div>
+            <div class="step" id="step2">2</div>
+            <div class="step-line"></div>
+            <div class="step" id="step3">3</div>
+            <div class="step-line"></div>
+            <div class="step" id="step4">4</div>
+            <div class="step-line"></div>
+            <div class="step" id="step5">5</div>
+            <div class="step-line"></div>
+            <div class="step" id="step6">6</div>
+        </div>
+
+        <!-- Step 1: Main Menu -->
+        <div id="main-menu" class="card">
+            <h2>🎯 Welcome to Poker Player Token DApp</h2>
+            <div class="info-box">
+                <h4>How it works:</h4>
+                <p>Poker players create tokens to sell shares of their potential tournament winnings. Investors buy tokens to fund the player's buy-in, and if the player wins, they share a percentage of their winnings with token holders.</p>
+            </div>
+            
+            <div style="text-align: center; margin-top: 30px;">
+                <button class="btn btn-primary" onclick="showCreateToken()">
+                    🏆 Create Player Token
+                </button>
+                <button class="btn btn-success" onclick="showTournamentList()">
+                    📋 View Tournaments
+                </button>
+            </div>
+        </div>
+
+        <!-- Step 2: Tournament List -->
+        <div id="tournament-list" class="card hidden">
+            <h2>🏆 Available Tournaments</h2>
+            <p>Select a tournament to create your player token for:</p>
+            
+            <div class="tournament-list">
+                <div class="tournament-card" onclick="selectTournament('World Series of Poker', 'WSOP', '10 ETH')">
+                    <h4>🏆 World Series of Poker</h4>
+                    <p><strong>Buy-in:</strong> 10 ETH</p>
+                    <p><strong>Prize Pool:</strong> 1,000 ETH</p>
+                    <p><strong>Players:</strong> 100</p>
+                </div>
+                
+                <div class="tournament-card" onclick="selectTournament('European Poker Tour', 'EPT', '5 ETH')">
+                    <h4>🌍 European Poker Tour</h4>
+                    <p><strong>Buy-in:</strong> 5 ETH</p>
+                    <p><strong>Prize Pool:</strong> 500 ETH</p>
+                    <p><strong>Players:</strong> 100</p>
+                </div>
+                
+                <div class="tournament-card" onclick="selectTournament('Asia Pacific Poker', 'APP', '3 ETH')">
+                    <h4>🌏 Asia Pacific Poker</h4>
+                    <p><strong>Buy-in:</strong> 3 ETH</p>
+                    <p><strong>Prize Pool:</strong> 300 ETH</p>
+                    <p><strong>Players:</strong> 100</p>
+                </div>
+                
+                <div class="tournament-card" onclick="selectTournament('Crypto Poker Championship', 'CPC', '2 ETH')">
+                    <h4>₿ Crypto Poker Championship</h4>
+                    <p><strong>Buy-in:</strong> 2 ETH</p>
+                    <p><strong>Prize Pool:</strong> 200 ETH</p>
+                    <p><strong>Players:</strong> 100</p>
+                </div>
+                
+                <div class="tournament-card" onclick="selectTournament('High Roller Series', 'HRS', '25 ETH')">
+                    <h4>💎 High Roller Series</h4>
+                    <p><strong>Buy-in:</strong> 25 ETH</p>
+                    <p><strong>Prize Pool:</strong> 2,500 ETH</p>
+                    <p><strong>Players:</strong> 100</p>
+                </div>
+                
+                <div class="tournament-card" onclick="selectTournament('Beginner Friendly', 'BF', '0.5 ETH')">
+                    <h4>🎯 Beginner Friendly</h4>
+                    <p><strong>Buy-in:</strong> 0.5 ETH</p>
+                    <p><strong>Prize Pool:</strong> 50 ETH</p>
+                    <p><strong>Players:</strong> 100</p>
+                </div>
+            </div>
+            
+            <div style="text-align: center; margin-top: 30px;">
+                <button class="btn back-btn" onclick="showMainMenu()">← Back</button>
+            </div>
+        </div>
+
+        <!-- Step 3-5: Create Token Form -->
+        <div id="create-token" class="card hidden">
+            <h2>🏆 Create Player Token for <span id="selected-tournament-name"></span></h2>
+            <div class="info-box">
+                <h4>Tournament Details:</h4>
+                <p><strong>Name:</strong> <span id="tournament-name"></span></p>
+                <p><strong>Buy-in:</strong> <span id="tournament-buyin"></span></p>
+                <p><strong>Symbol:</strong> <span id="tournament-symbol"></span></p>
+            </div>
+            
+            <form id="token-form">
+                <div class="form-group">
+                    <label for="player-name">🎮 Your Player Name:</label>
+                    <input type="text" id="player-name" placeholder="e.g., Alice the Poker Pro" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="token-count">🪙 Number of Tokens to Create:</label>
+                    <input type="number" id="token-count" placeholder="e.g., 100" min="1" max="10000" required>
+                    <small style="color: #7f8c8d;">Each token represents a share of your potential winnings</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="payout-percentage">💰 Payout Percentage to Investors:</label>
+                    <input type="number" id="payout-percentage" placeholder="e.g., 35" min="1" max="100" required>
+                    <small style="color: #7f8c8d;">What percentage of your winnings will you share with token holders? (1-100%)</small>
+                </div>
+                
+                <div style="text-align: center; margin-top: 30px;">
+                    <button type="button" class="btn back-btn" onclick="showTournamentList()">← Back</button>
+                    <button type="submit" class="btn btn-success">🚀 Create Token & Go to Results</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Step 6: Tournament Results -->
+        <div id="tournament-results" class="card hidden">
+            <h2>🎉 Tournament Results & Payouts</h2>
+            
+            <div class="info-box">
+                <h4>🎮 Player: <span id="result-player-name"></span></h4>
+                <p><strong>Tournament:</strong> <span id="result-tournament-name"></span></p>
+                <p><strong>Buy-in:</strong> <span id="result-buyin"></span></p>
+                <p><strong>Tokens Created:</strong> <span id="result-token-count"></span></p>
+                <p><strong>Payout Percentage:</strong> <span id="result-payout-percentage"></span>%</p>
+            </div>
+            
+            <div class="results-grid">
+                <div class="result-card">
+                    <h4>🏆 Tournament Result</h4>
+                    <p id="tournament-outcome">🎉 YOU WON!</p>
+                    <p id="winnings-amount">10 ETH</p>
+                </div>
+                
+                <div class="result-card">
+                    <h4>💰 Total Winnings</h4>
+                    <p id="total-winnings">10 ETH</p>
+                </div>
+                
+                <div class="result-card">
+                    <h4>🎯 Your Share</h4>
+                    <p id="player-share">6.5 ETH</p>
+                </div>
+                
+                <div class="result-card">
+                    <h4>👥 Investors' Share</h4>
+                    <p id="investors-share">3.5 ETH</p>
+                </div>
+            </div>
+            
+            <div class="card" style="margin-top: 20px;">
+                <h3>📊 Investor Payouts</h3>
+                <p>Based on your <span id="payout-percentage-display"></span>% payout percentage, here's how the winnings are distributed:</p>
+                
+                <div id="investor-payouts" style="margin-top: 20px;">
+                    <!-- Investor payouts will be generated here -->
+                </div>
+                
+                <div class="info-box" style="margin-top: 20px;">
+                    <h4>🎯 Summary</h4>
+                    <p>• You kept <strong><span id="player-kept-percentage"></span>%</strong> of your winnings</p>
+                    <p>• Token holders received <strong><span id="investors-received-percentage"></span>%</strong> of your winnings</p>
+                    <p>• Each token was worth <strong><span id="value-per-token"></span> ETH</strong> in winnings</p>
+                </div>
+            </div>
+            
+            <div style="text-align: center; margin-top: 30px;">
+                <button class="btn back-btn" onclick="showMainMenu()">← Back to Main Menu</button>
+                <button class="btn btn-primary" onclick="createNewToken()">🏆 Create Another Token</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 1;
+        let selectedTournament = {};
+        let tokenData = {};
+
+        function updateStepIndicator(step) {
+            // Reset all steps
+            for (let i = 1; i <= 6; i++) {
+                const stepEl = document.getElementById(`step${i}`);
+                const lineEl = stepEl.nextElementSibling;
+                
+                stepEl.classList.remove('active', 'completed');
+                if (lineEl && lineEl.classList.contains('step-line')) {
+                    lineEl.classList.remove('completed');
+                }
+            }
+            
+            // Set current and completed steps
+            for (let i = 1; i <= step; i++) {
+                const stepEl = document.getElementById(`step${i}`);
+                const lineEl = stepEl.nextElementSibling;
+                
+                if (i < step) {
+                    stepEl.classList.add('completed');
+                    if (lineEl && lineEl.classList.contains('step-line')) {
+                        lineEl.classList.add('completed');
+                    }
+                } else if (i === step) {
+                    stepEl.classList.add('active');
+                }
+            }
+        }
+
+        function showMainMenu() {
+            hideAllSections();
+            document.getElementById('main-menu').classList.remove('hidden');
+            currentStep = 1;
+            updateStepIndicator(1);
+        }
+
+        function showCreateToken() {
+            hideAllSections();
+            document.getElementById('create-token').classList.remove('hidden');
+            currentStep = 3;
+            updateStepIndicator(3);
+        }
+
+        function showTournamentList() {
+            hideAllSections();
+            document.getElementById('tournament-list').classList.remove('hidden');
+            currentStep = 2;
+            updateStepIndicator(2);
+        }
+
+        function selectTournament(name, symbol, buyin) {
+            selectedTournament = { name, symbol, buyin };
+            
+            // Update the form with tournament details
+            document.getElementById('selected-tournament-name').textContent = name;
+            document.getElementById('tournament-name').textContent = name;
+            document.getElementById('tournament-buyin').textContent = buyin;
+            document.getElementById('tournament-symbol').textContent = symbol;
+            
+            showCreateToken();
+        }
+
+        function hideAllSections() {
+            const sections = ['main-menu', 'tournament-list', 'create-token', 'tournament-results'];
+            sections.forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+        }
+
+        function createNewToken() {
+            showTournamentList();
+        }
+
+        // Handle form submission
+        document.getElementById('token-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const playerName = document.getElementById('player-name').value;
+            const tokenCount = parseInt(document.getElementById('token-count').value);
+            const payoutPercentage = parseInt(document.getElementById('payout-percentage').value);
+            
+            tokenData = {
+                playerName,
+                tokenCount,
+                payoutPercentage,
+                tournament: selectedTournament
+            };
+            
+            showTournamentResults();
+        });
+
+        function showTournamentResults() {
+            hideAllSections();
+            document.getElementById('tournament-results').classList.remove('hidden');
+            currentStep = 6;
+            updateStepIndicator(6);
+            
+            // Update results with token data
+            document.getElementById('result-player-name').textContent = tokenData.playerName;
+            document.getElementById('result-tournament-name').textContent = tokenData.tournament.name;
+            document.getElementById('result-buyin').textContent = tokenData.tournament.buyin;
+            document.getElementById('result-token-count').textContent = tokenData.tokenCount;
+            document.getElementById('result-payout-percentage').textContent = tokenData.payoutPercentage;
+            
+            // Calculate and display results
+            calculateAndDisplayResults();
+        }
+
+        function calculateAndDisplayResults() {
+            // Simulate tournament results
+            const totalWinnings = 10; // ETH
+            const payoutPercentage = tokenData.payoutPercentage;
+            const playerKeptPercentage = 100 - payoutPercentage;
+            
+            const investorsShare = (totalWinnings * payoutPercentage) / 100;
+            const playerShare = totalWinnings - investorsShare;
+            const valuePerToken = investorsShare / tokenData.tokenCount;
+            
+            // Update display
+            document.getElementById('total-winnings').textContent = `${totalWinnings} ETH`;
+            document.getElementById('player-share').textContent = `${playerShare} ETH`;
+            document.getElementById('investors-share').textContent = `${investorsShare} ETH`;
+            document.getElementById('payout-percentage-display').textContent = payoutPercentage;
+            document.getElementById('player-kept-percentage').textContent = playerKeptPercentage;
+            document.getElementById('investors-received-percentage').textContent = payoutPercentage;
+            document.getElementById('value-per-token').textContent = valuePerToken.toFixed(4);
+            
+            // Generate investor payouts
+            generateInvestorPayouts(valuePerToken);
+        }
+
+        function generateInvestorPayouts(valuePerToken) {
+            const investorPayoutsDiv = document.getElementById('investor-payouts');
+            investorPayoutsDiv.innerHTML = '';
+            
+            // Simulate 5 investors with different token amounts
+            const investors = [
+                { name: 'Bob', tokens: Math.floor(tokenData.tokenCount * 0.25) },
+                { name: 'Charlie', tokens: Math.floor(tokenData.tokenCount * 0.20) },
+                { name: 'Diana', tokens: Math.floor(tokenData.tokenCount * 0.20) },
+                { name: 'Eve', tokens: Math.floor(tokenData.tokenCount * 0.20) },
+                { name: 'Frank', tokens: Math.floor(tokenData.tokenCount * 0.15) }
+            ];
+            
+            investors.forEach(investor => {
+                const payout = investor.tokens * valuePerToken;
+                const investorCard = document.createElement('div');
+                investorCard.className = 'result-card';
+                investorCard.style.marginBottom = '10px';
+                investorCard.innerHTML = `
+                    <h4>👤 ${investor.name}</h4>
+                    <p><strong>Tokens:</strong> ${investor.tokens}</p>
+                    <p><strong>Payout:</strong> ${payout.toFixed(4)} ETH</p>
+                `;
+                investorPayoutsDiv.appendChild(investorCard);
+            });
+        }
+
+        // Initialize
+        showMainMenu();
+    </script>
+</body>
+</html>
+

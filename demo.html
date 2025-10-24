@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Poker Tournament DApp - Demo Results</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+        }
+        
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+        }
+        
+        .demo-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+        }
+        
+        .demo-card h2 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .stat-box {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+        
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .stat-label {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+        
+        .participants {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .participant {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .participant-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .participant-address {
+            font-size: 0.8rem;
+            opacity: 0.8;
+            margin-bottom: 10px;
+        }
+        
+        .participant-tokens {
+            color: #4ade80;
+            font-weight: bold;
+        }
+        
+        .participant-winnings {
+            color: #fbbf24;
+            font-weight: bold;
+        }
+        
+        .summary {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 25px;
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+        
+        .summary h3 {
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+        
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .contract-info {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            font-size: 0.9rem;
+        }
+        
+        .success-badge {
+            display: inline-block;
+            background: #4ade80;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            margin: 5px;
+        }
+        
+        .emoji {
+            font-size: 1.5rem;
+            margin-right: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .participants {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🃏 Poker Tournament DApp</h1>
+            <p>Live Demo - Completed Tournament Results</p>
+        </div>
+        
+        <div class="card demo-card">
+            <h2>🏆 World Series of Poker Demo</h2>
+            
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-value">100</div>
+                    <div class="stat-label">Total Tokens</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value">35%</div>
+                    <div class="stat-label">Profit Share</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value">10 ETH</div>
+                    <div class="stat-label">Total Winnings</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value">3.5 ETH</div>
+                    <div class="stat-label">Distributed</div>
+                </div>
+            </div>
+            
+            <div class="summary">
+                <h3>📊 Tournament Results</h3>
+                <div class="summary-item">
+                    <span><span class="emoji">✅</span>Tournament Status</span>
+                    <span class="success-badge">COMPLETED</span>
+                </div>
+                <div class="summary-item">
+                    <span><span class="emoji">👥</span>Participants</span>
+                    <span>5 people</span>
+                </div>
+                <div class="summary-item">
+                    <span><span class="emoji">🪙</span>Tokens per Person</span>
+                    <span>20 tokens each</span>
+                </div>
+                <div class="summary-item">
+                    <span><span class="emoji">💰</span>Investment per Person</span>
+                    <span>0.2 ETH</span>
+                </div>
+                <div class="summary-item">
+                    <span><span class="emoji">🎯</span>Winnings per Person</span>
+                    <span>0.7 ETH</span>
+                </div>
+                <div class="summary-item">
+                    <span><span class="emoji">📈</span>ROI for Token Holders</span>
+                    <span>350%</span>
+                </div>
+                <div class="summary-item">
+                    <span><span class="emoji">👑</span>Creator Kept</span>
+                    <span>6.5 ETH (65%)</span>
+                </div>
+            </div>
+            
+            <h3 style="margin: 30px 0 20px 0;">👥 Participants & Results</h3>
+            <div class="participants">
+                <div class="participant">
+                    <div class="participant-name">👤 Alice</div>
+                    <div class="participant-address">0x70997970...79C8</div>
+                    <div class="participant-tokens">20 tokens</div>
+                    <div class="participant-winnings">0.7 ETH won</div>
+                </div>
+                <div class="participant">
+                    <div class="participant-name">👤 Bob</div>
+                    <div class="participant-address">0x3C44CdDd...93BC</div>
+                    <div class="participant-tokens">20 tokens</div>
+                    <div class="participant-winnings">0.7 ETH won</div>
+                </div>
+                <div class="participant">
+                    <div class="participant-name">👤 Charlie</div>
+                    <div class="participant-address">0x90F79bf6...93b906</div>
+                    <div class="participant-tokens">20 tokens</div>
+                    <div class="participant-winnings">0.7 ETH won</div>
+                </div>
+                <div class="participant">
+                    <div class="participant-name">👤 Diana</div>
+                    <div class="participant-address">0x15d34AAf...6A65</div>
+                    <div class="participant-tokens">20 tokens</div>
+                    <div class="participant-winnings">0.7 ETH won</div>
+                </div>
+                <div class="participant">
+                    <div class="participant-name">👤 Eve</div>
+                    <div class="participant-address">0x9965507D...0A4dc</div>
+                    <div class="participant-tokens">20 tokens</div>
+                    <div class="participant-winnings">0.7 ETH won</div>
+                </div>
+            </div>
+            
+            <div class="contract-info">
+                <h4>📋 Contract Information</h4>
+                <p><strong>TournamentManager:</strong> 0x5FC8d32690cc91D4c39d9d3abcBD16989F875707</p>
+                <p><strong>Demo Tournament:</strong> 0x61c36a8d610163660E21a8b7359e1Cac0C9133e1</p>
+                <p><strong>Network:</strong> Localhost (Hardhat) - Chain ID: 31337</p>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>🎯 How the Demo Worked</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 20px;">
+                <div>
+                    <h3>1️⃣ Tournament Creation</h3>
+                    <p>Created a tournament with 100 tokens, 1 ETH buy-in, and 35% profit share.</p>
+                </div>
+                <div>
+                    <h3>2️⃣ Token Sales</h3>
+                    <p>5 people each bought 20 tokens for 0.2 ETH, funding the 1 ETH buy-in.</p>
+                </div>
+                <div>
+                    <h3>3️⃣ Tournament Play</h3>
+                    <p>Creator used the 1 ETH to enter the poker tournament and won 10 ETH.</p>
+                </div>
+                <div>
+                    <h3>4️⃣ Profit Distribution</h3>
+                    <p>3.5 ETH (35%) was distributed to token holders, each getting 0.7 ETH.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>💰 Financial Breakdown</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 20px;">
+                <div style="text-align: center; padding: 20px; background: #f8f9fa; border-radius: 10px;">
+                    <h3 style="color: #28a745;">Total Raised</h3>
+                    <div style="font-size: 2rem; font-weight: bold; color: #28a745;">1.0 ETH</div>
+                    <p>From token sales</p>
+                </div>
+                <div style="text-align: center; padding: 20px; background: #f8f9fa; border-radius: 10px;">
+                    <h3 style="color: #007bff;">Total Winnings</h3>
+                    <div style="font-size: 2rem; font-weight: bold; color: #007bff;">10.0 ETH</div>
+                    <p>From tournament</p>
+                </div>
+                <div style="text-align: center; padding: 20px; background: #f8f9fa; border-radius: 10px;">
+                    <h3 style="color: #ffc107;">Distributed</h3>
+                    <div style="font-size: 2rem; font-weight: bold; color: #ffc107;">3.5 ETH</div>
+                    <p>To token holders</p>
+                </div>
+                <div style="text-align: center; padding: 20px; background: #f8f9fa; border-radius: 10px;">
+                    <h3 style="color: #6f42c1;">Creator Kept</h3>
+                    <div style="font-size: 2rem; font-weight: bold; color: #6f42c1;">6.5 ETH</div>
+                    <p>65% of winnings</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>🎮 Interactive Demo Available</h2>
+            <p>For the full interactive experience with MetaMask integration, visit:</p>
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin: 20px 0; text-align: center;">
+                <h3><a href="http://localhost:3000" style="color: #007bff; text-decoration: none;">http://localhost:3000</a></h3>
+                <p style="margin-top: 10px; color: #6c757d;">Connect MetaMask to localhost:8545 (Chain ID: 31337)</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+
