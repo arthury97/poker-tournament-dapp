@@ -10,7 +10,7 @@
         // Import Firebase modules
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-        import { getFirestore, doc, setDoc, getDoc, collection, addDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        import { getFirestore, doc, setDoc, getDoc, collection, addDoc, getDocs, updateDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
         // Firebase configuration
         const firebaseConfig = {
@@ -42,7 +42,10 @@
             setDoc,
             getDoc,
             collection,
-            addDoc
+            addDoc,
+            getDocs,
+            updateDoc,
+            onSnapshot
         };
     </script>
     
@@ -1151,6 +1154,10 @@
             
             // Initialize trading stats
             updateTradingStats();
+            
+            // Load orders from Firestore and setup real-time listener
+            await loadOrdersFromFirestore();
+            setupOrdersListener();
         });
 
         // Token data (available tokens for trading)
@@ -2305,6 +2312,7 @@
                             <p><strong>Amount:</strong> ${order.amount} tokens</p>
                             <p><strong>Price:</strong> ${order.price} ETH/token</p>
                             <p><strong>Total Value:</strong> ${order.total} ETH</p>
+                            <p><strong>Created by:</strong> ${order.createdByUsername || 'Anonymous'}</p>
                         </div>
                         <div style="background: rgba(255, 255, 255, 0.1); padding: 15px; border-radius: 8px;">
                             <p><strong>Your Action:</strong> ${counterpartyText}</p>
@@ -2356,9 +2364,14 @@
             // Execute the trade
             showMessage(`Executing ${action} order #${orderId}...`, 'success');
             
-            setTimeout(() => {
+            setTimeout(async () => {
                 // Mark original order as executed
                 order.status = 'executed';
+                
+                // Update order in Firestore
+                if (order.firestoreId) {
+                    await updateOrderInFirestore(order.firestoreId, { status: 'executed' });
+                }
                 
                 if (action === 'sell') {
                     // User sold tokens to the buy order
@@ -2472,6 +2485,131 @@
                 percentage: percentage,
                 hasTokens: freefloat > 0
             };
+        };
+
+        // Firestore Order Management Functions
+        window.saveOrderToFirestore = async function(order) {
+            if (!firebaseReady) {
+                console.log('Firebase not ready, saving order locally only');
+                return false;
+            }
+
+            try {
+                const orderData = {
+                    ...order,
+                    createdAt: new Date().toISOString(),
+                    createdByUserId: currentUser ? currentUser.uid : 'anonymous',
+                    createdByUsername: currentUser ? currentUser.username || currentUser.displayName : 'Anonymous'
+                };
+
+                const docRef = await window.firebaseDbFunctions.addDoc(
+                    window.firebaseDbFunctions.collection(window.firebaseDb, 'orders'),
+                    orderData
+                );
+
+                console.log('Order saved to Firestore with ID:', docRef.id);
+                return docRef.id;
+            } catch (error) {
+                console.error('Error saving order to Firestore:', error);
+                return false;
+            }
+        };
+
+        window.updateOrderInFirestore = async function(orderId, updates) {
+            if (!firebaseReady) {
+                console.log('Firebase not ready, updating order locally only');
+                return false;
+            }
+
+            try {
+                const orderRef = window.firebaseDbFunctions.doc(window.firebaseDb, 'orders', orderId);
+                await window.firebaseDbFunctions.updateDoc(orderRef, {
+                    ...updates,
+                    updatedAt: new Date().toISOString()
+                });
+
+                console.log('Order updated in Firestore:', orderId);
+                return true;
+            } catch (error) {
+                console.error('Error updating order in Firestore:', error);
+                return false;
+            }
+        };
+
+        window.loadOrdersFromFirestore = async function() {
+            if (!firebaseReady) {
+                console.log('Firebase not ready, using local orders only');
+                return;
+            }
+
+            try {
+                const ordersRef = window.firebaseDbFunctions.collection(window.firebaseDb, 'orders');
+                const querySnapshot = await window.firebaseDbFunctions.getDocs(ordersRef);
+                
+                // Clear existing orders and load from Firestore
+                orders.length = 0; // Clear the array
+                let maxId = 0;
+
+                querySnapshot.forEach((doc) => {
+                    const orderData = doc.data();
+                    const order = {
+                        id: parseInt(orderData.id) || parseInt(doc.id),
+                        type: orderData.type,
+                        tokenId: orderData.tokenId,
+                        amount: orderData.amount,
+                        price: orderData.price,
+                        total: orderData.total,
+                        status: orderData.status,
+                        createdBy: orderData.createdBy,
+                        ethSource: orderData.ethSource,
+                        firestoreId: doc.id, // Store Firestore document ID
+                        createdAt: orderData.createdAt,
+                        createdByUserId: orderData.createdByUserId,
+                        createdByUsername: orderData.createdByUsername
+                    };
+                    
+                    orders.push(order);
+                    if (order.id > maxId) {
+                        maxId = order.id;
+                    }
+                });
+
+                // Update the order ID counter
+                orderIdCounter = maxId + 1;
+
+                console.log(`Loaded ${orders.length} orders from Firestore`);
+                
+                // Update UI
+                updateOrderBook();
+                updateMarketplace();
+                updateTradingStats();
+
+            } catch (error) {
+                console.error('Error loading orders from Firestore:', error);
+            }
+        };
+
+        window.setupOrdersListener = function() {
+            if (!firebaseReady) {
+                console.log('Firebase not ready, cannot setup orders listener');
+                return;
+            }
+
+            try {
+                const ordersRef = window.firebaseDbFunctions.collection(window.firebaseDb, 'orders');
+                
+                // Listen for real-time updates
+                window.firebaseDbFunctions.onSnapshot(ordersRef, (querySnapshot) => {
+                    console.log('Orders updated in real-time from Firestore');
+                    
+                    // Reload orders when changes are detected
+                    loadOrdersFromFirestore();
+                });
+
+                console.log('Real-time orders listener setup complete');
+            } catch (error) {
+                console.error('Error setting up orders listener:', error);
+            }
         };
 
         window.showMessage = function(message, type) {
@@ -2757,6 +2895,13 @@
             orders.push(newOrder);
             console.log('New order added:', newOrder);
             console.log('All orders after adding:', orders);
+            
+            // Save order to Firestore
+            const firestoreId = await saveOrderToFirestore(newOrder);
+            if (firestoreId) {
+                newOrder.firestoreId = firestoreId;
+                console.log('Order saved to Firestore with ID:', firestoreId);
+            }
             
             setTimeout(async () => {
                 if (orderType === 'buy') {
