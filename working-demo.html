@@ -244,6 +244,15 @@
             display: none !important;
         }
         
+        /* Trading Sub-tabs */
+        .trading-subtab {
+            display: none;
+        }
+        
+        .trading-subtab.active {
+            display: block;
+        }
+        
         .form-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -632,75 +641,153 @@
                 <h2>📈 Built-in Exchange</h2>
                 <p>Trade player tokens on our built-in exchange.</p>
                 
-                <div class="grid">
-                    <!-- Order Book -->
+                <!-- Trading Sub-tabs -->
+                <div class="tabs" style="margin: 20px 0; border-bottom: 2px solid #34495e;">
+                    <button class="tab active" onclick="showTradingSubTab('create-order', this)" style="margin-right: 10px;">📝 Create Order</button>
+                    <button class="tab" onclick="showTradingSubTab('marketplace', this)" style="margin-right: 10px;">🏪 Marketplace</button>
+                    <button class="tab" onclick="showTradingSubTab('order-book', this)">📋 Order Book</button>
+                </div>
+                
+                <!-- Create Order Sub-tab -->
+                <div id="create-order-subtab" class="trading-subtab active">
+                    <div class="grid">
+                        <!-- Create Order Form -->
+                        <div>
+                            <h3>📝 Create New Order</h3>
+                            <form id="order-form">
+                                <div class="form-group">
+                                    <label for="token-select">Select Token to Trade:</label>
+                                    <select id="token-select" onchange="updateTokenInfo()">
+                                        <option value="">Choose a token...</option>
+                                        <option value="alice">🏆 Alice Token (ALICE) - Alice the Poker Pro</option>
+                                        <option value="bob">🎯 Bob Token (BOB) - Bob the Bluffer</option>
+                                        <option value="charlie">💎 Charlie Token (CHAR) - Charlie the Shark</option>
+                                        <option value="diana">👑 Diana Token (DIA) - Diana the Queen</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="order-type">Order Type:</label>
+                                    <select id="order-type" onchange="updateOrderForm()">
+                                        <option value="buy">🟢 Buy Order</option>
+                                        <option value="sell">🔴 Sell Order</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="token-amount">Token Amount:</label>
+                                        <input type="number" id="token-amount" placeholder="e.g., 50" min="1" oninput="calculateEthAmount()">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="price-per-token">Price per Token (ETH):</label>
+                                        <input type="number" id="price-per-token" placeholder="e.g., 0.012" step="0.001" min="0.001" oninput="calculateEthAmount()">
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="eth-source">ETH Source:</label>
+                                    <select id="eth-source" required>
+                                        <option value="demo">Demo ETH (Virtual Balance)</option>
+                                        <option value="sepolia">Sepolia ETH (Real Wallet)</option>
+                                    </select>
+                                    <small style="color: #666; font-size: 0.9rem; display: block; margin-top: 5px;">
+                                        <strong>Demo ETH:</strong> Virtual balance for testing (no real ETH spent)<br>
+                                        <strong>Sepolia ETH:</strong> Real testnet ETH from your wallet
+                                    </small>
+                                </div>
+                                
+                                <div class="form-group" id="eth-amount-group" style="display: none;">
+                                    <label for="eth-amount">ETH Amount:</label>
+                                    <input type="number" id="eth-amount" placeholder="0.6" step="0.001" min="0.001" readonly>
+                                </div>
+                                
+                                <div class="form-group" id="token-balance-group" style="display: none;">
+                                    <label>Your Token Balance:</label>
+                                    <div id="token-balance-display" style="background: #f8f9fa; padding: 10px; border-radius: 5px; color: #2c3e50; font-weight: bold;">
+                                        Select a token to see your balance
+                                    </div>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-success">Create Order</button>
+                            </form>
+                        </div>
+                        
+                        <!-- Quick Stats -->
+                        <div>
+                            <h3>📊 Quick Stats</h3>
+                            <div id="trading-stats" style="background: rgba(255, 255, 255, 0.1); padding: 20px; border-radius: 10px;">
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                                    <div style="text-align: center; padding: 10px; background: rgba(39, 174, 96, 0.1); border-radius: 5px;">
+                                        <strong>Active Orders</strong><br>
+                                        <span id="active-orders-count">0</span>
+                                    </div>
+                                    <div style="text-align: center; padding: 10px; background: rgba(52, 152, 219, 0.1); border-radius: 5px;">
+                                        <strong>Total Volume</strong><br>
+                                        <span id="total-volume">0 ETH</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Marketplace Sub-tab -->
+                <div id="marketplace-subtab" class="trading-subtab">
                     <div>
-                        <h3>📋 Order Book</h3>
+                        <h3>🏪 Marketplace - Find Counterparty Orders</h3>
+                        <p>Browse and execute orders from other users. Be the counterparty to existing buy/sell orders.</p>
+                        
+                        <!-- Marketplace Filters -->
+                        <div style="margin: 20px 0; padding: 15px; background: rgba(255, 255, 255, 0.1); border-radius: 10px;">
+                            <h4>🔍 Filters</h4>
+                            <div style="display: flex; gap: 15px; flex-wrap: wrap; align-items: center;">
+                                <div>
+                                    <label for="marketplace-token-filter">Token:</label>
+                                    <select id="marketplace-token-filter" onchange="updateMarketplace()">
+                                        <option value="">All Tokens</option>
+                                        <option value="alice">🏆 Alice Token (ALICE)</option>
+                                        <option value="bob">🎯 Bob Token (BOB)</option>
+                                        <option value="charlie">💎 Charlie Token (CHAR)</option>
+                                        <option value="diana">👑 Diana Token (DIA)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="marketplace-type-filter">Order Type:</label>
+                                    <select id="marketplace-type-filter" onchange="updateMarketplace()">
+                                        <option value="">All Types</option>
+                                        <option value="buy">🟢 Buy Orders (You Sell To)</option>
+                                        <option value="sell">🔴 Sell Orders (You Buy From)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="marketplace-sort">Sort by:</label>
+                                    <select id="marketplace-sort" onchange="updateMarketplace()">
+                                        <option value="price-asc">Price (Low to High)</option>
+                                        <option value="price-desc">Price (High to Low)</option>
+                                        <option value="amount-desc">Amount (High to Low)</option>
+                                        <option value="amount-asc">Amount (Low to High)</option>
+                                    </select>
+                                </div>
+                                <button class="btn" onclick="updateMarketplace()" style="background: #3498db; color: white;">🔄 Refresh</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Marketplace Orders -->
+                        <div id="marketplace-container" class="grid">
+                            <!-- Marketplace orders will be generated dynamically -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Order Book Sub-tab -->
+                <div id="order-book-subtab" class="trading-subtab">
+                    <div>
+                        <h3>📋 Order Book - Your Active Orders</h3>
+                        <p>View and manage your active orders.</p>
                         <div id="order-book-container">
                             <!-- Orders will be generated dynamically -->
                         </div>
-                    </div>
-                    
-                    <!-- Create Order -->
-                    <div>
-                        <h3>📝 Create Order</h3>
-                        <form id="order-form">
-                            <div class="form-group">
-                                <label for="token-select">Select Token to Trade:</label>
-                                <select id="token-select" onchange="updateTokenInfo()">
-                                    <option value="">Choose a token...</option>
-                                    <option value="alice">🏆 Alice Token (ALICE) - Alice the Poker Pro</option>
-                                    <option value="bob">🎯 Bob Token (BOB) - Bob the Bluffer</option>
-                                    <option value="charlie">💎 Charlie Token (CHAR) - Charlie the Shark</option>
-                                    <option value="diana">👑 Diana Token (DIA) - Diana the Queen</option>
-                                </select>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="order-type">Order Type:</label>
-                                <select id="order-type" onchange="updateOrderForm()">
-                                    <option value="buy">🟢 Buy Order</option>
-                                    <option value="sell">🔴 Sell Order</option>
-                                </select>
-                            </div>
-                            
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="token-amount">Token Amount:</label>
-                                    <input type="number" id="token-amount" placeholder="e.g., 50" min="1" oninput="calculateEthAmount()">
-                                </div>
-                                <div class="form-group">
-                                    <label for="price-per-token">Price per Token (ETH):</label>
-                                    <input type="number" id="price-per-token" placeholder="e.g., 0.012" step="0.001" min="0.001" oninput="calculateEthAmount()">
-                                </div>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="eth-source">ETH Source:</label>
-                                <select id="eth-source" required>
-                                    <option value="demo">Demo ETH (Virtual Balance)</option>
-                                    <option value="sepolia">Sepolia ETH (Real Wallet)</option>
-                                </select>
-                                <small style="color: #666; font-size: 0.9rem; display: block; margin-top: 5px;">
-                                    <strong>Demo ETH:</strong> Virtual balance for testing (no real ETH spent)<br>
-                                    <strong>Sepolia ETH:</strong> Real testnet ETH from your wallet
-                                </small>
-                            </div>
-                            
-                            <div class="form-group" id="eth-amount-group" style="display: none;">
-                                <label for="eth-amount">ETH Amount:</label>
-                                <input type="number" id="eth-amount" placeholder="0.6" step="0.001" min="0.001" readonly>
-                            </div>
-                            
-                            <div class="form-group" id="token-balance-group" style="display: none;">
-                                <label>Your Token Balance:</label>
-                                <div id="token-balance-display" style="background: #f8f9fa; padding: 10px; border-radius: 5px; color: #2c3e50; font-weight: bold;">
-                                    Select a token to see your balance
-                                </div>
-                            </div>
-                            
-                            <button type="submit" class="btn btn-success">Create Order</button>
-                        </form>
                     </div>
                 </div>
             </div>
@@ -1051,6 +1138,9 @@
                     document.getElementById('login-form-element').reset();
                 }
             });
+            
+            // Initialize trading stats
+            updateTradingStats();
         });
 
         // Token data (available tokens for trading)
@@ -1076,11 +1166,15 @@
         let demoETHBalance = 0; // Demo ETH balance for testing
 
         // Order storage
-        let orderIdCounter = 4; // Start after the existing orders
+        let orderIdCounter = 8; // Start after the existing orders
         const orders = [
             { id: 1, type: 'buy', tokenId: 'alice', amount: 50, price: 0.012, total: 0.6, status: 'active', createdBy: 'other' },
             { id: 2, type: 'sell', tokenId: 'bob', amount: 30, price: 0.015, total: 0.45, status: 'active', createdBy: 'other' },
-            { id: 3, type: 'buy', tokenId: 'charlie', amount: 25, price: 0.011, total: 0.275, status: 'active', createdBy: 'other' }
+            { id: 3, type: 'buy', tokenId: 'charlie', amount: 25, price: 0.011, total: 0.275, status: 'active', createdBy: 'other' },
+            { id: 4, type: 'sell', tokenId: 'alice', amount: 20, price: 0.013, total: 0.26, status: 'active', createdBy: 'other' },
+            { id: 5, type: 'buy', tokenId: 'diana', amount: 40, price: 0.014, total: 0.56, status: 'active', createdBy: 'other' },
+            { id: 6, type: 'sell', tokenId: 'charlie', amount: 15, price: 0.010, total: 0.15, status: 'active', createdBy: 'other' },
+            { id: 7, type: 'buy', tokenId: 'bob', amount: 35, price: 0.016, total: 0.56, status: 'active', createdBy: 'other' }
         ];
 
         // Dual Wallet Integration Functions
@@ -2037,6 +2131,253 @@
                 
                 orderBookContainer.appendChild(orderItem);
             });
+        };
+
+        // Trading Sub-tab Functions
+        window.showTradingSubTab = function(subTabName, clickedElement) {
+            console.log('Switching to trading sub-tab:', subTabName);
+            
+            // Remove active class from all trading sub-tabs
+            document.querySelectorAll('.trading-subtab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Remove active class from all trading sub-tab buttons
+            document.querySelectorAll('#trading-tab .tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Add active class to clicked button
+            clickedElement.classList.add('active');
+            
+            // Show selected sub-tab
+            const targetTab = document.getElementById(subTabName + '-subtab');
+            if (targetTab) {
+                targetTab.classList.add('active');
+            }
+            
+            // Update content based on sub-tab
+            if (subTabName === 'marketplace') {
+                updateMarketplace();
+            } else if (subTabName === 'order-book') {
+                updateOrderBook();
+            } else if (subTabName === 'create-order') {
+                updateTradingStats();
+            }
+        };
+
+        // Marketplace Functions
+        window.updateMarketplace = function() {
+            const marketplaceContainer = document.getElementById('marketplace-container');
+            if (!marketplaceContainer) return;
+            
+            marketplaceContainer.innerHTML = '';
+            
+            // Get filter values
+            const tokenFilter = document.getElementById('marketplace-token-filter').value;
+            const typeFilter = document.getElementById('marketplace-type-filter').value;
+            const sortBy = document.getElementById('marketplace-sort').value;
+            
+            // Filter orders that user can be counterparty to
+            let availableOrders = orders.filter(order => 
+                order.status === 'active' && 
+                order.createdBy !== 'user' // Only show orders from other users
+            );
+            
+            // Apply token filter
+            if (tokenFilter) {
+                availableOrders = availableOrders.filter(order => order.tokenId === tokenFilter);
+            }
+            
+            // Apply type filter
+            if (typeFilter) {
+                availableOrders = availableOrders.filter(order => order.type === typeFilter);
+            }
+            
+            // Sort orders
+            availableOrders.sort((a, b) => {
+                switch (sortBy) {
+                    case 'price-asc':
+                        return a.price - b.price;
+                    case 'price-desc':
+                        return b.price - a.price;
+                    case 'amount-desc':
+                        return b.amount - a.amount;
+                    case 'amount-asc':
+                        return a.amount - b.amount;
+                    default:
+                        return 0;
+                }
+            });
+            
+            if (availableOrders.length === 0) {
+                marketplaceContainer.innerHTML = `
+                    <div style="text-align: center; color: #666; padding: 40px; grid-column: 1 / -1;">
+                        <h4>🔍 No Orders Found</h4>
+                        <p>No matching orders available for counterparty trading.</p>
+                        <p>Try adjusting your filters or create your own orders!</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Display orders
+            availableOrders.forEach(order => {
+                const tokenInfo = tokenData[order.tokenId];
+                if (!tokenInfo) return;
+                
+                const orderItem = document.createElement('div');
+                orderItem.className = `order-item ${order.type}`;
+                orderItem.style.marginBottom = '20px';
+                
+                const orderTypeIcon = order.type === 'buy' ? '🟢' : '🔴';
+                const orderTypeText = order.type === 'buy' ? 'Buy Order' : 'Sell Order';
+                const counterpartyAction = order.type === 'buy' ? 'sell' : 'buy';
+                const counterpartyText = order.type === 'buy' ? 'Sell To This Order' : 'Buy From This Order';
+                const buttonClass = order.type === 'buy' ? 'btn-success' : 'btn-warning';
+                
+                // Check if user has sufficient balance/tokens for this order
+                let canExecute = false;
+                let executionMessage = '';
+                
+                if (order.type === 'buy') {
+                    // User would be selling tokens to this buy order
+                    const userTokenBalance = userPortfolio[order.tokenId] ? userPortfolio[order.tokenId].balance : 0;
+                    if (userTokenBalance >= order.amount) {
+                        canExecute = true;
+                        executionMessage = `You have ${userTokenBalance} tokens available`;
+                    } else {
+                        executionMessage = `You need ${order.amount} tokens (have ${userTokenBalance})`;
+                    }
+                } else {
+                    // User would be buying tokens from this sell order
+                    if (demoETHBalance >= order.total) {
+                        canExecute = true;
+                        executionMessage = `You have ${demoETHBalance.toFixed(4)} ETH available`;
+                    } else {
+                        executionMessage = `You need ${order.total.toFixed(4)} ETH (have ${demoETHBalance.toFixed(4)})`;
+                    }
+                }
+                
+                orderItem.innerHTML = `
+                    <h4>${orderTypeIcon} ${orderTypeText} #${order.id} - ${tokenInfo.name.split(' ')[0].toUpperCase()}</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 15px 0;">
+                        <div>
+                            <p><strong>Token:</strong> ${tokenInfo.name}</p>
+                            <p><strong>Amount:</strong> ${order.amount} tokens</p>
+                            <p><strong>Price:</strong> ${order.price} ETH/token</p>
+                            <p><strong>Total Value:</strong> ${order.total} ETH</p>
+                        </div>
+                        <div style="background: rgba(255, 255, 255, 0.1); padding: 15px; border-radius: 8px;">
+                            <p><strong>Your Action:</strong> ${counterpartyText}</p>
+                            <p><strong>Status:</strong> <span style="color: ${canExecute ? '#27ae60' : '#e74c3c'};">${executionMessage}</span></p>
+                            <button class="btn ${buttonClass}" 
+                                    onclick="executeMarketplaceOrder(${order.id}, '${counterpartyAction}', '${order.tokenId}')"
+                                    ${!canExecute ? 'disabled' : ''}
+                                    style="margin-top: 10px; width: 100%;">
+                                ${canExecute ? `✅ ${counterpartyText}` : '❌ Insufficient Balance'}
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                marketplaceContainer.appendChild(orderItem);
+            });
+        };
+
+        // Execute marketplace order (counterparty action)
+        window.executeMarketplaceOrder = async function(orderId, action, tokenId) {
+            const order = orders.find(o => o.id === orderId);
+            if (!order) {
+                showMessage('Order not found!', 'error');
+                return;
+            }
+            
+            const tokenInfo = tokenData[tokenId];
+            if (!tokenInfo) {
+                showMessage('Token not found!', 'error');
+                return;
+            }
+            
+            // Check if user has sufficient balance
+            if (action === 'sell') {
+                // User is selling tokens to a buy order
+                const userTokenBalance = userPortfolio[tokenId] ? userPortfolio[tokenId].balance : 0;
+                if (userTokenBalance < order.amount) {
+                    showMessage(`Insufficient token balance! You need ${order.amount} tokens but only have ${userTokenBalance}.`, 'error');
+                    return;
+                }
+            } else {
+                // User is buying tokens from a sell order
+                if (demoETHBalance < order.total) {
+                    showMessage(`Insufficient ETH balance! You need ${order.total.toFixed(4)} ETH but only have ${demoETHBalance.toFixed(4)}.`, 'error');
+                    return;
+                }
+            }
+            
+            // Execute the trade
+            showMessage(`Executing ${action} order #${orderId}...`, 'success');
+            
+            setTimeout(() => {
+                // Mark original order as executed
+                order.status = 'executed';
+                
+                if (action === 'sell') {
+                    // User sold tokens to the buy order
+                    // Remove tokens from user's portfolio
+                    if (userPortfolio[tokenId]) {
+                        userPortfolio[tokenId].balance -= order.amount;
+                        if (userPortfolio[tokenId].balance <= 0) {
+                            delete userPortfolio[tokenId];
+                        }
+                    }
+                    
+                    // Add ETH to user's demo balance (simulating receiving payment)
+                    addETHToBalance(order.total);
+                    
+                    showMessage(`✅ Successfully sold ${order.amount} ${tokenInfo.name} tokens for ${order.total} ETH!`, 'success');
+                } else {
+                    // User bought tokens from the sell order
+                    // Add tokens to user's portfolio
+                    if (!userPortfolio[tokenId]) {
+                        userPortfolio[tokenId] = {
+                            name: tokenInfo.name,
+                            player: tokenInfo.player,
+                            balance: 0,
+                            price: tokenInfo.price
+                        };
+                    }
+                    userPortfolio[tokenId].balance += order.amount;
+                    
+                    // Deduct ETH from user's demo balance
+                    deductETHFromBalance(order.total);
+                    
+                    showMessage(`✅ Successfully bought ${order.amount} ${tokenInfo.name} tokens for ${order.total} ETH!`, 'success');
+                }
+                
+                // Update displays
+                updateMarketplace();
+                updateOrderBook();
+                updatePortfolio();
+                updateTradingStats();
+                
+            }, 1000);
+        };
+
+        // Update trading stats
+        window.updateTradingStats = function() {
+            const activeOrdersCount = orders.filter(order => order.status === 'active').length;
+            const totalVolume = orders.filter(order => order.status === 'executed').reduce((sum, order) => sum + order.total, 0);
+            
+            const activeOrdersElement = document.getElementById('active-orders-count');
+            const totalVolumeElement = document.getElementById('total-volume');
+            
+            if (activeOrdersElement) {
+                activeOrdersElement.textContent = activeOrdersCount;
+            }
+            if (totalVolumeElement) {
+                totalVolumeElement.textContent = totalVolume.toFixed(4) + ' ETH';
+            }
         };
 
         window.showMessage = function(message, type) {
