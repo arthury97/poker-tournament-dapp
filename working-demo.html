@@ -221,6 +221,86 @@
             <h1>🎮 Poker Player Token DApp</h1>
             <p>Working Demo - Create tokens, trade them, and share tournament winnings!</p>
             
+            <!-- Authentication Section -->
+            <div id="auth-section" style="margin: 20px 0; padding: 20px; background: rgba(255, 255, 255, 0.1); border-radius: 15px; backdrop-filter: blur(10px);">
+                <div id="auth-not-logged-in">
+                    <h3>🔐 Account Access</h3>
+                    <p>Create an account or log in to access the full demo experience</p>
+                    
+                    <div style="display: flex; justify-content: center; gap: 20px; margin: 20px 0; flex-wrap: wrap;">
+                        <button id="show-register-btn" class="btn btn-success" style="min-width: 150px;">
+                            📝 Create Account
+                        </button>
+                        <button id="show-login-btn" class="btn" style="min-width: 150px; background: #007bff; color: white;">
+                            🔑 Log In
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="auth-logged-in" style="display: none; text-align: center;">
+                    <h3>✅ Welcome, <span id="user-display-name"></span>!</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 15px 0;">
+                        <div style="background: rgba(255, 255, 255, 0.1); padding: 15px; border-radius: 10px;">
+                            <strong>Username</strong><br>
+                            <span id="user-display-username" style="font-family: monospace;"></span>
+                        </div>
+                        <div style="background: rgba(255, 255, 255, 0.1); padding: 15px; border-radius: 10px;">
+                            <strong>Account Type</strong><br>
+                            <span id="user-account-type">Demo User</span>
+                        </div>
+                    </div>
+                    <button id="logout-btn" class="btn" style="background: #dc3545; color: white; margin: 10px;">
+                        🚪 Log Out
+                    </button>
+                </div>
+            </div>
+
+            <!-- Registration Form -->
+            <div id="register-form" style="display: none; margin: 20px 0; padding: 20px; background: rgba(40, 167, 69, 0.1); border-radius: 15px; border: 2px solid #28a745;">
+                <h3>📝 Create New Account</h3>
+                <form id="register-form-element">
+                    <div class="form-group">
+                        <label for="register-name">Full Name:</label>
+                        <input type="text" id="register-name" placeholder="Enter your full name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="register-username">Username:</label>
+                        <input type="text" id="register-username" placeholder="Choose a username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="register-password">Password:</label>
+                        <input type="password" id="register-password" placeholder="Create a password" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="register-confirm-password">Confirm Password:</label>
+                        <input type="password" id="register-confirm-password" placeholder="Confirm your password" required>
+                    </div>
+                    <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                        <button type="submit" class="btn btn-success">Create Account</button>
+                        <button type="button" id="cancel-register-btn" class="btn">Cancel</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Login Form -->
+            <div id="login-form" style="display: none; margin: 20px 0; padding: 20px; background: rgba(0, 123, 255, 0.1); border-radius: 15px; border: 2px solid #007bff;">
+                <h3>🔑 Log In to Your Account</h3>
+                <form id="login-form-element">
+                    <div class="form-group">
+                        <label for="login-username">Username:</label>
+                        <input type="text" id="login-username" placeholder="Enter your username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="login-password">Password:</label>
+                        <input type="password" id="login-password" placeholder="Enter your password" required>
+                    </div>
+                    <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                        <button type="submit" class="btn" style="background: #007bff; color: white;">Log In</button>
+                        <button type="button" id="cancel-login-btn" class="btn">Cancel</button>
+                    </div>
+                </form>
+            </div>
+            
             <!-- Wallet Connection Section -->
             <div id="wallet-section" style="margin-top: 20px; padding: 20px; background: rgba(255, 255, 255, 0.1); border-radius: 15px; backdrop-filter: blur(10px);">
                 <div id="wallet-not-connected" style="text-align: center;">
@@ -596,6 +676,186 @@
     </div>
 
     <script>
+        // Authentication system
+        let currentUser = null;
+        let userAccounts = JSON.parse(localStorage.getItem('pokerDappUsers')) || {};
+
+        // Authentication functions
+        function showAuthSection() {
+            document.getElementById('auth-not-logged-in').style.display = 'block';
+            document.getElementById('auth-logged-in').style.display = 'none';
+            document.getElementById('register-form').style.display = 'none';
+            document.getElementById('login-form').style.display = 'none';
+        }
+
+        function showLoggedInUser(user) {
+            document.getElementById('auth-not-logged-in').style.display = 'none';
+            document.getElementById('auth-logged-in').style.display = 'block';
+            document.getElementById('register-form').style.display = 'none';
+            document.getElementById('login-form').style.display = 'none';
+            
+            document.getElementById('user-display-name').textContent = user.name;
+            document.getElementById('user-display-username').textContent = user.username;
+        }
+
+        function showRegisterForm() {
+            document.getElementById('register-form').style.display = 'block';
+            document.getElementById('login-form').style.display = 'none';
+        }
+
+        function showLoginForm() {
+            document.getElementById('login-form').style.display = 'block';
+            document.getElementById('register-form').style.display = 'none';
+        }
+
+        function hideAuthForms() {
+            document.getElementById('register-form').style.display = 'none';
+            document.getElementById('login-form').style.display = 'none';
+        }
+
+        function registerUser(name, username, password) {
+            if (userAccounts[username]) {
+                showMessage('Username already exists! Please choose a different username.', 'error');
+                return false;
+            }
+
+            const user = {
+                name: name,
+                username: username,
+                password: password, // In a real app, this would be hashed
+                createdAt: new Date().toISOString(),
+                accountType: 'Demo User'
+            };
+
+            userAccounts[username] = user;
+            localStorage.setItem('pokerDappUsers', JSON.stringify(userAccounts));
+            
+            currentUser = user;
+            localStorage.setItem('pokerDappCurrentUser', JSON.stringify(user));
+            
+            showLoggedInUser(user);
+            showMessage(`Welcome ${name}! Your account has been created successfully.`, 'success');
+            return true;
+        }
+
+        function loginUser(username, password) {
+            const user = userAccounts[username];
+            
+            if (!user) {
+                showMessage('Username not found! Please check your username or create an account.', 'error');
+                return false;
+            }
+
+            if (user.password !== password) {
+                showMessage('Incorrect password! Please try again.', 'error');
+                return false;
+            }
+
+            currentUser = user;
+            localStorage.setItem('pokerDappCurrentUser', JSON.stringify(user));
+            
+            showLoggedInUser(user);
+            showMessage(`Welcome back, ${user.name}!`, 'success');
+            return true;
+        }
+
+        function logoutUser() {
+            currentUser = null;
+            localStorage.removeItem('pokerDappCurrentUser');
+            showAuthSection();
+            showMessage('You have been logged out successfully.', 'success');
+        }
+
+        function checkExistingLogin() {
+            const savedUser = localStorage.getItem('pokerDappCurrentUser');
+            if (savedUser) {
+                try {
+                    currentUser = JSON.parse(savedUser);
+                    showLoggedInUser(currentUser);
+                } catch (error) {
+                    console.error('Error parsing saved user:', error);
+                    localStorage.removeItem('pokerDappCurrentUser');
+                }
+            }
+        }
+
+        // Authentication event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if user is already logged in
+            checkExistingLogin();
+
+            // Show register form
+            document.getElementById('show-register-btn').addEventListener('click', function() {
+                showRegisterForm();
+            });
+
+            // Show login form
+            document.getElementById('show-login-btn').addEventListener('click', function() {
+                showLoginForm();
+            });
+
+            // Cancel register
+            document.getElementById('cancel-register-btn').addEventListener('click', function() {
+                hideAuthForms();
+            });
+
+            // Cancel login
+            document.getElementById('cancel-login-btn').addEventListener('click', function() {
+                hideAuthForms();
+            });
+
+            // Logout
+            document.getElementById('logout-btn').addEventListener('click', function() {
+                logoutUser();
+            });
+
+            // Register form submission
+            document.getElementById('register-form-element').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const name = document.getElementById('register-name').value.trim();
+                const username = document.getElementById('register-username').value.trim();
+                const password = document.getElementById('register-password').value;
+                const confirmPassword = document.getElementById('register-confirm-password').value;
+
+                if (!name || !username || !password) {
+                    showMessage('Please fill in all fields!', 'error');
+                    return;
+                }
+
+                if (password !== confirmPassword) {
+                    showMessage('Passwords do not match!', 'error');
+                    return;
+                }
+
+                if (password.length < 6) {
+                    showMessage('Password must be at least 6 characters long!', 'error');
+                    return;
+                }
+
+                if (registerUser(name, username, password)) {
+                    document.getElementById('register-form-element').reset();
+                }
+            });
+
+            // Login form submission
+            document.getElementById('login-form-element').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const username = document.getElementById('login-username').value.trim();
+                const password = document.getElementById('login-password').value;
+
+                if (!username || !password) {
+                    showMessage('Please fill in all fields!', 'error');
+                    return;
+                }
+
+                if (loginUser(username, password)) {
+                    document.getElementById('login-form-element').reset();
+                }
+            });
+        });
+
         // Token data (available tokens for trading)
         const tokenData = {
             alice: { name: 'Alice Token (ALICE)', player: 'Alice the Poker Pro', price: 0.012 },

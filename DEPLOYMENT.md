@@ -134,13 +134,102 @@ git push -u origin main
 - Check file permissions
 - Ensure file is committed to repository
 
+## 🔐 Authentication System
+
+The demo now includes a complete authentication system:
+
+### **Features:**
+- ✅ **User Registration**: Name, username, password
+- ✅ **User Login**: Username and password authentication
+- ✅ **Session Management**: Automatic login persistence
+- ✅ **User Dashboard**: Display user information
+- ✅ **Logout Functionality**: Secure session termination
+
+### **Current Implementation:**
+- **Storage**: Uses browser localStorage (demo purposes)
+- **Security**: Basic validation (passwords stored in plain text for demo)
+- **Persistence**: Users stay logged in between sessions
+
+### **Server Integration Options:**
+
+#### **Option 1: Firebase (Recommended)**
+```javascript
+// Replace localStorage with Firebase
+import { initializeApp } from 'firebase/app';
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+import { getFirestore, doc, setDoc, getDoc } from 'firebase/firestore';
+
+// Initialize Firebase
+const firebaseConfig = {
+  // Your Firebase config
+};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+```
+
+#### **Option 2: Supabase**
+```javascript
+// Replace localStorage with Supabase
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient('YOUR_SUPABASE_URL', 'YOUR_SUPABASE_KEY');
+
+// Register user
+const { data, error } = await supabase.auth.signUp({
+  email: email,
+  password: password,
+  options: {
+    data: {
+      name: name,
+      username: username
+    }
+  }
+});
+```
+
+#### **Option 3: Custom Backend**
+```javascript
+// Replace localStorage with API calls
+async function registerUser(name, username, password) {
+  const response = await fetch('/api/register', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ name, username, password })
+  });
+  return response.json();
+}
+
+async function loginUser(username, password) {
+  const response = await fetch('/api/login', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ username, password })
+  });
+  return response.json();
+}
+```
+
 ## 🎉 Success!
 
 Once deployed, your demo will be publicly accessible and users can:
-- Connect their wallets (MetaMask, Coinbase Wallet)
-- Create player tokens
-- Place buy/sell orders
-- View their portfolio
-- Experience the full poker tournament DApp demo
+- **Create accounts** and log in securely
+- **Connect their wallets** (MetaMask, Coinbase Wallet)
+- **Create player tokens** for poker tournaments
+- **Place buy/sell orders** with automatic execution
+- **View their portfolio** with real-time updates
+- **Experience the full poker tournament DApp demo**
+
+### **Next Steps for Production:**
+1. **Integrate with a real backend** (Firebase, Supabase, or custom API)
+2. **Add password hashing** (bcrypt, Argon2)
+3. **Implement JWT tokens** for secure sessions
+4. **Add email verification** for account creation
+5. **Add password reset** functionality
+6. **Implement rate limiting** and security measures
 
 Happy deploying! 🚀
