@@ -728,13 +728,41 @@
                 const checkFirebase = () => {
                     if (window.firebaseAuth && window.firebaseDb && window.firebaseAuthFunctions) {
                         firebaseReady = true;
+                        console.log('✅ Firebase is ready!');
+                        console.log('Firebase Auth:', window.firebaseAuth);
+                        console.log('Firebase DB:', window.firebaseDb);
                         resolve();
                     } else {
+                        console.log('⏳ Waiting for Firebase...');
                         setTimeout(checkFirebase, 100);
                     }
                 };
                 checkFirebase();
             });
+        }
+
+        // Test Firebase connection
+        async function testFirebaseConnection() {
+            try {
+                console.log('🧪 Testing Firebase connection...');
+                
+                // Test if we can access Firebase services
+                if (window.firebaseAuth && window.firebaseDb) {
+                    console.log('✅ Firebase services are accessible');
+                    
+                    // Test Firestore connection
+                    const testDoc = window.firebaseDbFunctions.doc(window.firebaseDb, 'test', 'connection');
+                    console.log('✅ Firestore connection test passed');
+                    
+                    return true;
+                } else {
+                    console.log('❌ Firebase services not accessible');
+                    return false;
+                }
+            } catch (error) {
+                console.error('❌ Firebase connection test failed:', error);
+                return false;
+            }
         }
 
         // Authentication functions
@@ -941,6 +969,14 @@
         document.addEventListener('DOMContentLoaded', async function() {
             // Wait for Firebase to be ready
             await waitForFirebase();
+            
+            // Test Firebase connection
+            const connectionTest = await testFirebaseConnection();
+            if (connectionTest) {
+                console.log('🎉 Firebase connection successful!');
+            } else {
+                console.log('⚠️ Firebase connection issues detected');
+            }
             
             // Setup Firebase auth state listener
             setupAuthStateListener();
