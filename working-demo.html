@@ -702,12 +702,19 @@
                                     <input type="number" id="eth-amount" placeholder="0.6" step="0.001" min="0.001" readonly>
                                 </div>
                                 
-                                <div class="form-group" id="token-balance-group" style="display: none;">
-                                    <label>Your Token Balance:</label>
-                                    <div id="token-balance-display" style="background: #f8f9fa; padding: 10px; border-radius: 5px; color: #2c3e50; font-weight: bold;">
-                                        Select a token to see your balance
-                                    </div>
+                            <div class="form-group" id="token-balance-group" style="display: none;">
+                                <label>Your Token Balance:</label>
+                                <div id="token-balance-display" style="background: #f8f9fa; padding: 10px; border-radius: 5px; color: #2c3e50; font-weight: bold;">
+                                    Select a token to see your balance
                                 </div>
+                            </div>
+                            
+                            <div class="form-group" id="freefloat-group" style="display: none;">
+                                <label>Free-Floating Tokens Available:</label>
+                                <div id="freefloat-display" style="background: rgba(52, 152, 219, 0.1); padding: 10px; border-radius: 5px; color: #2c3e50; font-weight: bold; border-left: 4px solid #3498db;">
+                                    Select a token to see freefloat
+                                </div>
+                            </div>
                                 
                                 <button type="submit" class="btn btn-success">Create Order</button>
                             </form>
@@ -1145,10 +1152,10 @@
 
         // Token data (available tokens for trading)
         const tokenData = {
-            alice: { name: 'Alice Token (ALICE)', player: 'Alice the Poker Pro', price: 0.012 },
-            bob: { name: 'Bob Token (BOB)', player: 'Bob the Bluffer', price: 0.015 },
-            charlie: { name: 'Charlie Token (CHAR)', player: 'Charlie the Shark', price: 0.011 },
-            diana: { name: 'Diana Token (DIA)', player: 'Diana the Queen', price: 0.018 }
+            alice: { name: 'Alice Token (ALICE)', player: 'Alice the Poker Pro', price: 0.012, totalSupply: 1000, freefloat: 1000 },
+            bob: { name: 'Bob Token (BOB)', player: 'Bob the Bluffer', price: 0.015, totalSupply: 1000, freefloat: 1000 },
+            charlie: { name: 'Charlie Token (CHAR)', player: 'Charlie the Shark', price: 0.011, totalSupply: 1000, freefloat: 1000 },
+            diana: { name: 'Diana Token (DIA)', player: 'Diana the Queen', price: 0.018, totalSupply: 1000, freefloat: 1000 }
         };
 
         // User's portfolio (tokens they own)
@@ -1158,6 +1165,14 @@
             charlie: { name: 'Charlie Token (CHAR)', player: 'Charlie the Shark', balance: 10, price: 0.011 },
             diana: { name: 'Diana Token (DIA)', player: 'Diana the Queen', balance: 5, price: 0.018 }
         };
+
+        // Initialize freefloat by deducting user's existing tokens
+        Object.keys(userPortfolio).forEach(tokenId => {
+            if (tokenData[tokenId] && userPortfolio[tokenId]) {
+                tokenData[tokenId].freefloat -= userPortfolio[tokenId].balance;
+                console.log(`Initialized freefloat for ${tokenId}: ${tokenData[tokenId].freefloat} (deducted ${userPortfolio[tokenId].balance} from user portfolio)`);
+            }
+        });
 
         // Wallet connection state
         let walletConnected = false;
@@ -1831,10 +1846,15 @@
             const selectedToken = document.getElementById('token-select').value;
             const tokenBalanceGroup = document.getElementById('token-balance-group');
             const tokenBalanceDisplay = document.getElementById('token-balance-display');
+            const freefloatGroup = document.getElementById('freefloat-group');
+            const freefloatDisplay = document.getElementById('freefloat-display');
             
             if (selectedToken && tokenData[selectedToken]) {
                 const token = tokenData[selectedToken];
                 const userBalance = userPortfolio[selectedToken] ? userPortfolio[selectedToken].balance : 0;
+                const freefloatStatus = getFreefloatStatus(selectedToken);
+                
+                // Show token balance
                 tokenBalanceGroup.style.display = 'block';
                 tokenBalanceDisplay.innerHTML = `
                     <strong>${token.name}</strong><br>
@@ -1842,8 +1862,23 @@
                     Your Balance: ${userBalance} tokens<br>
                     Current Price: ${token.price} ETH/token
                 `;
+                
+                // Show freefloat information
+                freefloatGroup.style.display = 'block';
+                const freefloatColor = freefloatStatus.hasTokens ? '#27ae60' : '#e74c3c';
+                const freefloatIcon = freefloatStatus.hasTokens ? '✅' : '❌';
+                freefloatDisplay.innerHTML = `
+                    <strong>${freefloatIcon} ${freefloatStatus.available} tokens available</strong><br>
+                    Total Supply: ${freefloatStatus.total} tokens<br>
+                    Freefloat: ${freefloatStatus.percentage}% of total supply<br>
+                    <small style="color: ${freefloatColor};">
+                        ${freefloatStatus.hasTokens ? 'Tokens available for immediate purchase' : 'No free-floating tokens - orders will go to marketplace'}
+                    </small>
+                `;
+                freefloatDisplay.style.borderLeftColor = freefloatColor;
             } else {
                 tokenBalanceGroup.style.display = 'none';
+                freefloatGroup.style.display = 'none';
             }
         };
 
@@ -2332,27 +2367,41 @@
                         }
                     }
                     
+                    // Add tokens back to freefloat (since they're being sold from user's portfolio)
+                    updateFreefloat(tokenId, order.amount, 'add');
+                    
                     // Add ETH to user's demo balance (simulating receiving payment)
                     addETHToBalance(order.total);
                     
-                    showMessage(`✅ Successfully sold ${order.amount} ${tokenInfo.name} tokens for ${order.total} ETH!`, 'success');
+                    showMessage(`✅ Successfully sold ${order.amount} ${tokenInfo.name} tokens for ${order.total} ETH! Tokens returned to freefloat.`, 'success');
                 } else {
                     // User bought tokens from the sell order
-                    // Add tokens to user's portfolio
-                    if (!userPortfolio[tokenId]) {
-                        userPortfolio[tokenId] = {
-                            name: tokenInfo.name,
-                            player: tokenInfo.player,
-                            balance: 0,
-                            price: tokenInfo.price
-                        };
+                    // Check if there are free-floating tokens available first
+                    if (hasFreefloat(tokenId, order.amount)) {
+                        // Execute from freefloat
+                        updateFreefloat(tokenId, order.amount, 'subtract');
+                        
+                        // Add tokens to user's portfolio
+                        if (!userPortfolio[tokenId]) {
+                            userPortfolio[tokenId] = {
+                                name: tokenInfo.name,
+                                player: tokenInfo.player,
+                                balance: 0,
+                                price: tokenInfo.price
+                            };
+                        }
+                        userPortfolio[tokenId].balance += order.amount;
+                        
+                        // Deduct ETH from user's demo balance
+                        deductETHFromBalance(order.total);
+                        
+                        showMessage(`✅ Successfully bought ${order.amount} ${tokenInfo.name} tokens for ${order.total} ETH from freefloat!`, 'success');
+                    } else {
+                        // No freefloat available, this shouldn't happen for sell orders
+                        // But handle gracefully
+                        showMessage(`❌ No free-floating tokens available for ${tokenInfo.name}. Order cannot be executed.`, 'error');
+                        return;
                     }
-                    userPortfolio[tokenId].balance += order.amount;
-                    
-                    // Deduct ETH from user's demo balance
-                    deductETHFromBalance(order.total);
-                    
-                    showMessage(`✅ Successfully bought ${order.amount} ${tokenInfo.name} tokens for ${order.total} ETH!`, 'success');
                 }
                 
                 // Update displays
@@ -2378,6 +2427,48 @@
             if (totalVolumeElement) {
                 totalVolumeElement.textContent = totalVolume.toFixed(4) + ' ETH';
             }
+        };
+
+        // Freefloat Management Functions
+        window.getFreefloat = function(tokenId) {
+            return tokenData[tokenId] ? tokenData[tokenId].freefloat : 0;
+        };
+
+        window.updateFreefloat = function(tokenId, amount, operation = 'subtract') {
+            if (!tokenData[tokenId]) return false;
+            
+            if (operation === 'subtract') {
+                if (tokenData[tokenId].freefloat >= amount) {
+                    tokenData[tokenId].freefloat -= amount;
+                    console.log(`Freefloat updated: ${tokenId} -${amount}, remaining: ${tokenData[tokenId].freefloat}`);
+                    return true;
+                } else {
+                    console.log(`Insufficient freefloat: ${tokenId} has ${tokenData[tokenId].freefloat}, need ${amount}`);
+                    return false;
+                }
+            } else if (operation === 'add') {
+                tokenData[tokenId].freefloat += amount;
+                console.log(`Freefloat updated: ${tokenId} +${amount}, total: ${tokenData[tokenId].freefloat}`);
+                return true;
+            }
+            return false;
+        };
+
+        window.hasFreefloat = function(tokenId, amount) {
+            return getFreefloat(tokenId) >= amount;
+        };
+
+        window.getFreefloatStatus = function(tokenId) {
+            const freefloat = getFreefloat(tokenId);
+            const totalSupply = tokenData[tokenId] ? tokenData[tokenId].totalSupply : 0;
+            const percentage = totalSupply > 0 ? (freefloat / totalSupply * 100).toFixed(1) : 0;
+            
+            return {
+                available: freefloat,
+                total: totalSupply,
+                percentage: percentage,
+                hasTokens: freefloat > 0
+            };
         };
 
         window.showMessage = function(message, type) {
@@ -2539,7 +2630,9 @@
             tokenData[tokenId] = {
                 name: `${playerName} Token (${tokenSymbol})`,
                 player: playerName,
-                price: 0.01 // Default price
+                price: 0.01, // Default price
+                totalSupply: tokenCount, // Use the token count as total supply
+                freefloat: tokenCount // All tokens start as free-floating
             };
             
             // Add the new token to the dropdown
@@ -2664,33 +2757,42 @@
             
             setTimeout(async () => {
                 if (orderType === 'buy') {
-                    // For buy orders, execute immediately and add to portfolio
-                    newOrder.status = 'executed';
-                    
-                    // Add tokens to user's portfolio
-                    if (!userPortfolio[selectedToken]) {
-                        userPortfolio[selectedToken] = {
-                            name: tokenInfo.name,
-                            player: tokenInfo.player,
-                            balance: 0,
-                            price: tokenInfo.price
-                        };
+                    // Check if there are free-floating tokens available
+                    if (hasFreefloat(selectedToken, tokenAmount)) {
+                        // Execute immediately from freefloat and add to portfolio
+                        newOrder.status = 'executed';
+                        
+                        // Deduct from freefloat
+                        updateFreefloat(selectedToken, tokenAmount, 'subtract');
+                        
+                        // Add tokens to user's portfolio
+                        if (!userPortfolio[selectedToken]) {
+                            userPortfolio[selectedToken] = {
+                                name: tokenInfo.name,
+                                player: tokenInfo.player,
+                                balance: 0,
+                                price: tokenInfo.price
+                            };
+                        }
+                        userPortfolio[selectedToken].balance = (userPortfolio[selectedToken].balance || 0) + tokenAmount;
+                        
+                        // Deduct ETH based on source selection
+                        if (ethSource === 'demo') {
+                            // Deduct from demo balance (simulating the transaction)
+                            deductETHFromBalance(totalCost);
+                            showMessage(`Buy order #${newOrder.id} executed immediately from freefloat! Added ${tokenAmount} ${tokenInfo.name} tokens to your portfolio. Deducted ${totalCost} ETH from demo balance.`, 'success');
+                        } else if (ethSource === 'sepolia') {
+                            // For Sepolia ETH, we don't actually deduct real ETH (it's a demo)
+                            // But we show a message about the transaction
+                            showMessage(`Buy order #${newOrder.id} executed immediately from freefloat! Added ${tokenAmount} ${tokenInfo.name} tokens to your portfolio. (Sepolia ETH validation passed - no real ETH spent in demo)`, 'success');
+                        }
+                        
+                        // Update portfolio to show the new tokens
+                        updatePortfolio();
+                    } else {
+                        // No freefloat available, add to marketplace
+                        showMessage(`Buy order #${newOrder.id} added to marketplace! No free-floating tokens available. Order will be executed when someone sells tokens to you.`, 'success');
                     }
-                    userPortfolio[selectedToken].balance = (userPortfolio[selectedToken].balance || 0) + tokenAmount;
-                    
-                    // Deduct ETH based on source selection
-                    if (ethSource === 'demo') {
-                        // Deduct from demo balance (simulating the transaction)
-                        deductETHFromBalance(totalCost);
-                        showMessage(`Buy order #${newOrder.id} executed immediately! Added ${tokenAmount} ${tokenInfo.name} tokens to your portfolio. Deducted ${totalCost} ETH from demo balance.`, 'success');
-                    } else if (ethSource === 'sepolia') {
-                        // For Sepolia ETH, we don't actually deduct real ETH (it's a demo)
-                        // But we show a message about the transaction
-                        showMessage(`Buy order #${newOrder.id} executed immediately! Added ${tokenAmount} ${tokenInfo.name} tokens to your portfolio. (Sepolia ETH validation passed - no real ETH spent in demo)`, 'success');
-                    }
-                    
-                    // Update portfolio to show the new tokens
-                    updatePortfolio();
                     
                 } else {
                     // For sell orders, just add to order book
