@@ -744,6 +744,9 @@
                     <div>
                         <h3>🏪 Marketplace - Find Counterparty Orders</h3>
                         <p>Browse and execute orders from other users. Be the counterparty to existing buy/sell orders.</p>
+                        <div style="background: rgba(52, 152, 219, 0.1); padding: 10px; border-radius: 8px; margin: 10px 0; border-left: 4px solid #3498db;">
+                            <strong>💡 Demo ETH Only:</strong> All marketplace transactions use Demo ETH for a consistent demo experience. No real ETH is required or spent.
+                        </div>
                         
                         <!-- Marketplace Filters -->
                         <div style="margin: 20px 0; padding: 15px; background: rgba(255, 255, 255, 0.1); border-radius: 10px;">
@@ -2288,9 +2291,9 @@
                     // User would be buying tokens from this sell order
                     if (demoETHBalance >= order.total) {
                         canExecute = true;
-                        executionMessage = `You have ${demoETHBalance.toFixed(4)} ETH available`;
+                        executionMessage = `You have ${demoETHBalance.toFixed(4)} Demo ETH available`;
                     } else {
-                        executionMessage = `You need ${order.total.toFixed(4)} ETH (have ${demoETHBalance.toFixed(4)})`;
+                        executionMessage = `You need ${order.total.toFixed(4)} Demo ETH (have ${demoETHBalance.toFixed(4)})`;
                     }
                 }
                 
@@ -2345,7 +2348,7 @@
             } else {
                 // User is buying tokens from a sell order
                 if (demoETHBalance < order.total) {
-                    showMessage(`Insufficient ETH balance! You need ${order.total.toFixed(4)} ETH but only have ${demoETHBalance.toFixed(4)}.`, 'error');
+                    showMessage(`Insufficient Demo ETH balance! You need ${order.total.toFixed(4)} Demo ETH but only have ${demoETHBalance.toFixed(4)}.`, 'error');
                     return;
                 }
             }
@@ -2373,7 +2376,7 @@
                     // Add ETH to user's demo balance (simulating receiving payment)
                     addETHToBalance(order.total);
                     
-                    showMessage(`✅ Successfully sold ${order.amount} ${tokenInfo.name} tokens for ${order.total} ETH! Tokens returned to freefloat.`, 'success');
+                    showMessage(`✅ Successfully sold ${order.amount} ${tokenInfo.name} tokens for ${order.total} Demo ETH! Tokens returned to freefloat.`, 'success');
                 } else {
                     // User bought tokens from the sell order
                     // Check if there are free-floating tokens available first
@@ -2395,7 +2398,7 @@
                         // Deduct ETH from user's demo balance
                         deductETHFromBalance(order.total);
                         
-                        showMessage(`✅ Successfully bought ${order.amount} ${tokenInfo.name} tokens for ${order.total} ETH from freefloat!`, 'success');
+                        showMessage(`✅ Successfully bought ${order.amount} ${tokenInfo.name} tokens for ${order.total} Demo ETH from freefloat!`, 'success');
                     } else {
                         // No freefloat available, this shouldn't happen for sell orders
                         // But handle gracefully
