@@ -256,6 +256,76 @@
             display: block;
         }
         
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+        }
+        
+        .modal-content {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .modal-header h3 {
+            color: white;
+            margin: 0;
+        }
+        
+        .close {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+        
+        .close:hover {
+            color: white;
+        }
+        
+        .modal-body {
+            color: white;
+        }
+        
+        .token-info {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .modal-footer {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
         .form-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -813,6 +883,55 @@
                 <div id="portfolio-grid" class="grid">
                     <!-- Portfolio items will be generated dynamically -->
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sell Token Modal -->
+    <div id="sell-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🔴 Sell Tokens</h3>
+                <span class="close" onclick="closeSellModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="token-info">
+                    <h4 id="sell-token-name">Token Name</h4>
+                    <p><strong>Player:</strong> <span id="sell-token-player"></span></p>
+                    <p><strong>Your Balance:</strong> <span id="sell-token-balance"></span> tokens</p>
+                    <p><strong>Current Price:</strong> <span id="sell-token-price"></span> ETH/token</p>
+                </div>
+                
+                <form id="sell-form">
+                    <div class="form-group">
+                        <label for="sell-amount">Amount to Sell:</label>
+                        <input type="number" id="sell-amount" placeholder="Enter amount" min="1" required>
+                        <small style="color: #bbb;">Maximum: <span id="sell-max-amount"></span> tokens</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="sell-price">Price per Token (ETH):</label>
+                        <input type="number" id="sell-price" placeholder="Enter price" step="0.001" min="0.001" required>
+                        <small style="color: #bbb;">Current market price: <span id="sell-current-price"></span> ETH/token</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="sell-total">Total Value:</label>
+                        <input type="number" id="sell-total" placeholder="0.000" step="0.001" readonly>
+                        <small style="color: #bbb;">Amount × Price = Total</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="sell-confirm" required>
+                            I confirm I want to sell these tokens and create a sell order
+                        </label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn" onclick="closeSellModal()">Cancel</button>
+                <button type="button" class="btn btn-warning" onclick="submitSellOrder()">Create Sell Order</button>
             </div>
         </div>
     </div>
@@ -1991,15 +2110,152 @@
             }, 1000);
         };
 
-        window.sellTokens = function(symbol, amount) {
-            const tokenInfo = Object.values(tokenData).find(token => token.name.includes(symbol));
-            const playerName = tokenInfo ? tokenInfo.player : 'Unknown Player';
-            const message = `Creating sell order for ${amount} ${symbol} tokens (${playerName})...`;
-            showMessage(message, 'success');
+        // Sell Modal Functions
+        let currentSellTokenId = null;
+
+        window.openSellModal = function(tokenId) {
+            currentSellTokenId = tokenId;
+            const token = userPortfolio[tokenId];
+            const tokenInfo = tokenData[tokenId];
             
-            setTimeout(() => {
-                showMessage(`Sell order created for ${amount} ${symbol} tokens!`, 'success');
-            }, 1000);
+            if (!token || !tokenInfo) {
+                showMessage('Token not found!', 'error');
+                return;
+            }
+            
+            // Populate modal with token information
+            document.getElementById('sell-token-name').textContent = token.name;
+            document.getElementById('sell-token-player').textContent = token.player;
+            document.getElementById('sell-token-balance').textContent = token.balance;
+            document.getElementById('sell-token-price').textContent = token.price;
+            document.getElementById('sell-current-price').textContent = token.price;
+            document.getElementById('sell-max-amount').textContent = token.balance;
+            
+            // Set default values
+            document.getElementById('sell-amount').value = '';
+            document.getElementById('sell-amount').max = token.balance;
+            document.getElementById('sell-price').value = token.price;
+            document.getElementById('sell-total').value = '';
+            document.getElementById('sell-confirm').checked = false;
+            
+            // Show modal
+            document.getElementById('sell-modal').style.display = 'block';
+        };
+
+        window.closeSellModal = function() {
+            document.getElementById('sell-modal').style.display = 'none';
+            currentSellTokenId = null;
+        };
+
+        window.submitSellOrder = async function() {
+            if (!currentSellTokenId) {
+                showMessage('No token selected!', 'error');
+                return;
+            }
+            
+            const token = userPortfolio[currentSellTokenId];
+            const tokenInfo = tokenData[currentSellTokenId];
+            
+            if (!token || !tokenInfo) {
+                showMessage('Token not found!', 'error');
+                return;
+            }
+            
+            const amount = parseInt(document.getElementById('sell-amount').value);
+            const price = parseFloat(document.getElementById('sell-price').value);
+            const confirmCheckbox = document.getElementById('sell-confirm');
+            
+            // Validation
+            if (!amount || amount <= 0) {
+                showMessage('Please enter a valid amount!', 'error');
+                return;
+            }
+            
+            if (amount > token.balance) {
+                showMessage(`You can only sell up to ${token.balance} tokens!`, 'error');
+                return;
+            }
+            
+            if (!price || price <= 0) {
+                showMessage('Please enter a valid price!', 'error');
+                return;
+            }
+            
+            if (!confirmCheckbox.checked) {
+                showMessage('Please confirm that you want to create this sell order!', 'error');
+                return;
+            }
+            
+            const total = amount * price;
+            
+            // Create the sell order
+            const newOrder = {
+                id: orderIdCounter++,
+                type: 'sell',
+                tokenId: currentSellTokenId,
+                amount: amount,
+                price: price,
+                total: total,
+                status: 'active',
+                createdBy: currentUser ? 'user' : 'anonymous',
+                ethSource: 'demo' // Sell orders always use demo ETH
+            };
+            
+            orders.push(newOrder);
+            console.log('New sell order added:', newOrder);
+            
+            // Save order to Firestore
+            const firestoreId = await saveOrderToFirestore(newOrder);
+            if (firestoreId) {
+                newOrder.firestoreId = firestoreId;
+                console.log('Sell order saved to Firestore with ID:', firestoreId);
+            }
+            
+            // Close modal
+            closeSellModal();
+            
+            // Show success message
+            showMessage(`Sell order created for ${amount} ${tokenInfo.name} tokens at ${price} ETH/token!`, 'success');
+            
+            // Update UI
+            updatePortfolio();
+            updateOrderBook();
+            updateMarketplace();
+            updateTradingStats();
+        };
+
+        // Calculate total when amount or price changes
+        document.addEventListener('DOMContentLoaded', function() {
+            const sellAmountInput = document.getElementById('sell-amount');
+            const sellPriceInput = document.getElementById('sell-price');
+            const sellTotalInput = document.getElementById('sell-total');
+            
+            function calculateSellTotal() {
+                const amount = parseFloat(sellAmountInput.value) || 0;
+                const price = parseFloat(sellPriceInput.value) || 0;
+                const total = amount * price;
+                sellTotalInput.value = total.toFixed(6);
+            }
+            
+            if (sellAmountInput) {
+                sellAmountInput.addEventListener('input', calculateSellTotal);
+            }
+            if (sellPriceInput) {
+                sellPriceInput.addEventListener('input', calculateSellTotal);
+            }
+            
+            // Close modal when clicking outside
+            window.addEventListener('click', function(event) {
+                const modal = document.getElementById('sell-modal');
+                if (event.target === modal) {
+                    closeSellModal();
+                }
+            });
+        });
+
+        // Legacy function for backward compatibility
+        window.sellTokens = function(symbol, amount) {
+            showMessage('Please use the new sell interface by clicking the Sell button in your portfolio!', 'info');
         };
 
         // Function to update portfolio display
@@ -2124,7 +2380,7 @@
                     <p><strong>Current Value:</strong> ${currentValue.toFixed(3)} ETH</p>
                     <p><strong>Current Potential Winnings:</strong> ${currentWinnings.toFixed(3)} ETH</p>
                     ${orderInfo}
-                    <button class="btn btn-warning" onclick="sellTokens('${tokenId}', ${currentBalance})">Sell</button>
+                    <button class="btn btn-warning" onclick="openSellModal('${tokenId}')">Sell</button>
                 `;
                 portfolioGrid.appendChild(portfolioItem);
             });
