@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { Web3Provider } from './context/Web3Context';
+import { AuthProvider } from './context/AuthContext';
 import Header from './components/Header';
 import CreateTournament from './components/CreateTournament';
 import TournamentList from './components/TournamentList';
@@ -17,9 +18,10 @@ function App() {
   };
 
   return (
-    <Web3Provider>
-      <div style={{ minHeight: '100vh' }}>
-        <Header />
+    <AuthProvider>
+      <Web3Provider>
+        <div style={{ minHeight: '100vh' }}>
+          <Header />
         
         <main style={{ padding: '40px 0' }}>
           <div className="container">
@@ -226,8 +228,9 @@ function App() {
             },
           }}
         />
-      </div>
-    </Web3Provider>
+        </div>
+      </Web3Provider>
+    </AuthProvider>
   );
 }
 

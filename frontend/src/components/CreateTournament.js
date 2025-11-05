@@ -1,11 +1,13 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useWeb3 } from '../context/Web3Context';
+import { useAuth } from '../context/AuthContext';
 import { getTournamentManagerContract, parseEther } from '../utils/contracts';
 import { tournamentList, searchTournaments } from '../utils/tournamentData';
 import toast from 'react-hot-toast';
 
 const CreateTournament = ({ onTournamentCreated }) => {
   const { signer, TOURNAMENT_MANAGER_ADDRESS, isConnected } = useWeb3();
+  const { isAuthenticated } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTournament, setSelectedTournament] = useState(null);
@@ -71,6 +73,11 @@ const CreateTournament = ({ onTournamentCreated }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    if (!isAuthenticated) {
+      toast.error('Please sign in first to create a token');
+      return;
+    }
+
     if (!isConnected) {
       toast.error('Please connect your wallet first');
       return;
@@ -403,7 +410,7 @@ const CreateTournament = ({ onTournamentCreated }) => {
         <button
           type="submit"
           className="btn btn-primary"
-          disabled={isLoading || !isConnected || !selectedTournament}
+          disabled={isLoading || !isAuthenticated || !isConnected || !selectedTournament}
           style={{ 
             width: '100%', 
             marginTop: '16px',
@@ -425,7 +432,12 @@ const CreateTournament = ({ onTournamentCreated }) => {
           )}
         </button>
 
-        {!isConnected && (
+        {!isAuthenticated && (
+          <p className="text-muted text-center" style={{ marginTop: '16px', fontSize: '14px' }}>
+            Please sign in to create a tournament token
+          </p>
+        )}
+        {!isConnected && isAuthenticated && (
           <p className="text-muted text-center" style={{ marginTop: '16px', fontSize: '14px' }}>
             Please connect your wallet to create a tournament token
           </p>

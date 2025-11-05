@@ -1,11 +1,21 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useWeb3 } from '../context/Web3Context';
+import { useAuth } from '../context/AuthContext';
+import AuthModal from './AuthModal';
 import toast from 'react-hot-toast';
 
 const Header = () => {
   const { account, isConnected, connectWallet, disconnectWallet, isLoading, chainId } = useWeb3();
+  const { user, isAuthenticated, signOut } = useAuth();
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   const handleConnect = async () => {
+    if (!isAuthenticated) {
+      toast.error('Please sign in first to connect your wallet');
+      setShowAuthModal(true);
+      return;
+    }
+
     try {
       await connectWallet();
       toast.success('Wallet connected successfully!');
@@ -17,6 +27,12 @@ const Header = () => {
   const handleDisconnect = () => {
     disconnectWallet();
     toast.success('Wallet disconnected');
+  };
+
+  const handleSignOut = () => {
+    signOut();
+    disconnectWallet();
+    toast.success('Signed out successfully');
   };
 
   const formatAddress = (address) => {
@@ -90,53 +106,116 @@ const Header = () => {
             alignItems: 'center',
             gap: '12px'
           }}>
-            {isConnected ? (
-              <>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  background: '#f3f4f6',
-                  padding: '8px 16px',
-                  borderRadius: '20px',
-                  border: '1px solid #d1d5db'
-                }}>
-                  <div style={{
-                    width: '8px',
-                    height: '8px',
-                    borderRadius: '50%',
-                    background: '#2563eb'
-                  }}></div>
-                  <span style={{ fontSize: '14px', fontWeight: '600', color: '#1f2937' }}>
-                    {formatAddress(account)}
-                  </span>
-                </div>
-                <button
-                  onClick={handleDisconnect}
-                  className="btn btn-secondary"
-                  style={{ padding: '8px 16px', fontSize: '14px' }}
-                >
-                  Disconnect
-                </button>
-              </>
-            ) : (
+            {!isAuthenticated ? (
               <button
-                onClick={handleConnect}
+                onClick={() => setShowAuthModal(true)}
                 className="btn btn-primary"
-                disabled={isLoading}
-                style={{ padding: '8px 16px', fontSize: '14px' }}
+                style={{ 
+                  padding: '8px 16px', 
+                  fontSize: '14px',
+                  fontWeight: '700',
+                  fontFamily: '"Bungee", "Impact", "Arial Black", sans-serif',
+                  letterSpacing: '0.5px',
+                  textTransform: 'uppercase'
+                }}
               >
-                {isLoading ? (
+                SIGN IN
+              </button>
+            ) : (
+              <>
+                {user && (
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    background: '#f3f4f6',
+                    padding: '8px 16px',
+                    borderRadius: '20px',
+                    border: '1px solid #d1d5db'
+                  }}>
+                    <div style={{
+                      width: '8px',
+                      height: '8px',
+                      borderRadius: '50%',
+                      background: '#10b981'
+                    }}></div>
+                    <span style={{ fontSize: '14px', fontWeight: '600', color: '#1f2937' }}>
+                      {user.name || user.email}
+                    </span>
+                  </div>
+                )}
+                {isConnected ? (
                   <>
-                    <div className="loading"></div>
-                    Connecting...
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      background: '#f3f4f6',
+                      padding: '8px 16px',
+                      borderRadius: '20px',
+                      border: '1px solid #d1d5db'
+                    }}>
+                      <div style={{
+                        width: '8px',
+                        height: '8px',
+                        borderRadius: '50%',
+                        background: '#2563eb'
+                      }}></div>
+                      <span style={{ fontSize: '14px', fontWeight: '600', color: '#1f2937' }}>
+                        {formatAddress(account)}
+                      </span>
+                    </div>
+                    <button
+                      onClick={handleDisconnect}
+                      className="btn btn-secondary"
+                      style={{ padding: '8px 16px', fontSize: '14px' }}
+                    >
+                      Disconnect
+                    </button>
                   </>
                 ) : (
-                  'Connect Wallet'
+                  <button
+                    onClick={handleConnect}
+                    className="btn btn-primary"
+                    disabled={isLoading}
+                    style={{ 
+                      padding: '8px 16px', 
+                      fontSize: '14px',
+                      fontWeight: '700',
+                      fontFamily: '"Bungee", "Impact", "Arial Black", sans-serif',
+                      letterSpacing: '0.5px',
+                      textTransform: 'uppercase'
+                    }}
+                  >
+                    {isLoading ? (
+                      <>
+                        <div className="loading"></div>
+                        CONNECTING...
+                      </>
+                    ) : (
+                      'CONNECT WALLET'
+                    )}
+                  </button>
                 )}
-              </button>
+                <button
+                  onClick={handleSignOut}
+                  className="btn btn-secondary"
+                  style={{ 
+                    padding: '8px 16px', 
+                    fontSize: '14px',
+                    fontWeight: '600'
+                  }}
+                >
+                  SIGN OUT
+                </button>
+              </>
             )}
           </div>
+          
+          <AuthModal 
+            isOpen={showAuthModal} 
+            onClose={() => setShowAuthModal(false)} 
+          />
         </div>
       </div>
     </header>
