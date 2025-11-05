@@ -5,7 +5,7 @@ import AuthModal from './AuthModal';
 import WalletModal from './WalletModal';
 import toast from 'react-hot-toast';
 
-const Header = () => {
+const Header = ({ onNavigateToDashboard, isDashboardActive = false }) => {
   const { account, isConnected, connectWallet, disconnectWallet, isLoading, chainId } = useWeb3();
   const { user, isAuthenticated, signOut } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -113,6 +113,40 @@ const Header = () => {
             alignItems: 'center',
             gap: '12px'
           }}>
+            {isAuthenticated && onNavigateToDashboard && (
+              <button
+                onClick={onNavigateToDashboard}
+                className="btn"
+                style={{
+                  padding: '8px 16px',
+                  fontSize: '14px',
+                  fontWeight: '700',
+                  fontFamily: '"Bungee", "Impact", "Arial Black", sans-serif',
+                  letterSpacing: '0.5px',
+                  textTransform: 'uppercase',
+                  background: isDashboardActive ? '#1d4ed8' : '#2563eb',
+                  color: '#ffffff',
+                  border: `2px solid ${isDashboardActive ? '#1d4ed8' : '#2563eb'}`,
+                  borderRadius: '8px',
+                  transition: 'all 0.2s ease',
+                  boxShadow: isDashboardActive ? '0 4px 12px rgba(29, 78, 216, 0.3)' : 'none'
+                }}
+                onMouseEnter={(e) => {
+                  if (!isDashboardActive) {
+                    e.target.style.background = '#1d4ed8';
+                    e.target.style.borderColor = '#1d4ed8';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isDashboardActive) {
+                    e.target.style.background = '#2563eb';
+                    e.target.style.borderColor = '#2563eb';
+                  }
+                }}
+              >
+                📊 DASHBOARD
+              </button>
+            )}
             {!isAuthenticated ? (
               <button
                 onClick={() => setShowAuthModal(true)}

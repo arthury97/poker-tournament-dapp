@@ -22,7 +22,10 @@ function App() {
     <AuthProvider>
       <Web3Provider>
         <div style={{ minHeight: '100vh' }}>
-          <Header />
+          <Header 
+            onNavigateToDashboard={() => setActiveTab('dashboard')}
+            isDashboardActive={activeTab === 'dashboard'}
+          />
         
         <main style={{ padding: '40px 0' }}>
           <div className="container">
@@ -74,25 +77,6 @@ function App() {
                 }}
               >
                 🏆 TOURNAMENTS
-              </button>
-              <button
-                onClick={() => setActiveTab('dashboard')}
-                className="btn"
-                style={{
-                  background: activeTab === 'dashboard' ? '#ffffff' : 'transparent',
-                  color: activeTab === 'dashboard' ? '#1f2937' : '#ffffff',
-                  border: 'none',
-                  flex: 1,
-                  padding: '12px 24px',
-                  borderRadius: '8px',
-                  fontWeight: '700',
-                  fontFamily: '"Bungee", "Impact", "Arial Black", sans-serif',
-                  letterSpacing: '0.5px',
-                  textTransform: 'uppercase',
-                  transition: 'all 0.2s ease'
-                }}
-              >
-                📊 DASHBOARD
               </button>
               <button
                 onClick={() => setActiveTab('create')}
