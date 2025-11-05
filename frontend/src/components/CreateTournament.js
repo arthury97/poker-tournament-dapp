@@ -3,6 +3,7 @@ import { useWeb3 } from '../context/Web3Context';
 import { useAuth } from '../context/AuthContext';
 import { getTournamentManagerContract, parseEther, usdtToEth } from '../utils/contracts';
 import { tournamentList, searchTournaments } from '../utils/tournamentData';
+import { formatDateRange, getDateRangeDisplay } from '../utils/dateFormat';
 import toast from 'react-hot-toast';
 
 const CreateTournament = ({ onTournamentCreated }) => {
@@ -285,9 +286,14 @@ const CreateTournament = ({ onTournamentCreated }) => {
                         <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>
                           {tournament.series}
                         </div>
-                        <div style={{ fontSize: '12px', color: '#6b7280' }}>
-                          📍 {tournament.location} • 📅 {tournament.startDate}
+                        <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>
+                          📍 {tournament.location}
                         </div>
+                        {tournament.startDate && (
+                          <div style={{ fontSize: '12px', color: '#2563eb', fontWeight: '600' }}>
+                            📅 {formatDateRange(tournament.startDate, tournament.endDate)}
+                          </div>
+                        )}
                       </div>
                       <div style={{ marginLeft: '12px' }}>
                         {getTypeBadge(tournament.type)}
@@ -323,9 +329,14 @@ const CreateTournament = ({ onTournamentCreated }) => {
               <div style={{ fontSize: '18px', fontWeight: '700', color: '#2563eb', marginBottom: '4px' }}>
                 {selectedTournament.name}
               </div>
-              <div style={{ fontSize: '14px', color: '#6b7280' }}>
-                {selectedTournament.series} • {selectedTournament.location} • {selectedTournament.startDate}
+              <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '4px' }}>
+                {selectedTournament.series} • {selectedTournament.location}
               </div>
+              {selectedTournament.startDate && (
+                <div style={{ fontSize: '14px', color: '#2563eb', fontWeight: '600' }}>
+                  📅 {formatDateRange(selectedTournament.startDate, selectedTournament.endDate)}
+                </div>
+              )}
             </div>
           )}
         </div>

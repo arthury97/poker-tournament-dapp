@@ -1,5 +1,6 @@
 import React from 'react';
 import { useWeb3 } from '../context/Web3Context';
+import { formatDateRange, getDateRangeDisplay } from '../utils/dateFormat';
 
 const DemoTournament = () => {
   const { isConnected } = useWeb3();
@@ -19,7 +20,8 @@ const DemoTournament = () => {
       description: 'Asia Poker Tour Taiwan - Main Event',
       location: 'Taipei, Taiwan',
       prizePool: '50,000',
-      startDate: '2025-12-15'
+      startDate: '2025-12-15',
+      endDate: '2025-12-22'
     },
     {
       id: 2,
@@ -34,7 +36,8 @@ const DemoTournament = () => {
       description: 'World Series of Poker Global Championship',
       location: 'Las Vegas, USA',
       prizePool: '100,000',
-      startDate: '2025-12-20'
+      startDate: '2025-12-20',
+      endDate: '2026-01-05'
     }
   ];
 
@@ -178,17 +181,15 @@ const DemoTournament = () => {
                   </div>
                 </div>
 
-                {/* Location and Date */}
+                {/* Location and Dates */}
                 <div style={{ 
-                  display: 'flex', 
-                  justifyContent: 'space-between',
                   marginBottom: '16px',
-                  padding: '12px',
+                  padding: '16px',
                   background: '#eff6ff',
                   borderRadius: '8px',
                   border: '2px solid #dbeafe'
                 }}>
-                  <div>
+                  <div style={{ marginBottom: '12px' }}>
                     <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px', fontWeight: '600' }}>
                       LOCATION
                     </div>
@@ -196,14 +197,44 @@ const DemoTournament = () => {
                       📍 {tournament.location}
                     </div>
                   </div>
-                  <div>
-                    <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px', fontWeight: '600' }}>
-                      START DATE
+                  <div style={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: 'repeat(2, 1fr)', 
+                    gap: '12px'
+                  }}>
+                    <div>
+                      <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px', fontWeight: '600' }}>
+                        START DATE
+                      </div>
+                      <div style={{ fontSize: '16px', fontWeight: '700', color: '#1f2937' }}>
+                        📅 {tournament.startDate || 'TBD'}
+                      </div>
                     </div>
-                    <div style={{ fontSize: '16px', fontWeight: '700', color: '#1f2937' }}>
-                      📅 {tournament.startDate}
+                    <div>
+                      <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px', fontWeight: '600' }}>
+                        END DATE
+                      </div>
+                      <div style={{ fontSize: '16px', fontWeight: '700', color: '#1f2937' }}>
+                        📅 {tournament.endDate || 'TBD'}
+                      </div>
                     </div>
                   </div>
+                  {tournament.startDate && tournament.endDate && (
+                    <div style={{ 
+                      marginTop: '12px',
+                      padding: '8px',
+                      background: '#ffffff',
+                      borderRadius: '6px',
+                      border: '1px solid #dbeafe'
+                    }}>
+                      <div style={{ fontSize: '11px', color: '#6b7280', marginBottom: '2px', fontWeight: '600' }}>
+                        TOURNAMENT PERIOD
+                      </div>
+                      <div style={{ fontSize: '14px', fontWeight: '700', color: '#2563eb' }}>
+                        {formatDateRange(tournament.startDate, tournament.endDate)}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 

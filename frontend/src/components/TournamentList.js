@@ -3,6 +3,7 @@ import { useWeb3 } from '../context/Web3Context';
 import { useAuth } from '../context/AuthContext';
 import { getTournamentManagerContract, getPokerTokenContract, ethToUSDT, formatUSDT } from '../utils/contracts';
 import { tournamentList as predefinedTournaments } from '../utils/tournamentData';
+import { formatDateRange, getDateRangeDisplay } from '../utils/dateFormat';
 import toast from 'react-hot-toast';
 
 const TournamentList = ({ refreshTrigger }) => {
@@ -270,9 +271,18 @@ const TournamentList = ({ refreshTrigger }) => {
                   <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '4px', fontWeight: '600' }}>
                     {tournament.series || 'Custom Tournament'}
                   </div>
-                  <div style={{ fontSize: '12px', color: '#6b7280' }}>
-                    📍 {tournament.location} • 📅 {tournament.startDate || 'TBD'}
+                  <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>
+                    📍 {tournament.location}
                   </div>
+                  {tournament.startDate && (
+                    <div style={{ 
+                      fontSize: '12px', 
+                      color: '#2563eb',
+                      fontWeight: '600'
+                    }}>
+                      📅 {formatDateRange(tournament.startDate, tournament.endDate)}
+                    </div>
+                  )}
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-end' }}>
                   {tournament.type && getTypeBadge(tournament.type)}
