@@ -56,3 +56,6 @@ export const formatUnits = (value, decimals = 18) => {
 export const parseUnits = (value, decimals = 18) => {
   return ethers.parseUnits(value, decimals);
 };
+
+// Export USDT conversion utilities
+export { ethToUSDT, ethDecimalToUSDT, formatUSDT, usdtToEth, getEthToUsdtRate } from './usdtConversion';

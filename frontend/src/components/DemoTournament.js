@@ -134,7 +134,7 @@ const DemoTournament = () => {
                       BUY-IN
                     </div>
                     <div style={{ fontSize: '20px', fontWeight: '700', color: '#1f2937' }}>
-                      {tournament.buyInAmount} ETH
+                      {tournament.buyInAmount ? (parseFloat(tournament.buyInAmount) * 3000).toFixed(2) : '0.00'} USDT
                     </div>
                   </div>
                   <div style={{ 
@@ -173,7 +173,7 @@ const DemoTournament = () => {
                       TOKEN PRICE
                     </div>
                     <div style={{ fontSize: '20px', fontWeight: '700', color: '#1f2937' }}>
-                      {tokenPrice} ETH
+                      {(parseFloat(tokenPrice) * 3000).toFixed(2)} USDT
                     </div>
                   </div>
                 </div>

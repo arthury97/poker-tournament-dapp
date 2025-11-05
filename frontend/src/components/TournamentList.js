@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useWeb3 } from '../context/Web3Context';
 import { useAuth } from '../context/AuthContext';
-import { getTournamentManagerContract, getPokerTokenContract, formatEther } from '../utils/contracts';
+import { getTournamentManagerContract, getPokerTokenContract, formatEther, ethToUSDT, formatUSDT } from '../utils/contracts';
 import { tournamentList as predefinedTournaments } from '../utils/tournamentData';
 import toast from 'react-hot-toast';
 
@@ -214,6 +214,7 @@ const TournamentList = ({ refreshTrigger }) => {
         {allTournaments.map((tournament, index) => {
           const isPredefined = !tournament.isOnChain;
           const buyInEth = tournament.buyInAmount ? formatEther(tournament.buyInAmount) : (tournament.buyIn ? (tournament.buyIn / 1000).toFixed(2) : 'N/A');
+          const buyInUSDT = tournament.buyInAmount ? formatUSDT(ethToUSDT(tournament.buyInAmount)) : (tournament.buyIn ? formatUSDT(tournament.buyIn) : 'N/A');
           const progress = tournament.isOnChain ? getProgressPercentage(tournament.tokensSold, tournament.totalTokens) : 0;
 
           return (
@@ -279,11 +280,11 @@ const TournamentList = ({ refreshTrigger }) => {
                       BUY-IN
                     </div>
                     <div style={{ fontSize: '18px', fontWeight: '700', color: '#1f2937' }}>
-                      {buyInEth} ETH
+                      {buyInUSDT} USDT
                     </div>
                     {tournament.buyIn && (
                       <div style={{ fontSize: '11px', color: '#6b7280', marginTop: '2px' }}>
-                        ${tournament.buyIn.toLocaleString()}
+                        ${tournament.buyIn.toLocaleString()} USD
                       </div>
                     )}
                   </div>
@@ -390,7 +391,7 @@ const TournamentList = ({ refreshTrigger }) => {
                       TOTAL WINNINGS
                     </div>
                     <div style={{ fontSize: '20px', fontWeight: '700', color: '#2563eb' }}>
-                      {formatEther(tournament.totalWinnings)} ETH
+                      {formatUSDT(ethToUSDT(tournament.totalWinnings))} USDT
                     </div>
                   </div>
                 )}

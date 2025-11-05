@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useWeb3 } from '../context/Web3Context';
 import { useAuth } from '../context/AuthContext';
-import { getTournamentManagerContract, parseEther } from '../utils/contracts';
+import { getTournamentManagerContract, parseEther, usdtToEth, getEthToUsdtRate } from '../utils/contracts';
 import { tournamentList, searchTournaments } from '../utils/tournamentData';
 import toast from 'react-hot-toast';
 
@@ -55,10 +55,12 @@ const CreateTournament = ({ onTournamentCreated }) => {
     setShowDropdown(false);
     
     // Pre-fill form with tournament data
+    // Convert tournament buy-in (USD) to USDT equivalent, then to ETH for smart contract
+    const buyInUSDT = tournament.buyIn ? tournament.buyIn.toString() : '';
     setFormData(prev => ({
       ...prev,
       symbol: tournament.series.split(' ').map(word => word[0]).join('').toUpperCase() || tournament.name.substring(0, 4).toUpperCase(),
-      buyInAmount: tournament.buyIn ? (tournament.buyIn / 1000).toFixed(2) : '',
+      buyInAmount: buyInUSDT, // Store as USDT in form
     }));
   };
 
@@ -103,6 +105,9 @@ const CreateTournament = ({ onTournamentCreated }) => {
       if (!formData.buyInAmount || parseFloat(formData.buyInAmount) <= 0) {
         throw new Error('Buy-in amount must be greater than 0');
       }
+
+      // Convert USDT to ETH for smart contract
+      const buyInEth = usdtToEth(formData.buyInAmount);
       if (!formData.totalTokens || parseInt(formData.totalTokens) <= 0) {
         throw new Error('Total tokens must be greater than 0');
       }
@@ -118,7 +123,7 @@ const CreateTournament = ({ onTournamentCreated }) => {
       const tx = await tournamentManager.createTournament(
         tournamentName,
         formData.symbol.trim().toUpperCase(),
-        parseEther(formData.buyInAmount),
+        parseEther(buyInEth), // Convert USDT to ETH for smart contract
         parseInt(formData.totalTokens),
         parseInt(formData.profitSharePercentage)
       );
@@ -347,7 +352,7 @@ const CreateTournament = ({ onTournamentCreated }) => {
 
         <div className="form-group">
           <label className="form-label" htmlFor="buyInAmount">
-            BUY-IN AMOUNT (ETH) *
+            BUY-IN AMOUNT (USDT) *
           </label>
           <input
             type="number"
@@ -356,13 +361,14 @@ const CreateTournament = ({ onTournamentCreated }) => {
             className="form-input"
             value={formData.buyInAmount}
             onChange={handleInputChange}
-            placeholder={selectedTournament?.buyIn ? (selectedTournament.buyIn / 1000).toFixed(2) : "1.0"}
+            placeholder={selectedTournament?.buyIn ? selectedTournament.buyIn.toString() : "3000"}
             step="0.01"
             min="0.01"
             required
           />
           <small className="text-muted" style={{ fontSize: '12px', display: 'block', marginTop: '4px' }}>
-            {selectedTournament?.buyIn && `Tournament buy-in: $${selectedTournament.buyIn.toLocaleString()}`}
+            {selectedTournament?.buyIn && `Tournament buy-in: ${selectedTournament.buyIn.toLocaleString()} USDT`}
+            {selectedTournament?.buyIn && ` (≈ ${usdtToEth(selectedTournament.buyIn)} ETH on-chain)`}
           </small>
         </div>
 
