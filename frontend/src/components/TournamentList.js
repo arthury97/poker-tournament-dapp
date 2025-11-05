@@ -12,13 +12,26 @@ const TournamentList = ({ refreshTrigger }) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const loadOnChainTournaments = async () => {
-    if (!isConnected || !signer) return;
+    // Don't try to load if wallet is not connected or contract address is missing
+    if (!isConnected || !signer || !TOURNAMENT_MANAGER_ADDRESS) {
+      setOnChainTournaments([]);
+      setIsLoading(false);
+      return;
+    }
 
     try {
       setIsLoading(true);
       const tournamentManager = getTournamentManagerContract(TOURNAMENT_MANAGER_ADDRESS, signer);
       
       const totalTournaments = await tournamentManager.getTotalTournaments();
+      
+      // If no tournaments exist, just set empty array
+      if (totalTournaments === 0n || totalTournaments === 0) {
+        setOnChainTournaments([]);
+        setIsLoading(false);
+        return;
+      }
+      
       const tournamentPromises = [];
 
       for (let i = 0; i < totalTournaments; i++) {
@@ -58,7 +71,20 @@ const TournamentList = ({ refreshTrigger }) => {
 
     } catch (error) {
       console.error('Error loading tournaments:', error);
-      toast.error('Failed to load tournaments');
+      // Only show error if it's a real error, not just missing configuration
+      // Check if error is due to missing contract or network issues
+      if (error.message && (
+        error.message.includes('contract') || 
+        error.message.includes('network') ||
+        error.message.includes('revert')
+      )) {
+        // Don't show error for expected cases - just log it
+        console.warn('Tournament loading skipped:', error.message);
+      } else {
+        // Only show toast for unexpected errors
+        toast.error('Failed to load on-chain tournaments');
+      }
+      setOnChainTournaments([]);
     } finally {
       setIsLoading(false);
     }
