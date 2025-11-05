@@ -28,22 +28,26 @@ function App() {
               display: 'flex',
               gap: '8px',
               marginBottom: '32px',
-              background: 'rgba(255, 255, 255, 0.1)',
+              background: 'rgba(255, 255, 255, 0.15)',
               padding: '4px',
               borderRadius: '12px',
-              backdropFilter: 'blur(10px)'
+              backdropFilter: 'blur(10px)',
+              border: '2px solid rgba(255, 255, 255, 0.2)'
             }}>
               <button
                 onClick={() => setActiveTab('demo')}
                 className="btn"
                 style={{
-                  background: activeTab === 'demo' ? 'white' : 'transparent',
-                  color: activeTab === 'demo' ? '#333' : 'white',
+                  background: activeTab === 'demo' ? '#ffffff' : 'transparent',
+                  color: activeTab === 'demo' ? '#1f2937' : '#ffffff',
                   border: 'none',
                   flex: 1,
                   padding: '12px 24px',
                   borderRadius: '8px',
-                  fontWeight: '500',
+                  fontWeight: '700',
+                  fontFamily: '"Bungee", "Impact", "Arial Black", sans-serif',
+                  letterSpacing: '0.5px',
+                  textTransform: 'uppercase',
                   transition: 'all 0.2s ease'
                 }}
               >
@@ -97,14 +101,14 @@ function App() {
             )}
 
             {/* Info Section */}
-            <div className="card" style={{ marginTop: '40px', background: 'rgba(255, 255, 255, 0.95)' }}>
-              <h3 style={{ marginBottom: '16px', color: '#333' }}>How It Works</h3>
+            <div className="card" style={{ marginTop: '40px', background: '#ffffff' }}>
+              <h3 style={{ marginBottom: '16px', color: '#2563eb', fontSize: '28px' }}>HOW IT WORKS</h3>
               <div className="grid grid-3">
                 <div style={{ textAlign: 'center' }}>
                   <div style={{
                     width: '60px',
                     height: '60px',
-                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    background: '#2563eb',
                     borderRadius: '50%',
                     display: 'flex',
                     alignItems: 'center',
@@ -114,7 +118,7 @@ function App() {
                   }}>
                     1️⃣
                   </div>
-                  <h4 style={{ marginBottom: '8px', color: '#333' }}>Create Tournament</h4>
+                  <h4 style={{ marginBottom: '8px', color: '#1f2937', fontSize: '20px' }}>CREATE TOURNAMENT</h4>
                   <p className="text-muted" style={{ fontSize: '14px' }}>
                     Set up your poker tournament with buy-in amount, total tokens, and profit share percentage.
                   </p>
@@ -123,7 +127,7 @@ function App() {
                   <div style={{
                     width: '60px',
                     height: '60px',
-                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    background: '#2563eb',
                     borderRadius: '50%',
                     display: 'flex',
                     alignItems: 'center',
@@ -133,7 +137,7 @@ function App() {
                   }}>
                     2️⃣
                   </div>
-                  <h4 style={{ marginBottom: '8px', color: '#333' }}>Sell Tokens</h4>
+                  <h4 style={{ marginBottom: '8px', color: '#1f2937', fontSize: '20px' }}>SELL TOKENS</h4>
                   <p className="text-muted" style={{ fontSize: '14px' }}>
                     Public can buy your tournament tokens, funding your poker buy-in. Each token represents a share of potential winnings.
                   </p>
@@ -142,7 +146,7 @@ function App() {
                   <div style={{
                     width: '60px',
                     height: '60px',
-                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    background: '#2563eb',
                     borderRadius: '50%',
                     display: 'flex',
                     alignItems: 'center',
@@ -152,7 +156,7 @@ function App() {
                   }}>
                     3️⃣
                   </div>
-                  <h4 style={{ marginBottom: '8px', color: '#333' }}>Share Winnings</h4>
+                  <h4 style={{ marginBottom: '8px', color: '#1f2937', fontSize: '20px' }}>SHARE WINNINGS</h4>
                   <p className="text-muted" style={{ fontSize: '14px' }}>
                     If you win the tournament, winnings are automatically distributed to token holders based on their token ownership.
                   </p>
@@ -161,29 +165,29 @@ function App() {
             </div>
 
             {/* Features */}
-            <div className="card" style={{ marginTop: '24px', background: 'rgba(255, 255, 255, 0.95)' }}>
-              <h3 style={{ marginBottom: '16px', color: '#333' }}>Features</h3>
+            <div className="card" style={{ marginTop: '24px', background: '#ffffff' }}>
+              <h3 style={{ marginBottom: '16px', color: '#2563eb', fontSize: '28px' }}>FEATURES</h3>
               <div className="grid grid-2">
                 <div>
-                  <h4 style={{ color: '#333', marginBottom: '8px' }}>🔒 Secure & Transparent</h4>
+                  <h4 style={{ color: '#1f2937', marginBottom: '8px', fontSize: '18px' }}>🔒 SECURE & TRANSPARENT</h4>
                   <p className="text-muted" style={{ fontSize: '14px' }}>
                     All transactions are recorded on the Ethereum blockchain, ensuring transparency and security.
                   </p>
                 </div>
                 <div>
-                  <h4 style={{ color: '#333', marginBottom: '8px' }}>⚡ Instant Settlement</h4>
+                  <h4 style={{ color: '#1f2937', marginBottom: '8px', fontSize: '18px' }}>⚡ INSTANT SETTLEMENT</h4>
                   <p className="text-muted" style={{ fontSize: '14px' }}>
                     Winnings are distributed automatically through smart contracts, eliminating manual processes.
                   </p>
                 </div>
                 <div>
-                  <h4 style={{ color: '#333', marginBottom: '8px' }}>🎯 Flexible Profit Sharing</h4>
+                  <h4 style={{ color: '#1f2937', marginBottom: '8px', fontSize: '18px' }}>🎯 FLEXIBLE PROFIT SHARING</h4>
                   <p className="text-muted" style={{ fontSize: '14px' }}>
                     Tournament creators can set their own profit sharing percentage (0-100%).
                   </p>
                 </div>
                 <div>
-                  <h4 style={{ color: '#333', marginBottom: '8px' }}>🌐 Decentralized</h4>
+                  <h4 style={{ color: '#1f2937', marginBottom: '8px', fontSize: '18px' }}>🌐 DECENTRALIZED</h4>
                   <p className="text-muted" style={{ fontSize: '14px' }}>
                     No central authority controls the platform. Everything runs on smart contracts.
                   </p>
@@ -199,20 +203,21 @@ function App() {
           toastOptions={{
             duration: 4000,
             style: {
-              background: '#363636',
+              background: '#1f2937',
               color: '#fff',
+              border: '2px solid #2563eb',
             },
             success: {
               duration: 3000,
               iconTheme: {
-                primary: '#4ade80',
+                primary: '#2563eb',
                 secondary: '#fff',
               },
             },
             error: {
               duration: 5000,
               iconTheme: {
-                primary: '#ef4444',
+                primary: '#dc2626',
                 secondary: '#fff',
               },
             },

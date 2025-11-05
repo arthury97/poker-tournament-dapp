@@ -39,13 +39,13 @@ const Header = () => {
 
   return (
     <header style={{
-      background: 'rgba(255, 255, 255, 0.95)',
-      backdropFilter: 'blur(10px)',
-      borderBottom: '1px solid rgba(255, 255, 255, 0.2)',
-      padding: '16px 0',
+      background: '#ffffff',
+      borderBottom: '2px solid #e5e7eb',
+      padding: '20px 0',
       position: 'sticky',
       top: 0,
-      zIndex: 1000
+      zIndex: 1000,
+      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)'
     }}>
       <div className="container">
         <div style={{
@@ -59,23 +59,26 @@ const Header = () => {
             gap: '16px'
           }}>
             <h1 style={{
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              fontSize: '24px',
-              fontWeight: '700',
-              margin: 0
+              color: '#2563eb',
+              fontSize: '42px',
+              fontWeight: '900',
+              fontFamily: '"Bungee", "Impact", "Arial Black", sans-serif',
+              margin: 0,
+              letterSpacing: '2px',
+              textTransform: 'uppercase',
+              textShadow: '2px 2px 0px rgba(0, 0, 0, 0.1)'
             }}>
-              🃏 Poker Tournament DApp
+              STAKED
             </h1>
             {chainId && (
               <span style={{
-                background: '#f8f9fa',
+                background: '#e5e7eb',
                 padding: '4px 12px',
                 borderRadius: '20px',
                 fontSize: '12px',
-                color: '#6c757d',
-                border: '1px solid #e9ecef'
+                color: '#4b5563',
+                border: '1px solid #d1d5db',
+                fontWeight: '600'
               }}>
                 {getChainName(chainId)}
               </span>
@@ -93,18 +96,18 @@ const Header = () => {
                   display: 'flex',
                   alignItems: 'center',
                   gap: '8px',
-                  background: '#f8f9fa',
+                  background: '#f3f4f6',
                   padding: '8px 16px',
                   borderRadius: '20px',
-                  border: '1px solid #e9ecef'
+                  border: '1px solid #d1d5db'
                 }}>
                   <div style={{
                     width: '8px',
                     height: '8px',
                     borderRadius: '50%',
-                    background: '#28a745'
+                    background: '#2563eb'
                   }}></div>
-                  <span style={{ fontSize: '14px', fontWeight: '500' }}>
+                  <span style={{ fontSize: '14px', fontWeight: '600', color: '#1f2937' }}>
                     {formatAddress(account)}
                   </span>
                 </div>
