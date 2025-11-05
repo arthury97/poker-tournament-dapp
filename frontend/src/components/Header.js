@@ -2,23 +2,30 @@ import React, { useState } from 'react';
 import { useWeb3 } from '../context/Web3Context';
 import { useAuth } from '../context/AuthContext';
 import AuthModal from './AuthModal';
+import WalletModal from './WalletModal';
 import toast from 'react-hot-toast';
 
 const Header = () => {
   const { account, isConnected, connectWallet, disconnectWallet, isLoading, chainId } = useWeb3();
   const { user, isAuthenticated, signOut } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showWalletModal, setShowWalletModal] = useState(false);
 
-  const handleConnect = async () => {
+  const handleConnect = () => {
     if (!isAuthenticated) {
       toast.error('Please sign in first to connect your wallet');
       setShowAuthModal(true);
       return;
     }
 
+    // Show wallet selection modal
+    setShowWalletModal(true);
+  };
+
+  const handleWalletSelect = async (walletType) => {
     try {
-      await connectWallet();
-      toast.success('Wallet connected successfully!');
+      await connectWallet(walletType);
+      toast.success(`${walletType === 'metamask' ? 'MetaMask' : 'Coinbase Wallet'} connected successfully!`);
     } catch (error) {
       toast.error(error.message || 'Failed to connect wallet');
     }
@@ -215,6 +222,12 @@ const Header = () => {
           <AuthModal 
             isOpen={showAuthModal} 
             onClose={() => setShowAuthModal(false)} 
+          />
+          
+          <WalletModal 
+            isOpen={showWalletModal} 
+            onClose={() => setShowWalletModal(false)}
+            onSelectWallet={handleWalletSelect}
           />
         </div>
       </div>

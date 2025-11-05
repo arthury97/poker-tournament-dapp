@@ -328,7 +328,7 @@ const DemoTournament = () => {
               CONNECT WALLET
             </h4>
             <p style={{ fontSize: '14px', color: '#6b7280', margin: 0 }}>
-              Connect your MetaMask wallet to the blockchain network
+              Connect your wallet (MetaMask or Coinbase Wallet) to the blockchain network
             </p>
           </div>
           <div style={{ padding: '16px', background: '#f3f4f6', borderRadius: '8px' }}>

@@ -33,7 +33,17 @@ export const Web3Provider = ({ children }) => {
       if (ethereumProvider) {
         const accounts = await ethereumProvider.request({ method: 'eth_accounts' });
         if (accounts.length > 0) {
-          await connectWallet();
+          // Auto-detect wallet type for reconnection
+          let walletType = 'metamask';
+          if (window.ethereum?.providers) {
+            const coinbaseProvider = window.ethereum.providers.find(p => p.isCoinbaseWallet);
+            if (coinbaseProvider) {
+              walletType = 'coinbase';
+            }
+          } else if (window.ethereum?.isCoinbaseWallet) {
+            walletType = 'coinbase';
+          }
+          await connectWallet(walletType);
         }
       }
     } catch (error) {
@@ -41,13 +51,46 @@ export const Web3Provider = ({ children }) => {
     }
   };
 
-  const connectWallet = async () => {
+  const connectWallet = async (walletType = 'metamask') => {
     try {
       setIsLoading(true);
-      const ethereumProvider = await detectEthereumProvider();
-      
+      let ethereumProvider = null;
+
+      // Detect available providers
+      if (typeof window !== 'undefined' && window.ethereum) {
+        // Check if multiple providers are available (browser extension wallets)
+        if (window.ethereum.providers && Array.isArray(window.ethereum.providers)) {
+          // Multiple wallets installed
+          if (walletType === 'metamask') {
+            ethereumProvider = window.ethereum.providers.find(p => p.isMetaMask) || window.ethereum;
+          } else if (walletType === 'coinbase') {
+            ethereumProvider = window.ethereum.providers.find(p => p.isCoinbaseWallet) || window.ethereum;
+          } else {
+            ethereumProvider = window.ethereum;
+          }
+        } else {
+          // Single provider or legacy MetaMask
+          ethereumProvider = window.ethereum;
+          
+          // Verify it's the correct wallet type if requested
+          if (walletType === 'metamask' && !ethereumProvider.isMetaMask) {
+            throw new Error('MetaMask not found. Please install MetaMask or select Coinbase Wallet.');
+          }
+          if (walletType === 'coinbase' && !ethereumProvider.isCoinbaseWallet) {
+            throw new Error('Coinbase Wallet not found. Please install Coinbase Wallet or select MetaMask.');
+          }
+        }
+      } else {
+        // Try to detect provider
+        ethereumProvider = await detectEthereumProvider();
+        
+        if (!ethereumProvider) {
+          throw new Error('No wallet found. Please install MetaMask or Coinbase Wallet!');
+        }
+      }
+
       if (!ethereumProvider) {
-        throw new Error('Please install MetaMask!');
+        throw new Error(`Please install ${walletType === 'metamask' ? 'MetaMask' : 'Coinbase Wallet'}!`);
       }
 
       const accounts = await ethereumProvider.request({
