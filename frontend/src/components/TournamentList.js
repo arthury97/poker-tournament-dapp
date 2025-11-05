@@ -177,12 +177,6 @@ const TournamentList = ({ refreshTrigger }) => {
     return Math.round((Number(tokensSold) / Number(totalTokens)) * 100);
   };
 
-  // Convert ETH to USD approximation (for display)
-  const ethToUsd = (ethAmount) => {
-    const ethPrice = 3000; // Approximate ETH price
-    return (ethAmount * ethPrice).toLocaleString();
-  };
-
   // Combine predefined tournaments with on-chain tournaments
   const allTournaments = [
     ...predefinedTournaments.map(t => ({
