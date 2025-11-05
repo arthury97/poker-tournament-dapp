@@ -3,7 +3,7 @@ import { useWeb3 } from '../context/Web3Context';
 import { useAuth } from '../context/AuthContext';
 import { getTournamentManagerContract, parseEther, usdtToEth } from '../utils/contracts';
 import { tournamentList, searchTournaments } from '../utils/tournamentData';
-import { formatDateRange, getDateRangeDisplay } from '../utils/dateFormat';
+import { formatDateRange } from '../utils/dateFormat';
 import toast from 'react-hot-toast';
 
 const CreateTournament = ({ onTournamentCreated }) => {

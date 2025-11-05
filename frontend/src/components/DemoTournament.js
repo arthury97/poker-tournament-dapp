@@ -1,6 +1,6 @@
 import React from 'react';
 import { useWeb3 } from '../context/Web3Context';
-import { formatDateRange, getDateRangeDisplay } from '../utils/dateFormat';
+import { formatDateRange } from '../utils/dateFormat';
 
 const DemoTournament = () => {
   const { isConnected } = useWeb3();
