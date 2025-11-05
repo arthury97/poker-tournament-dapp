@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useWeb3 } from '../context/Web3Context';
 import { useAuth } from '../context/AuthContext';
-import { getTournamentManagerContract, parseEther, usdtToEth, getEthToUsdtRate } from '../utils/contracts';
+import { getTournamentManagerContract, parseEther, usdtToEth } from '../utils/contracts';
 import { tournamentList, searchTournaments } from '../utils/tournamentData';
 import toast from 'react-hot-toast';
 

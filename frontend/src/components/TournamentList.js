@@ -213,7 +213,6 @@ const TournamentList = ({ refreshTrigger }) => {
       <div className="grid grid-2" style={{ gap: '24px' }}>
         {allTournaments.map((tournament, index) => {
           const isPredefined = !tournament.isOnChain;
-          const buyInEth = tournament.buyInAmount ? formatEther(tournament.buyInAmount) : (tournament.buyIn ? (tournament.buyIn / 1000).toFixed(2) : 'N/A');
           const buyInUSDT = tournament.buyInAmount ? formatUSDT(ethToUSDT(tournament.buyInAmount)) : (tournament.buyIn ? formatUSDT(tournament.buyIn) : 'N/A');
           const progress = tournament.isOnChain ? getProgressPercentage(tournament.tokensSold, tournament.totalTokens) : 0;
 
