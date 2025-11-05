@@ -6,6 +6,7 @@ import Header from './components/Header';
 import CreateTournament from './components/CreateTournament';
 import TournamentList from './components/TournamentList';
 import DemoTournament from './components/DemoTournament';
+import Dashboard from './components/Dashboard';
 
 function App() {
   const [activeTab, setActiveTab] = useState('demo');
@@ -59,17 +60,39 @@ function App() {
                 onClick={() => setActiveTab('tournaments')}
                 className="btn"
                 style={{
-                  background: activeTab === 'tournaments' ? 'white' : 'transparent',
-                  color: activeTab === 'tournaments' ? '#333' : 'white',
+                  background: activeTab === 'tournaments' ? '#ffffff' : 'transparent',
+                  color: activeTab === 'tournaments' ? '#1f2937' : '#ffffff',
                   border: 'none',
                   flex: 1,
                   padding: '12px 24px',
                   borderRadius: '8px',
-                  fontWeight: '500',
+                  fontWeight: '700',
+                  fontFamily: '"Bungee", "Impact", "Arial Black", sans-serif',
+                  letterSpacing: '0.5px',
+                  textTransform: 'uppercase',
                   transition: 'all 0.2s ease'
                 }}
               >
-                🏆 Tournaments
+                🏆 TOURNAMENTS
+              </button>
+              <button
+                onClick={() => setActiveTab('dashboard')}
+                className="btn"
+                style={{
+                  background: activeTab === 'dashboard' ? '#ffffff' : 'transparent',
+                  color: activeTab === 'dashboard' ? '#1f2937' : '#ffffff',
+                  border: 'none',
+                  flex: 1,
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  fontWeight: '700',
+                  fontFamily: '"Bungee", "Impact", "Arial Black", sans-serif',
+                  letterSpacing: '0.5px',
+                  textTransform: 'uppercase',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                📊 DASHBOARD
               </button>
               <button
                 onClick={() => setActiveTab('create')}
@@ -99,6 +122,10 @@ function App() {
 
             {activeTab === 'tournaments' && (
               <TournamentList refreshTrigger={refreshTrigger} />
+            )}
+
+            {activeTab === 'dashboard' && (
+              <Dashboard />
             )}
 
             {activeTab === 'create' && (
