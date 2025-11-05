@@ -34,14 +34,24 @@ export const Web3Provider = ({ children }) => {
         const accounts = await ethereumProvider.request({ method: 'eth_accounts' });
         if (accounts.length > 0) {
           // Auto-detect wallet type for reconnection
-          let walletType = 'metamask';
-          if (window.ethereum?.providers) {
-            const coinbaseProvider = window.ethereum.providers.find(p => p.isCoinbaseWallet);
-            if (coinbaseProvider) {
+          let walletType = 'metamask'; // Default
+          if (window.ethereum) {
+            if (window.ethereum.providers && Array.isArray(window.ethereum.providers)) {
+              // Multiple wallets - check which one has connected accounts
+              const coinbaseProvider = window.ethereum.providers.find(p => p.isCoinbaseWallet);
+              if (coinbaseProvider) {
+                try {
+                  const coinbaseAccounts = await coinbaseProvider.request({ method: 'eth_accounts' });
+                  if (coinbaseAccounts.length > 0) {
+                    walletType = 'coinbase';
+                  }
+                } catch {
+                  // Use default
+                }
+              }
+            } else if (window.ethereum.isCoinbaseWallet) {
               walletType = 'coinbase';
             }
-          } else if (window.ethereum?.isCoinbaseWallet) {
-            walletType = 'coinbase';
           }
           await connectWallet(walletType);
         }
