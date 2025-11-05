@@ -73,17 +73,20 @@ function App() {
                 onClick={() => setActiveTab('create')}
                 className="btn"
                 style={{
-                  background: activeTab === 'create' ? 'white' : 'transparent',
-                  color: activeTab === 'create' ? '#333' : 'white',
+                  background: activeTab === 'create' ? '#ffffff' : 'transparent',
+                  color: activeTab === 'create' ? '#1f2937' : '#ffffff',
                   border: 'none',
                   flex: 1,
                   padding: '12px 24px',
                   borderRadius: '8px',
-                  fontWeight: '500',
+                  fontWeight: '700',
+                  fontFamily: '"Bungee", "Impact", "Arial Black", sans-serif',
+                  letterSpacing: '0.5px',
+                  textTransform: 'uppercase',
                   transition: 'all 0.2s ease'
                 }}
               >
-                ➕ Create Tournament
+                💎 CREATE TOKEN
               </button>
             </div>
 
@@ -118,9 +121,9 @@ function App() {
                   }}>
                     1️⃣
                   </div>
-                  <h4 style={{ marginBottom: '8px', color: '#1f2937', fontSize: '20px' }}>CREATE TOURNAMENT</h4>
+                  <h4 style={{ marginBottom: '8px', color: '#1f2937', fontSize: '20px' }}>CREATE TOKEN</h4>
                   <p className="text-muted" style={{ fontSize: '14px' }}>
-                    Set up your poker tournament with buy-in amount, total tokens, and profit share percentage.
+                    Select a tournament and create tokens to fund your buy-in, sharing potential winnings with token holders.
                   </p>
                 </div>
                 <div style={{ textAlign: 'center' }}>
