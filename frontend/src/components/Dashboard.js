@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useWeb3 } from '../context/Web3Context';
 import { useAuth } from '../context/AuthContext';
 import { getTournamentManagerContract, getPokerTokenContract, ethToUSDT, formatUSDT } from '../utils/contracts';
-import { formatDateRange } from '../utils/dateFormat';
 import toast from 'react-hot-toast';
 
 const Dashboard = () => {
@@ -15,7 +14,7 @@ const Dashboard = () => {
   const [isLoadingPortfolio, setIsLoadingPortfolio] = useState(false);
 
   // Load tournaments created by the user
-  const loadCreatedTournaments = async () => {
+  const loadCreatedTournaments = useCallback(async () => {
     if (!isConnected || !signer || !TOURNAMENT_MANAGER_ADDRESS || !account) {
       setCreatedTournaments([]);
       return;
@@ -68,10 +67,10 @@ const Dashboard = () => {
     } finally {
       setIsLoadingCreated(false);
     }
-  };
+  }, [isConnected, signer, TOURNAMENT_MANAGER_ADDRESS, account]);
 
   // Load user's portfolio (tokens they own)
-  const loadPortfolio = async () => {
+  const loadPortfolio = useCallback(async () => {
     if (!isConnected || !signer || !TOURNAMENT_MANAGER_ADDRESS || !account) {
       setPortfolioTokens([]);
       return;
@@ -141,7 +140,7 @@ const Dashboard = () => {
     } finally {
       setIsLoadingPortfolio(false);
     }
-  };
+  }, [isConnected, signer, TOURNAMENT_MANAGER_ADDRESS, account]);
 
   useEffect(() => {
     if (activeSection === 'created') {
@@ -149,7 +148,7 @@ const Dashboard = () => {
     } else {
       loadPortfolio();
     }
-  }, [isConnected, signer, account, activeSection]);
+  }, [activeSection, loadCreatedTournaments, loadPortfolio]);
 
   const handleClaimWinnings = async (tournamentAddress) => {
     if (!isConnected || !signer) {
@@ -564,8 +563,6 @@ const Dashboard = () => {
               {/* Portfolio Tokens */}
               <div className="grid grid-2" style={{ gap: '24px' }}>
                 {portfolioTokens.map((token, index) => {
-                  const progress = getProgressPercentage(token.tokensSold, token.totalTokens);
-                  const buyInUSDT = formatUSDT(ethToUSDT(token.buyInAmount));
                   const tokenValueUSDT = formatUSDT(ethToUSDT(
                     (BigInt(token.balance) * BigInt(token.tokenPrice)).toString()
                   ));
