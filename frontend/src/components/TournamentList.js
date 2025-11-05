@@ -70,20 +70,13 @@ const TournamentList = ({ refreshTrigger }) => {
       setOnChainTournaments(tournamentDetails.filter(t => t !== null));
 
     } catch (error) {
-      console.error('Error loading tournaments:', error);
-      // Only show error if it's a real error, not just missing configuration
-      // Check if error is due to missing contract or network issues
-      if (error.message && (
-        error.message.includes('contract') || 
-        error.message.includes('network') ||
-        error.message.includes('revert')
-      )) {
-        // Don't show error for expected cases - just log it
-        console.warn('Tournament loading skipped:', error.message);
-      } else {
-        // Only show toast for unexpected errors
-        toast.error('Failed to load on-chain tournaments');
-      }
+      // Silently handle errors - these are usually expected:
+      // - Contract not deployed at address (first time setup)
+      // - Network connection issues
+      // - RPC errors
+      // - Contract call reverts
+      // Predefined tournaments will still display, so no need to show error
+      console.warn('Could not load on-chain tournaments:', error.message || error);
       setOnChainTournaments([]);
     } finally {
       setIsLoading(false);
