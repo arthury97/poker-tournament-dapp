@@ -5,11 +5,11 @@ import { AuthProvider } from './context/AuthContext';
 import Header from './components/Header';
 import CreateTournament from './components/CreateTournament';
 import TournamentList from './components/TournamentList';
-import DemoTournament from './components/DemoTournament';
+import Marketplace from './components/Marketplace';
 import Dashboard from './components/Dashboard';
 
 function App() {
-  const [activeTab, setActiveTab] = useState('demo');
+  const [activeTab, setActiveTab] = useState('marketplace');
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const handleTournamentCreated = (tournamentAddress) => {
@@ -25,7 +25,7 @@ function App() {
           <Header 
             onNavigateToDashboard={() => setActiveTab('dashboard')}
             isDashboardActive={activeTab === 'dashboard'}
-            onNavigateToHome={() => setActiveTab('demo')}
+            onNavigateToHome={() => setActiveTab('marketplace')}
           />
         
         <main style={{ padding: '40px 0' }}>
@@ -42,11 +42,11 @@ function App() {
               border: '2px solid rgba(255, 255, 255, 0.2)'
             }}>
               <button
-                onClick={() => setActiveTab('demo')}
+                onClick={() => setActiveTab('marketplace')}
                 className="btn"
                 style={{
-                  background: activeTab === 'demo' ? '#ffffff' : 'transparent',
-                  color: activeTab === 'demo' ? '#1f2937' : '#ffffff',
+                  background: activeTab === 'marketplace' ? '#ffffff' : 'transparent',
+                  color: activeTab === 'marketplace' ? '#1f2937' : '#ffffff',
                   border: 'none',
                   flex: 1,
                   padding: '12px 24px',
@@ -58,7 +58,7 @@ function App() {
                   transition: 'all 0.2s ease'
                 }}
               >
-                🎮 Demo
+                🛒 MARKETPLACE
               </button>
               <button
                 onClick={() => setActiveTab('tournaments')}
@@ -101,8 +101,8 @@ function App() {
             </div>
 
             {/* Tab Content */}
-            {activeTab === 'demo' && (
-              <DemoTournament />
+            {activeTab === 'marketplace' && (
+              <Marketplace refreshTrigger={refreshTrigger} />
             )}
 
             {activeTab === 'tournaments' && (
