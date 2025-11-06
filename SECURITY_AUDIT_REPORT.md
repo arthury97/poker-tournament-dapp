@@ -347,6 +347,8 @@ The contracts are now significantly more secure. For production launch, consider
 3. ⚠️ Consider professional audit before mainnet deployment
 4. ⚠️ Implement enhanced winnings verification (oracle/multisig) for production
 
+**📋 For a complete pre-launch checklist, see:** [`PRE_LAUNCH_CHECKLIST.md`](./PRE_LAUNCH_CHECKLIST.md)
+
 ---
 
 **Report Generated:** 2025-01-27  
