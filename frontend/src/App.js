@@ -283,11 +283,17 @@ function App() {
               </div>
               <button
                 onClick={(e) => {
+                  console.log('🔴 X button CLICKED - dismissing toast:', t.id);
                   e.stopPropagation();
                   toast.dismiss(t.id);
+                  console.log('✅ toast.dismiss() called');
                 }}
                 onMouseDown={(e) => {
+                  console.log('🔵 X button MOUSEDOWN detected');
                   e.stopPropagation();
+                }}
+                onMouseEnter={() => {
+                  console.log('👆 Mouse ENTERED X button area');
                 }}
                 type="button"
                 aria-label="Close"
