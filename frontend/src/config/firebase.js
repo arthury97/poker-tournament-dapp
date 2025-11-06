@@ -7,14 +7,14 @@ import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
 // Your web app's Firebase configuration
-// TODO: Replace with your actual Firebase config
+// For GitHub Pages, we need to hardcode the config since .env files aren't available in the build
 const firebaseConfig = {
-  apiKey: process.env.REACT_APP_FIREBASE_API_KEY || "your-api-key",
-  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN || "your-project.firebaseapp.com",
-  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID || "your-project-id",
-  storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET || "your-project.appspot.com",
-  messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID || "123456789",
-  appId: process.env.REACT_APP_FIREBASE_APP_ID || "your-app-id"
+  apiKey: process.env.REACT_APP_FIREBASE_API_KEY || "AIzaSyAxkta8Xpcm0_itZl5guCXeFrgIWZJjZjg",
+  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN || "poker-tournament-dapp.firebaseapp.com",
+  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID || "poker-tournament-dapp",
+  storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET || "poker-tournament-dapp.firebasestorage.app",
+  messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID || "712334625837",
+  appId: process.env.REACT_APP_FIREBASE_APP_ID || "1:712334625837:web:e702d190869adfa1373ca4"
 };
 
 // Initialize Firebase
