@@ -240,21 +240,6 @@ function App() {
                 secondary: '#fff',
               },
             },
-            // Enable close button
-            closeButton: {
-              style: {
-                color: '#fff',
-                background: 'transparent',
-                borderRadius: '50%',
-                width: '24px',
-                height: '24px',
-                padding: '0',
-                marginLeft: '8px',
-                opacity: 0.8,
-                transition: 'all 0.2s ease',
-              },
-              ariaLabel: 'Close notification',
-            },
           }}
         />
         </div>
