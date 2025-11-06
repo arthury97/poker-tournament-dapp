@@ -278,8 +278,14 @@ const CreateTournament = ({ onTournamentCreated }) => {
                 console.log('✅ Found address by querying tournaments array:', tournamentAddress);
               }
             } catch (e) {
-              // Function doesn't exist - that's okay, we'll try other methods
-              console.log('getTotalTournaments/tournaments not available:', e.message);
+              // Function may not exist in old contract versions - that's okay, we'll try other methods
+              // Check if it's a "BAD_DATA" error (function doesn't exist) vs other errors
+              if (e.code === 'BAD_DATA' || e.message?.includes('could not decode result data')) {
+                console.log('getTotalTournaments/tournaments not available in this contract version:', e.message);
+              } else {
+                // Other errors (like index out of bounds) are expected
+                console.log('getTotalTournaments/tournaments call issue (may be expected):', e.message);
+              }
             }
           }
           
@@ -293,8 +299,14 @@ const CreateTournament = ({ onTournamentCreated }) => {
                 console.log('✅ Found address by querying playerTokens array:', tournamentAddress);
               }
             } catch (e) {
-              // Function doesn't exist - that's okay, we'll try other methods
-              console.log('getTotalPlayerTokens/playerTokens not available:', e.message);
+              // Function may not exist in old contract versions - that's okay, we'll try other methods
+              // Check if it's a "BAD_DATA" error (function doesn't exist) vs other errors
+              if (e.code === 'BAD_DATA' || e.message?.includes('could not decode result data')) {
+                console.log('getTotalPlayerTokens/playerTokens not available in this contract version:', e.message);
+              } else {
+                // Other errors (like index out of bounds) are expected
+                console.log('getTotalPlayerTokens/playerTokens call issue (may be expected):', e.message);
+              }
             }
           }
         } catch (queryError) {
