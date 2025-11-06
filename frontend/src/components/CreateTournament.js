@@ -157,67 +157,115 @@ const CreateTournament = ({ onTournamentCreated }) => {
       
       let tournamentAddress = null;
       
+      // Method 1: Try to parse events from receipt logs
+      console.log('Receipt logs:', receipt.logs.length);
+      console.log('Receipt logs details:', receipt.logs);
+      
       // Try to find TournamentCreated event first
-      let event = receipt.logs.find(log => {
+      for (const log of receipt.logs) {
         try {
           const parsed = tournamentManager.interface.parseLog(log);
-          return parsed && parsed.name === 'TournamentCreated';
-        } catch {
-          return false;
-        }
-      });
-
-      if (event) {
-        const parsedEvent = tournamentManager.interface.parseLog(event);
-        tournamentAddress = parsedEvent.args.tournamentAddress;
-      } else {
-        // Try to find PlayerTokenCreated event
-        event = receipt.logs.find(log => {
-          try {
-            const parsed = tournamentManager.interface.parseLog(log);
-            return parsed && parsed.name === 'PlayerTokenCreated';
-          } catch {
-            return false;
+          if (parsed && parsed.name === 'TournamentCreated') {
+            console.log('Found TournamentCreated event:', parsed.args);
+            tournamentAddress = parsed.args.tournamentAddress;
+            break;
           }
-        });
-
-        if (event) {
-          const parsedEvent = tournamentManager.interface.parseLog(event);
-          tournamentAddress = parsedEvent.args.playerTokenAddress;
+        } catch (e) {
+          // Continue to next log
         }
       }
 
-      // If still no address from event, try to get it from the array
+      // Try to find PlayerTokenCreated event
       if (!tournamentAddress) {
-        // Get the newly created tournament address from the array
+        for (const log of receipt.logs) {
+          try {
+            const parsed = tournamentManager.interface.parseLog(log);
+            if (parsed && parsed.name === 'PlayerTokenCreated') {
+              console.log('Found PlayerTokenCreated event:', parsed.args);
+              tournamentAddress = parsed.args.playerTokenAddress;
+              break;
+            }
+          } catch (e) {
+            // Continue to next log
+          }
+        }
+      }
+
+      // Method 2: Try to get from creator's tokens array (most reliable)
+      if (!tournamentAddress) {
+        console.log('Event parsing failed, trying to get from creator array...');
+        try {
+          // Get the user's account address
+          const userAddress = await signer.getAddress();
+          
+          // Try getCreatorTournaments first
+          try {
+            const creatorTournaments = await tournamentManager.getCreatorTournaments(userAddress);
+            if (creatorTournaments && creatorTournaments.length > 0) {
+              tournamentAddress = creatorTournaments[creatorTournaments.length - 1];
+              console.log('Found from getCreatorTournaments:', tournamentAddress);
+            }
+          } catch (e) {
+            console.log('getCreatorTournaments failed, trying getPlayerTokens...');
+            // Try getPlayerTokens
+            try {
+              const playerTokens = await tournamentManager.getPlayerTokens(userAddress);
+              if (playerTokens && playerTokens.length > 0) {
+                tournamentAddress = playerTokens[playerTokens.length - 1];
+                console.log('Found from getPlayerTokens:', tournamentAddress);
+              }
+            } catch (e2) {
+              console.error('getPlayerTokens also failed:', e2);
+            }
+          }
+        } catch (e) {
+          console.error('Could not get from creator array:', e);
+        }
+      }
+
+      // Method 3: Try to get from active tournaments array
+      if (!tournamentAddress) {
+        console.log('Creator array failed, trying active tournaments array...');
         try {
           if (useCreateTournament) {
             const tournamentsArray = await tournamentManager.getActiveTournaments();
             if (tournamentsArray && tournamentsArray.length > 0) {
               tournamentAddress = tournamentsArray[tournamentsArray.length - 1];
-            }
-            // If that doesn't work, try by index
-            if (!tournamentAddress) {
-              const totalCount = await tournamentManager.getTotalTournaments();
-              if (totalCount > 0n) {
-                tournamentAddress = await tournamentManager.tournaments(totalCount - 1n);
-              }
+              console.log('Found from getActiveTournaments:', tournamentAddress);
             }
           } else {
             const playerTokensArray = await tournamentManager.getActivePlayerTokens();
             if (playerTokensArray && playerTokensArray.length > 0) {
               tournamentAddress = playerTokensArray[playerTokensArray.length - 1];
-            }
-            // If that doesn't work, try by index
-            if (!tournamentAddress) {
-              const totalCount = await tournamentManager.getTotalPlayerTokens();
-              if (totalCount > 0n) {
-                tournamentAddress = await tournamentManager.playerTokens(totalCount - 1n);
-              }
+              console.log('Found from getActivePlayerTokens:', tournamentAddress);
             }
           }
         } catch (e) {
-          console.error('Could not get tournament address from array or index:', e);
+          console.error('Could not get from active array:', e);
+        }
+      }
+
+      // Method 4: Try to get by index (last resort)
+      if (!tournamentAddress) {
+        console.log('Active array failed, trying by index...');
+        try {
+          if (useCreateTournament) {
+            const totalCount = await tournamentManager.getTotalTournaments();
+            console.log('Total tournaments:', totalCount.toString());
+            if (totalCount > 0n) {
+              tournamentAddress = await tournamentManager.tournaments(totalCount - 1n);
+              console.log('Found from tournaments array by index:', tournamentAddress);
+            }
+          } else {
+            const totalCount = await tournamentManager.getTotalPlayerTokens();
+            console.log('Total player tokens:', totalCount.toString());
+            if (totalCount > 0n) {
+              tournamentAddress = await tournamentManager.playerTokens(totalCount - 1n);
+              console.log('Found from playerTokens array by index:', tournamentAddress);
+            }
+          }
+        } catch (e) {
+          console.error('Could not get by index:', e);
         }
       }
 
