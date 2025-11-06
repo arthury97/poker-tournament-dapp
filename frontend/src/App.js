@@ -293,7 +293,11 @@ function App() {
                 <span>{typeof t.message === 'string' ? t.message : t.message}</span>
               </div>
               <button
-                onClick={() => toast.dismiss(t.id)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toast.dismiss(t.id);
+                }}
+                type="button"
                 style={{
                   color: '#fff',
                   background: 'rgba(255, 255, 255, 0.2)',
@@ -311,6 +315,7 @@ function App() {
                   justifyContent: 'center',
                   flexShrink: 0,
                   lineHeight: '1',
+                  pointerEvents: 'auto',
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)';
