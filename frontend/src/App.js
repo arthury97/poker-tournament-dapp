@@ -245,11 +245,10 @@ function App() {
               color: '#fff',
               border: '2px solid #2563eb',
               borderRadius: '12px',
-              padding: '12px 16px',
+              padding: '16px',
               width: '100%',
               maxWidth: '100%',
               boxSizing: 'border-box',
-              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
             },
             success: {
               duration: 3000,
@@ -273,51 +272,48 @@ function App() {
               alignItems: 'center',
               justifyContent: 'space-between',
               width: '100%',
-              gap: '16px',
-              boxSizing: 'border-box',
+              gap: '12px',
             }}>
               <div style={{ 
                 flex: 1,
                 display: 'flex',
                 alignItems: 'center',
-                gap: '10px',
+                gap: '8px',
                 minWidth: 0,
               }}>
-                {t.icon && <span style={{ fontSize: '20px', flexShrink: 0 }}>{t.icon}</span>}
-                <span style={{ 
-                  fontSize: '14px', 
-                  lineHeight: '1.5',
-                }}>
-                  {typeof t.message === 'string' ? t.message : t.message}
-                </span>
+                {t.icon && <span>{t.icon}</span>}
+                <span>{typeof t.message === 'string' ? t.message : t.message}</span>
               </div>
               <button
                 onClick={() => toast.dismiss(t.id)}
                 style={{
                   color: '#fff',
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  fontSize: '24px',
+                  background: 'transparent',
+                  border: 'none',
+                  fontSize: '20px',
                   fontWeight: 'bold',
                   cursor: 'pointer',
-                  padding: '4px',
-                  borderRadius: '6px',
-                  width: '32px',
-                  height: '32px',
+                  padding: '4px 8px',
+                  borderRadius: '4px',
+                  opacity: 0.9,
+                  transition: 'all 0.2s ease',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  flexShrink: 0,
-                  transition: 'all 0.2s ease',
+                  minWidth: '28px',
+                  minHeight: '28px',
                   lineHeight: '1',
+                  flexShrink: 0,
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
-                  e.currentTarget.style.transform = 'scale(1.1)';
+                  e.currentTarget.style.opacity = '1';
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
+                  e.currentTarget.style.borderRadius = '50%';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-                  e.currentTarget.style.transform = 'scale(1)';
+                  e.currentTarget.style.opacity = '0.9';
+                  e.currentTarget.style.background = 'transparent';
+                  e.currentTarget.style.borderRadius = '4px';
                 }}
                 aria-label="Close notification"
                 title="Close"
