@@ -281,6 +281,7 @@ function App() {
               padding: '16px',
               boxShadow: '0 4px 12px rgba(37, 99, 235, 0.4)',
               boxSizing: 'border-box',
+              pointerEvents: 'auto',
             }}>
               <div style={{ 
                 flex: 1,
@@ -294,8 +295,13 @@ function App() {
               </div>
               <button
                 onClick={(e) => {
+                  e.preventDefault();
                   e.stopPropagation();
                   toast.dismiss(t.id);
+                }}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
                 }}
                 type="button"
                 style={{
@@ -315,7 +321,9 @@ function App() {
                   justifyContent: 'center',
                   flexShrink: 0,
                   lineHeight: '1',
-                  pointerEvents: 'auto',
+                  pointerEvents: 'all',
+                  zIndex: 10000,
+                  position: 'relative',
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)';

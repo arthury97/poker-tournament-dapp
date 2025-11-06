@@ -210,7 +210,6 @@ code {
   z-index: 9999 !important;
   max-width: calc(100vw - 24px) !important;
   width: 360px !important;
-  pointer-events: none !important;
 }
 
 .toast-container > * {
