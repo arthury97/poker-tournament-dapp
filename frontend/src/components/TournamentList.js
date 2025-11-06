@@ -212,17 +212,6 @@ const TournamentList = ({ refreshTrigger }) => {
 
   return (
     <div>
-      <h2 style={{ 
-        marginBottom: '32px', 
-        color: '#2563eb', 
-        fontSize: '36px',
-        fontFamily: '"Bungee", "Impact", "Arial Black", sans-serif',
-        letterSpacing: '1px',
-        textAlign: 'center'
-      }}>
-        AVAILABLE TOURNAMENTS
-      </h2>
-
       {isLoading && (
         <div className="card text-center">
           <div className="loading" style={{ margin: '20px auto' }}></div>
