@@ -243,7 +243,16 @@ function App() {
           }}
           toastOptions={{
             duration: 4000,
-            style: {
+            success: {
+              duration: 3000,
+            },
+            error: {
+              duration: 5000,
+            },
+          }}
+        >
+          {(t) => (
+            <div style={{
               background: '#2563eb',
               color: '#fff',
               border: '2px solid #1e40af',
@@ -251,38 +260,25 @@ function App() {
               padding: '16px',
               paddingRight: '48px',
               maxWidth: '360px',
+              minWidth: '320px',
               boxShadow: '0 4px 12px rgba(37, 99, 235, 0.4)',
               fontSize: '14px',
               position: 'relative',
-            },
-            success: {
-              duration: 3000,
-              style: {
-                background: '#2563eb',
-                color: '#fff',
-              },
-              iconTheme: {
-                primary: '#fff',
-                secondary: '#2563eb',
-              },
-            },
-            error: {
-              duration: 5000,
-              style: {
-                background: '#2563eb',
-                color: '#fff',
-              },
-              iconTheme: {
-                primary: '#fff',
-                secondary: '#2563eb',
-              },
-            },
-          }}
-        >
-          {(t) => (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              {t.icon}
-              <div style={{ flex: 1 }}>
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+            }}>
+              {t.icon && (
+                <span style={{ 
+                  fontSize: '20px',
+                  flexShrink: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                }}>
+                  {t.icon}
+                </span>
+              )}
+              <div style={{ flex: 1, lineHeight: '1.5' }}>
                 {typeof t.message === 'string' ? t.message : t.message}
               </div>
               <button
@@ -306,6 +302,7 @@ function App() {
                   lineHeight: '1',
                   padding: 0,
                   transition: 'all 0.2s',
+                  flexShrink: 0,
                 }}
                 onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)'}
                 onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)'}
