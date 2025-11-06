@@ -183,6 +183,30 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Function to save wallet address to user's Firestore document
+  const saveWalletAddress = async (walletAddress) => {
+    if (!user || !user.uid) {
+      throw new Error('User must be signed in to save wallet address');
+    }
+    
+    try {
+      const userRef = doc(db, 'users', user.uid);
+      await updateDoc(userRef, {
+        walletAddress: walletAddress.toLowerCase(), // Store lowercase for consistency
+        walletConnectedAt: new Date().toISOString()
+      });
+      
+      // Update local user state
+      setUser(prev => ({
+        ...prev,
+        walletAddress: walletAddress.toLowerCase()
+      }));
+    } catch (error) {
+      console.error('Error saving wallet address:', error);
+      throw error;
+    }
+  };
+
   const value = {
     user,
     isAuthenticated: !!user,
