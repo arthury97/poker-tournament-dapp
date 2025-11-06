@@ -241,14 +241,15 @@ function App() {
             duration: 4000,
             position: 'top-right',
             style: {
-              background: '#1f2937',
+              background: '#2563eb',
               color: '#fff',
-              border: '2px solid #2563eb',
+              border: '2px solid #1e40af',
               borderRadius: '12px',
               padding: '16px',
               width: '100%',
               maxWidth: '100%',
               boxSizing: 'border-box',
+              boxShadow: '0 4px 12px rgba(37, 99, 235, 0.4)',
             },
             success: {
               duration: 3000,
