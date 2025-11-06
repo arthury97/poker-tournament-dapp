@@ -232,7 +232,6 @@ const CreateTournament = ({ onTournamentCreated }) => {
           
           // Try to query the contract to find the newly created token
           try {
-            const userAddress = await signer.getAddress();
             // Try to get from player tokens array
             try {
               const totalTokens = await tournamentManager.getTotalPlayerTokens();
