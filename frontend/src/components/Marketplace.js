@@ -13,6 +13,9 @@ const Marketplace = ({ refreshTrigger }) => {
   const [activeSubTab, setActiveSubTab] = useState('available'); // 'available', 'orders', 'newlyMinted'
   const [orders, setOrders] = useState([]);
   const [isLoadingOrders, setIsLoadingOrders] = useState(false);
+  const [showPurchaseModal, setShowPurchaseModal] = useState(false);
+  const [selectedTournament, setSelectedTournament] = useState(null);
+  const [tokenQuantity, setTokenQuantity] = useState('');
 
   const loadOnChainTournaments = async () => {
     if (!isConnected || !signer || !TOURNAMENT_MANAGER_ADDRESS) {
@@ -184,7 +187,7 @@ const Marketplace = ({ refreshTrigger }) => {
     }
   }, [isConnected, signer, refreshTrigger, activeSubTab]);
 
-  const handlePurchaseTokens = async (tournamentAddress, tokenPrice) => {
+  const handlePurchaseClick = (tournament) => {
     if (!isConnected || !signer) {
       toast.error('Please connect your wallet first');
       return;
@@ -195,17 +198,41 @@ const Marketplace = ({ refreshTrigger }) => {
       return;
     }
 
+    setSelectedTournament(tournament);
+    setTokenQuantity('');
+    setShowPurchaseModal(true);
+  };
+
+  const handlePurchaseTokens = async () => {
+    if (!selectedTournament) return;
+
+    const quantity = parseInt(tokenQuantity);
+    if (!quantity || quantity <= 0) {
+      toast.error('Please enter a valid quantity');
+      return;
+    }
+
+    if (quantity > selectedTournament.remainingTokens) {
+      toast.error(`Only ${selectedTournament.remainingTokens.toString()} tokens available`);
+      return;
+    }
+
     try {
-      const pokerToken = getPokerTokenContract(tournamentAddress, signer);
-      const tokensToBuy = 100; // Buy 100 tokens
-      const totalCost = tokenPrice * BigInt(tokensToBuy);
+      const pokerToken = getPokerTokenContract(selectedTournament.address, signer);
+      const tokensToBuy = BigInt(quantity);
+      const totalCost = selectedTournament.tokenPrice * tokensToBuy;
       
-      toast.loading('Purchasing tokens...', { id: 'purchase-tokens' });
+      toast.loading(`Purchasing ${quantity} tokens...`, { id: 'purchase-tokens' });
       
       const tx = await pokerToken.purchaseTokens({ value: totalCost });
       await tx.wait();
       
-      toast.success(`Successfully purchased ${tokensToBuy} tokens!`, { id: 'purchase-tokens' });
+      toast.success(`Successfully purchased ${quantity} tokens!`, { id: 'purchase-tokens' });
+      
+      // Close modal and reset
+      setShowPurchaseModal(false);
+      setSelectedTournament(null);
+      setTokenQuantity('');
       
       // Refresh tournament list
       loadOnChainTournaments();

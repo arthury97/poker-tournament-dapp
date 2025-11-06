@@ -11,6 +11,9 @@ const TournamentList = ({ refreshTrigger }) => {
   const { isAuthenticated } = useAuth();
   const [onChainTournaments, setOnChainTournaments] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [showPurchaseModal, setShowPurchaseModal] = useState(false);
+  const [selectedTournament, setSelectedTournament] = useState(null);
+  const [tokenQuantity, setTokenQuantity] = useState('');
 
   const loadOnChainTournaments = async () => {
     // Don't try to load if wallet is not connected or contract address is missing
@@ -437,7 +440,7 @@ const TournamentList = ({ refreshTrigger }) => {
                   {tournament.isActive && !tournament.tournamentCompleted && (
                     <button
                       className="btn btn-primary"
-                      onClick={() => handlePurchaseTokens(tournament.address, tournament.buyInAmount, tournament.totalTokens)}
+                      onClick={() => handlePurchaseClick(tournament)}
                       disabled={!isConnected || !isAuthenticated}
                       style={{ 
                         flex: 1, 
