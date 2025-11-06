@@ -872,6 +872,154 @@ const Marketplace = ({ refreshTrigger }) => {
           )}
         </>
       )}
+
+      {/* Purchase Modal */}
+      {showPurchaseModal && selectedTournament && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.7)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 2000,
+          padding: '20px'
+        }} onClick={() => {
+          setShowPurchaseModal(false);
+          setSelectedTournament(null);
+          setTokenQuantity('');
+        }}>
+          <div style={{
+            background: '#ffffff',
+            borderRadius: '16px',
+            padding: '32px',
+            maxWidth: '500px',
+            width: '100%',
+            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)'
+          }} onClick={(e) => e.stopPropagation()}>
+            <h3 style={{
+              marginTop: 0,
+              marginBottom: '24px',
+              fontSize: '24px',
+              fontWeight: '900',
+              fontFamily: '"Bungee", "Impact", "Arial Black", sans-serif',
+              letterSpacing: '1px',
+              textTransform: 'uppercase',
+              color: '#2563eb'
+            }}>
+              PURCHASE TOKENS
+            </h3>
+
+            <div style={{ marginBottom: '20px' }}>
+              <p style={{ margin: '0 0 8px 0', fontSize: '14px', color: '#6b7280' }}>Tournament:</p>
+              <p style={{ margin: 0, fontSize: '18px', fontWeight: '700', color: '#1f2937' }}>
+                {selectedTournament.name}
+              </p>
+            </div>
+
+            <div style={{ marginBottom: '20px' }}>
+              <p style={{ margin: '0 0 8px 0', fontSize: '14px', color: '#6b7280' }}>Token Price:</p>
+              <p style={{ margin: 0, fontSize: '18px', fontWeight: '700', color: '#2563eb' }}>
+                {formatUSDT(ethToUSDT(selectedTournament.tokenPrice))} USDT per token
+              </p>
+            </div>
+
+            <div style={{ marginBottom: '20px' }}>
+              <p style={{ margin: '0 0 8px 0', fontSize: '14px', color: '#6b7280' }}>Available Tokens:</p>
+              <p style={{ margin: 0, fontSize: '18px', fontWeight: '700', color: '#1f2937' }}>
+                {selectedTournament.remainingTokens.toString()} tokens
+              </p>
+            </div>
+
+            <div style={{ marginBottom: '24px' }}>
+              <label style={{
+                display: 'block',
+                marginBottom: '8px',
+                fontSize: '14px',
+                fontWeight: '700',
+                fontFamily: '"Bungee", "Impact", "Arial Black", sans-serif',
+                letterSpacing: '0.5px',
+                textTransform: 'uppercase',
+                color: '#1f2937'
+              }}>
+                QUANTITY
+              </label>
+              <input
+                type="number"
+                min="1"
+                max={selectedTournament.remainingTokens.toString()}
+                value={tokenQuantity}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value === '' || (parseInt(value) > 0 && parseInt(value) <= selectedTournament.remainingTokens)) {
+                    setTokenQuantity(value);
+                  }
+                }}
+                placeholder="Enter quantity"
+                style={{
+                  width: '100%',
+                  padding: '12px 16px',
+                  fontSize: '16px',
+                  border: '2px solid #d1d5db',
+                  borderRadius: '8px',
+                  fontFamily: 'inherit',
+                  boxSizing: 'border-box'
+                }}
+              />
+              {tokenQuantity && (
+                <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: '#6b7280' }}>
+                  Total Cost: <strong style={{ color: '#2563eb' }}>
+                    {formatUSDT(ethToUSDT(selectedTournament.tokenPrice * BigInt(parseInt(tokenQuantity) || 0)))} USDT
+                  </strong>
+                </p>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button
+                onClick={() => {
+                  setShowPurchaseModal(false);
+                  setSelectedTournament(null);
+                  setTokenQuantity('');
+                }}
+                className="btn btn-secondary"
+                style={{
+                  flex: 1,
+                  padding: '12px 24px',
+                  fontSize: '14px',
+                  fontWeight: '700',
+                  fontFamily: '"Bungee", "Impact", "Arial Black", sans-serif',
+                  letterSpacing: '0.5px',
+                  textTransform: 'uppercase'
+                }}
+              >
+                CANCEL
+              </button>
+              <button
+                onClick={handlePurchaseTokens}
+                className="btn btn-primary"
+                disabled={!tokenQuantity || parseInt(tokenQuantity) <= 0 || parseInt(tokenQuantity) > selectedTournament.remainingTokens}
+                style={{
+                  flex: 1,
+                  padding: '12px 24px',
+                  fontSize: '14px',
+                  fontWeight: '700',
+                  fontFamily: '"Bungee", "Impact", "Arial Black", sans-serif',
+                  letterSpacing: '0.5px',
+                  textTransform: 'uppercase',
+                  opacity: (!tokenQuantity || parseInt(tokenQuantity) <= 0 || parseInt(tokenQuantity) > selectedTournament.remainingTokens) ? 0.6 : 1,
+                  cursor: (!tokenQuantity || parseInt(tokenQuantity) <= 0 || parseInt(tokenQuantity) > selectedTournament.remainingTokens) ? 'not-allowed' : 'pointer'
+                }}
+              >
+                PURCHASE
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
