@@ -153,36 +153,114 @@ const CreateTournament = ({ onTournamentCreated }) => {
 
       toast.loading('Creating tournament token...', { id: 'create-token' });
       
-      const receipt = await tx.wait();
+      // Wait for transaction and check status
+      let receipt;
+      try {
+        receipt = await tx.wait();
+      } catch (error) {
+        console.error('Transaction failed:', error);
+        throw new Error('Transaction failed: ' + (error.reason || error.message));
+      }
+      
+      // Check if transaction was successful
+      if (receipt.status === 0) {
+        throw new Error('Transaction reverted. Please check your inputs and try again.');
+      }
+      
+      console.log('Transaction confirmed:', receipt.hash);
+      console.log('Transaction status:', receipt.status === 1 ? 'SUCCESS' : 'FAILED');
+      console.log('Total logs:', receipt.logs?.length || 0);
+      console.log('TournamentManager address:', TOURNAMENT_MANAGER_ADDRESS);
       
       let tournamentAddress = null;
       
-      // Method 0: Try to get return value directly (for some cases)
-      try {
-        // In some cases, we can call the function with callStatic to get the return value
-        // But this won't work for state-changing functions, so we'll rely on events
-        console.log('Transaction confirmed, extracting address from events...');
-      } catch (e) {
-        console.log('Could not get return value directly:', e.message);
+      // If no logs, the transaction might have reverted or the function doesn't emit events
+      if (!receipt.logs || receipt.logs.length === 0) {
+        console.warn('⚠️ WARNING: Transaction has 0 logs! This means no events were emitted.');
+        console.warn('This could mean:');
+        console.warn('1. The function does not exist in the contract');
+        console.warn('2. The function exists but does not emit events');
+        console.warn('3. The transaction reverted silently');
+        console.warn('4. The contract address is incorrect');
+        
+        // Verify the contract code exists at the address
+        try {
+          const contractCode = await signer.provider.getCode(TOURNAMENT_MANAGER_ADDRESS);
+          if (!contractCode || contractCode === '0x') {
+            throw new Error('No contract code found at TournamentManager address. Please verify the contract is deployed.');
+          }
+          console.log('Contract code exists at address');
+        } catch (codeError) {
+          console.error('Error checking contract code:', codeError);
+        }
+        
+        // Try to get the return value by calling the function statically (simulate the call)
+        try {
+          console.log('Attempting to simulate function call to get return value...');
+          let staticResult;
+          if (useCreateTournament) {
+            staticResult = await tournamentManager.createTournament.staticCall(
+              tournamentName,
+              formData.symbol.trim().toUpperCase(),
+              parseEther(buyInEth),
+              parseInt(formData.totalTokens),
+              parseInt(formData.profitSharePercentage)
+            );
+          } else {
+            staticResult = await tournamentManager.createPlayerToken.staticCall(
+              tournamentName,
+              formData.symbol.trim().toUpperCase(),
+              parseEther(buyInEth),
+              parseInt(formData.totalTokens),
+              parseInt(formData.profitSharePercentage)
+            );
+          }
+          if (staticResult) {
+            tournamentAddress = staticResult;
+            console.log('✅ Got address from static call simulation:', tournamentAddress);
+          }
+        } catch (staticError) {
+          console.error('Static call simulation failed:', staticError.message);
+          console.error('This might mean the function does not exist or has different parameters');
+        }
+        
+        // If still no address, provide helpful error message
+        if (!tournamentAddress) {
+          const errorMsg = `Transaction succeeded but no events were emitted and address could not be retrieved.
+          
+Possible causes:
+1. The function "${useCreateTournament ? 'createTournament' : 'createPlayerToken'}" does not exist in the deployed contract
+2. The function exists but does not emit events
+3. The contract address (${TOURNAMENT_MANAGER_ADDRESS}) is incorrect
+4. The contract was deployed with a different version
+
+Please verify:
+- The contract is deployed at the correct address
+- The contract has the "${useCreateTournament ? 'createTournament' : 'createPlayerToken'}" function
+- The contract emits events when creating tokens
+
+Transaction hash: ${receipt.hash}`;
+          
+          console.error(errorMsg);
+          throw new Error(errorMsg);
+        }
       }
       
       // Method 1: Extract address from ALL logs (most reliable - check everything)
-      console.log('Transaction hash:', receipt.hash);
-      console.log('Total logs:', receipt.logs.length);
-      console.log('TournamentManager address:', TOURNAMENT_MANAGER_ADDRESS);
-      
       // First, let's see ALL logs to understand what we're working with
-      console.log('=== ALL RECEIPT LOGS ===');
-      receipt.logs.forEach((log, index) => {
-        console.log(`Log ${index}:`, {
-          address: log.address,
-          addressMatches: log.address.toLowerCase() === TOURNAMENT_MANAGER_ADDRESS.toLowerCase(),
-          topicsCount: log.topics?.length || 0,
-          firstTopic: log.topics?.[0] || 'none',
-          secondTopic: log.topics?.[1] || 'none',
-          dataLength: log.data?.length || 0
+      if (receipt.logs && receipt.logs.length > 0) {
+        console.log('=== ALL RECEIPT LOGS ===');
+        receipt.logs.forEach((log, index) => {
+          console.log(`Log ${index}:`, {
+            address: log.address,
+            addressMatches: log.address.toLowerCase() === TOURNAMENT_MANAGER_ADDRESS.toLowerCase(),
+            topicsCount: log.topics?.length || 0,
+            firstTopic: log.topics?.[0] || 'none',
+            secondTopic: log.topics?.[1] || 'none',
+            dataLength: log.data?.length || 0
+          });
         });
-      });
+      }
       
       // Try to parse each log from TournamentManager
       for (const log of receipt.logs) {
