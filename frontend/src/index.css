@@ -199,33 +199,43 @@ code {
 }
 
 /* React Hot Toast Styles */
-/* Force all toast elements to stay in top-right corner only */
-[data-hot-toast-wrapper] {
+/* Custom toast container - keep in top right only */
+.toast-container {
   position: fixed !important;
   top: 80px !important;
   right: 20px !important;
   left: auto !important;
   bottom: auto !important;
+  transform: none !important;
+  z-index: 9999 !important;
+  max-width: 420px !important;
+  width: auto !important;
+  pointer-events: none !important;
+}
+
+.toast-container > * {
+  pointer-events: auto !important;
+}
+
+/* Make sure react-hot-toast wrapper stays put */
+div[data-hot-toast-wrapper] {
+  position: fixed !important;
+  top: 80px !important;
+  right: 20px !important;
+  left: auto !important;
+  bottom: auto !important;
+  transform: none !important;
   width: auto !important;
   max-width: 420px !important;
   z-index: 9999 !important;
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 8px !important;
 }
 
-/* Ensure individual toasts don't spread */
-[data-hot-toast] {
-  position: relative !important;
-  width: 100% !important;
+/* Individual toast positioning */
+div[role="status"] {
+  margin-bottom: 8px !important;
+  width: auto !important;
   max-width: 420px !important;
   min-width: 320px !important;
-}
-
-/* Override any positioning on toast elements */
-[role="status"] {
-  position: relative !important;
-  width: 100% !important;
 }
 
 /* Responsive */
