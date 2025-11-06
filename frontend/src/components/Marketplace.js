@@ -11,7 +11,6 @@ const Marketplace = ({ refreshTrigger }) => {
   const { isAuthenticated } = useAuth();
   const [onChainTournaments, setOnChainTournaments] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [filter, setFilter] = useState('available'); // 'available' - only show purchasable tokens
 
   const loadOnChainTournaments = async () => {
     if (!isConnected || !signer || !TOURNAMENT_MANAGER_ADDRESS) {
