@@ -300,9 +300,22 @@ function App() {
               },
             },
           }}
-          // Add custom close button to all toasts
-          closeButton={CustomCloseButton}
-        />
+        >
+          {(t) => (
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              width: '100%',
+            }}>
+              <div style={{ flex: 1 }}>
+                {t.icon && <span style={{ marginRight: '8px' }}>{t.icon}</span>}
+                <span>{t.message}</span>
+              </div>
+              <CustomCloseButton closeToast={() => t.dismiss()} />
+            </div>
+          )}
+        </Toaster>
         </div>
       </Web3Provider>
     </AuthProvider>
