@@ -249,9 +249,11 @@ function App() {
               border: '2px solid #1e40af',
               borderRadius: '12px',
               padding: '16px',
+              paddingRight: '48px',
               maxWidth: '360px',
               boxShadow: '0 4px 12px rgba(37, 99, 235, 0.4)',
               fontSize: '14px',
+              position: 'relative',
             },
             success: {
               duration: 3000,
@@ -276,7 +278,43 @@ function App() {
               },
             },
           }}
-        />
+        >
+          {(t) => (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              {t.icon}
+              <div style={{ flex: 1 }}>
+                {typeof t.message === 'string' ? t.message : t.message}
+              </div>
+              <button
+                onClick={() => toast.dismiss(t.id)}
+                style={{
+                  position: 'absolute',
+                  right: '12px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'rgba(255, 255, 255, 0.2)',
+                  border: '1px solid rgba(255, 255, 255, 0.3)',
+                  color: '#fff',
+                  borderRadius: '4px',
+                  width: '24px',
+                  height: '24px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  fontSize: '16px',
+                  lineHeight: '1',
+                  padding: 0,
+                  transition: 'all 0.2s',
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)'}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)'}
+              >
+                ×
+              </button>
+            </div>
+          )}
+        </Toaster>
         </div>
       </Web3Provider>
     </AuthProvider>
