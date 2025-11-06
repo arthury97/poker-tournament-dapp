@@ -5,7 +5,7 @@ import AuthModal from './AuthModal';
 import WalletModal from './WalletModal';
 import toast from 'react-hot-toast';
 
-const Header = ({ onNavigateToDashboard, isDashboardActive = false }) => {
+const Header = ({ onNavigateToDashboard, isDashboardActive = false, onNavigateToHome }) => {
   const { account, isConnected, connectWallet, disconnectWallet, isLoading, chainId } = useWeb3();
   const { user, isAuthenticated, signOut } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -81,16 +81,30 @@ const Header = ({ onNavigateToDashboard, isDashboardActive = false }) => {
             alignItems: 'center',
             gap: '16px'
           }}>
-            <h1 style={{
-              color: '#2563eb',
-              fontSize: '42px',
-              fontWeight: '900',
-              fontFamily: '"Bungee", "Impact", "Arial Black", sans-serif',
-              margin: 0,
-              letterSpacing: '2px',
-              textTransform: 'uppercase',
-              textShadow: '2px 2px 0px rgba(0, 0, 0, 0.1)'
-            }}>
+            <h1 
+              onClick={onNavigateToHome}
+              style={{
+                color: '#2563eb',
+                fontSize: '42px',
+                fontWeight: '900',
+                fontFamily: '"Bungee", "Impact", "Arial Black", sans-serif',
+                margin: 0,
+                letterSpacing: '2px',
+                textTransform: 'uppercase',
+                textShadow: '2px 2px 0px rgba(0, 0, 0, 0.1)',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                userSelect: 'none'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.color = '#1d4ed8';
+                e.target.style.transform = 'scale(1.05)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.color = '#2563eb';
+                e.target.style.transform = 'scale(1)';
+              }}
+            >
               STAKED
             </h1>
             {chainId && (

@@ -25,6 +25,7 @@ function App() {
           <Header 
             onNavigateToDashboard={() => setActiveTab('dashboard')}
             isDashboardActive={activeTab === 'dashboard'}
+            onNavigateToHome={() => setActiveTab('demo')}
           />
         
         <main style={{ padding: '40px 0' }}>
