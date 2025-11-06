@@ -131,10 +131,9 @@ export const Web3Provider = ({ children }) => {
         } else {
           setAccount(accounts[0]);
           // Update balance for new account
-          if (provider) {
-            const newBalance = await provider.getBalance(accounts[0]);
-            setBalance(newBalance);
-          }
+          const currentProvider = new ethers.BrowserProvider(ethereumProvider);
+          const newBalance = await currentProvider.getBalance(accounts[0]);
+          setBalance(newBalance);
         }
       });
 
@@ -223,6 +222,7 @@ export const Web3Provider = ({ children }) => {
     chainId,
     isConnected,
     isLoading,
+    balance,
     connectWallet,
     disconnectWallet,
     switchToSepolia,
