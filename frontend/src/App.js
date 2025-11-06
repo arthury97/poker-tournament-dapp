@@ -240,21 +240,17 @@ function App() {
           toastOptions={{
             duration: 4000,
             position: 'top-right',
-            className: 'custom-toast',
-            onClick: (event, toast_id) => {
-              // Dismiss when clicking anywhere on the toast (especially the X button)
-              toast.dismiss(toast_id);
-            },
             style: {
               background: '#2563eb',
               color: '#fff',
               border: '2px solid #1e40af',
               borderRadius: '12px',
-              padding: '16px',
+              padding: '16px 56px 16px 16px',
               width: '100%',
               maxWidth: '100%',
               boxSizing: 'border-box',
               boxShadow: '0 4px 12px rgba(37, 99, 235, 0.4)',
+              position: 'relative',
             },
             success: {
               duration: 3000,
@@ -271,7 +267,49 @@ function App() {
               },
             },
           }}
-        />
+        >
+          {(t) => (
+            <>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                {t.icon}
+                <span>{typeof t.message === 'string' ? t.message : t.message}</span>
+              </div>
+              <div
+                onClick={() => toast.dismiss(t.id)}
+                style={{
+                  position: 'absolute',
+                  top: '50%',
+                  right: '16px',
+                  transform: 'translateY(-50%)',
+                  color: '#fff',
+                  background: 'rgba(255, 255, 255, 0.2)',
+                  border: '1px solid rgba(255, 255, 255, 0.4)',
+                  fontSize: '18px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  padding: '8px',
+                  borderRadius: '4px',
+                  width: '32px',
+                  height: '32px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  lineHeight: '1',
+                  userSelect: 'none',
+                  transition: 'all 0.2s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
+                }}
+              >
+                ×
+              </div>
+            </>
+          )}
+        </Toaster>
         </div>
       </Web3Provider>
     </AuthProvider>

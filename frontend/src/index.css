@@ -241,47 +241,7 @@ div[role="status"] {
 div[role="status"] > div {
   max-width: 100% !important;
   box-sizing: border-box !important;
-  overflow: hidden !important;
-}
-
-/* Add close button via CSS */
-.custom-toast[data-hot-toast] {
-  position: relative !important;
-  padding-right: 56px !important;
-}
-
-.custom-toast[data-hot-toast]::after {
-  content: '×';
-  position: absolute;
-  top: 50%;
-  right: 16px;
-  transform: translateY(-50%);
-  color: #fff;
-  background: rgba(255, 255, 255, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  font-size: 18px;
-  font-weight: bold;
-  cursor: pointer;
-  padding: 8px;
-  border-radius: 4px;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
-  user-select: none;
-  transition: all 0.2s ease;
-}
-
-.custom-toast[data-hot-toast]::after:hover {
-  background: rgba(255, 255, 255, 0.3);
-  transform: translateY(-50%) scale(1.1);
-}
-
-/* Make toast clickable to dismiss */
-.custom-toast[data-hot-toast] {
-  cursor: pointer;
+  overflow: visible !important;
 }
 
 /* Responsive */
