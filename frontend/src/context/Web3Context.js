@@ -21,7 +21,9 @@ export const Web3Provider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(false);
 
   // Contract addresses (update these after deployment)
-  const TOURNAMENT_MANAGER_ADDRESS = process.env.REACT_APP_TOURNAMENT_MANAGER_ADDRESS || '0x5FbDB2315678afecb367f032d93F642f64180aa3';
+  // Sepolia deployment: 0x5c4606b4F7b327Bd2996A0BCB5d5578dA2427138
+  // Localhost: 0x5FbDB2315678afecb367f032d93F642f64180aa3
+  const TOURNAMENT_MANAGER_ADDRESS = process.env.REACT_APP_TOURNAMENT_MANAGER_ADDRESS || '0x5c4606b4F7b327Bd2996A0BCB5d5578dA2427138';
 
   useEffect(() => {
     checkConnection();
