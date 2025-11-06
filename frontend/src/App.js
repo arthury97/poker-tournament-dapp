@@ -266,7 +266,70 @@ function App() {
               },
             },
           }}
-        />
+        >
+          {(t) => (
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              width: '100%',
+              gap: '12px',
+              boxSizing: 'border-box',
+            }}>
+              <div style={{ 
+                flex: 1,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                minWidth: 0,
+                overflow: 'hidden',
+              }}>
+                {t.icon && <span style={{ fontSize: '18px', flexShrink: 0 }}>{t.icon}</span>}
+                <span style={{ 
+                  fontSize: '14px', 
+                  lineHeight: '1.4',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }}>
+                  {typeof t.message === 'string' ? t.message : t.message}
+                </span>
+              </div>
+              <button
+                onClick={() => toast.dismiss(t.id)}
+                style={{
+                  color: '#fff',
+                  background: 'rgba(255, 255, 255, 0.15)',
+                  border: '1px solid rgba(255, 255, 255, 0.3)',
+                  fontSize: '20px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  padding: '2px',
+                  borderRadius: '4px',
+                  width: '28px',
+                  height: '28px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                  transition: 'all 0.2s ease',
+                  lineHeight: '1',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.25)';
+                  e.currentTarget.style.transform = 'scale(1.05)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
+                  e.currentTarget.style.transform = 'scale(1)';
+                }}
+                aria-label="Close notification"
+                title="Close"
+              >
+                ×
+              </button>
+            </div>
+          )}
+        </Toaster>
         </div>
       </Web3Provider>
     </AuthProvider>
