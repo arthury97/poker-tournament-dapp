@@ -240,6 +240,7 @@ function App() {
           toastOptions={{
             duration: 4000,
             position: 'top-right',
+            className: 'custom-toast',
             style: {
               background: '#2563eb',
               color: '#fff',
@@ -254,93 +255,19 @@ function App() {
             success: {
               duration: 3000,
               iconTheme: {
-                primary: '#2563eb',
-                secondary: '#fff',
+                primary: '#fff',
+                secondary: '#2563eb',
               },
             },
             error: {
               duration: 5000,
               iconTheme: {
-                primary: '#dc2626',
-                secondary: '#fff',
+                primary: '#fff',
+                secondary: '#2563eb',
               },
             },
           }}
-        >
-          {(t) => (
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              width: '100%',
-              gap: '12px',
-              background: '#2563eb',
-              color: '#fff',
-              border: '2px solid #1e40af',
-              borderRadius: '12px',
-              padding: '16px',
-              boxShadow: '0 4px 12px rgba(37, 99, 235, 0.4)',
-              boxSizing: 'border-box',
-              pointerEvents: 'auto',
-            }}>
-              <div style={{ 
-                flex: 1,
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                minWidth: 0,
-              }}>
-                {t.icon && <span>{t.icon}</span>}
-                <span>{typeof t.message === 'string' ? t.message : t.message}</span>
-              </div>
-              <div
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  toast.dismiss(t.id);
-                }}
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  toast.dismiss(t.id);
-                }}
-                role="button"
-                tabIndex={0}
-                style={{
-                  color: '#fff',
-                  background: 'rgba(255, 255, 255, 0.2)',
-                  border: '1px solid rgba(255, 255, 255, 0.4)',
-                  fontSize: '18px',
-                  fontWeight: 'bold',
-                  cursor: 'pointer',
-                  padding: '8px',
-                  borderRadius: '4px',
-                  width: '32px',
-                  height: '32px',
-                  transition: 'all 0.2s ease',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0,
-                  lineHeight: '1',
-                  userSelect: 'none',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)';
-                  e.currentTarget.style.transform = 'scale(1.1)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
-                  e.currentTarget.style.transform = 'scale(1)';
-                }}
-                aria-label="Close notification"
-                title="Close"
-              >
-                ×
-              </div>
-            </div>
-          )}
-        </Toaster>
+        />
         </div>
       </Web3Provider>
     </AuthProvider>
