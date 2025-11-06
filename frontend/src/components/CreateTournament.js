@@ -121,23 +121,64 @@ const CreateTournament = ({ onTournamentCreated }) => {
       // Use tournament name from selected tournament
       const tournamentName = selectedTournament.name;
 
-      // Try createTournament first, fallback to createPlayerToken if it doesn't exist
-      let tx;
+      // Step 1: Try to get the return value BEFORE executing using staticCall
+      // This will tell us which function exists and what address will be created
+      let expectedAddress = null;
       let useCreateTournament = true;
       
       try {
-        // Try to call createTournament
-        tx = await tournamentManager.createTournament(
+        console.log('Simulating createTournament call to get return value...');
+        expectedAddress = await tournamentManager.createTournament.staticCall(
           tournamentName,
           formData.symbol.trim().toUpperCase(),
           parseEther(buyInEth),
           parseInt(formData.totalTokens),
           parseInt(formData.profitSharePercentage)
         );
+        console.log('✅ Got address from static call (createTournament):', expectedAddress);
+        useCreateTournament = true;
+      } catch (error) {
+        console.log('createTournament static call failed, trying createPlayerToken...');
+        try {
+          expectedAddress = await tournamentManager.createPlayerToken.staticCall(
+            tournamentName,
+            formData.symbol.trim().toUpperCase(),
+            parseEther(buyInEth),
+            parseInt(formData.totalTokens),
+            parseInt(formData.profitSharePercentage)
+          );
+          console.log('✅ Got address from static call (createPlayerToken):', expectedAddress);
+          useCreateTournament = false;
+        } catch (e2) {
+          console.warn('Both static calls failed, will execute transaction and try to extract from logs/state');
+          console.warn('Error:', e2.message);
+        }
+      }
+
+      // Step 2: Execute the actual transaction
+      let tx;
+      try {
+        if (useCreateTournament) {
+          tx = await tournamentManager.createTournament(
+            tournamentName,
+            formData.symbol.trim().toUpperCase(),
+            parseEther(buyInEth),
+            parseInt(formData.totalTokens),
+            parseInt(formData.profitSharePercentage)
+          );
+        } else {
+          tx = await tournamentManager.createPlayerToken(
+            tournamentName,
+            formData.symbol.trim().toUpperCase(),
+            parseEther(buyInEth),
+            parseInt(formData.totalTokens),
+            parseInt(formData.profitSharePercentage)
+          );
+        }
       } catch (error) {
         // If createTournament doesn't exist, try createPlayerToken
         if (error.message && error.message.includes('createTournament')) {
-          console.log('createTournament not found, trying createPlayerToken...');
+          console.log('createTournament execution failed, trying createPlayerToken...');
           useCreateTournament = false;
           tx = await tournamentManager.createPlayerToken(
             tournamentName,
@@ -172,77 +213,55 @@ const CreateTournament = ({ onTournamentCreated }) => {
       console.log('Total logs:', receipt.logs?.length || 0);
       console.log('TournamentManager address:', TOURNAMENT_MANAGER_ADDRESS);
       
-      let tournamentAddress = null;
+      let tournamentAddress = expectedAddress; // Use the address from static call if we got it
+      
+      // If we didn't get it from static call, try to extract from logs
+      if (!tournamentAddress) {
+        console.log('No address from static call, trying to extract from transaction logs...');
+      }
       
       // If no logs, the transaction might have reverted or the function doesn't emit events
       if (!receipt.logs || receipt.logs.length === 0) {
         console.warn('⚠️ WARNING: Transaction has 0 logs! This means no events were emitted.');
-        console.warn('This could mean:');
-        console.warn('1. The function does not exist in the contract');
-        console.warn('2. The function exists but does not emit events');
-        console.warn('3. The transaction reverted silently');
-        console.warn('4. The contract address is incorrect');
         
-        // Verify the contract code exists at the address
-        try {
-          const contractCode = await signer.provider.getCode(TOURNAMENT_MANAGER_ADDRESS);
-          if (!contractCode || contractCode === '0x') {
-            throw new Error('No contract code found at TournamentManager address. Please verify the contract is deployed.');
-          }
-          console.log('Contract code exists at address');
-        } catch (codeError) {
-          console.error('Error checking contract code:', codeError);
-        }
-        
-        // Try to get the return value by calling the function statically (simulate the call)
-        try {
-          console.log('Attempting to simulate function call to get return value...');
-          let staticResult;
-          if (useCreateTournament) {
-            staticResult = await tournamentManager.createTournament.staticCall(
-              tournamentName,
-              formData.symbol.trim().toUpperCase(),
-              parseEther(buyInEth),
-              parseInt(formData.totalTokens),
-              parseInt(formData.profitSharePercentage)
-            );
-          } else {
-            staticResult = await tournamentManager.createPlayerToken.staticCall(
-              tournamentName,
-              formData.symbol.trim().toUpperCase(),
-              parseEther(buyInEth),
-              parseInt(formData.totalTokens),
-              parseInt(formData.profitSharePercentage)
-            );
-          }
-          if (staticResult) {
-            tournamentAddress = staticResult;
-            console.log('✅ Got address from static call simulation:', tournamentAddress);
-          }
-        } catch (staticError) {
-          console.error('Static call simulation failed:', staticError.message);
-          console.error('This might mean the function does not exist or has different parameters');
-        }
-        
-        // If still no address, provide helpful error message
-        if (!tournamentAddress) {
-          const errorMsg = `Transaction succeeded but no events were emitted and address could not be retrieved.
+        // If we already have the address from static call, we're good
+        if (tournamentAddress) {
+          console.log('✅ Using address from static call (events not needed):', tournamentAddress);
+        } else {
+          console.warn('No address from static call either. Trying to query contract state...');
           
+          // Try to query the contract to find the newly created token
+          try {
+            const userAddress = await signer.getAddress();
+            // Try to get from player tokens array
+            try {
+              const totalTokens = await tournamentManager.getTotalPlayerTokens();
+              if (totalTokens && totalTokens > 0n) {
+                const lastToken = await tournamentManager.playerTokens(totalTokens - 1n);
+                tournamentAddress = lastToken;
+                console.log('✅ Found address by querying playerTokens array:', tournamentAddress);
+              }
+            } catch (e) {
+              console.log('Could not query playerTokens array:', e.message);
+            }
+          } catch (queryError) {
+            console.error('Error querying contract state:', queryError);
+          }
+          
+          // If still no address, provide helpful error message
+          if (!tournamentAddress) {
+            const errorMsg = `Transaction succeeded but address could not be retrieved.
+            
 Possible causes:
 1. The function "${useCreateTournament ? 'createTournament' : 'createPlayerToken'}" does not exist in the deployed contract
-2. The function exists but does not emit events
+2. The function exists but does not emit events and return value could not be read
 3. The contract address (${TOURNAMENT_MANAGER_ADDRESS}) is incorrect
-4. The contract was deployed with a different version
-
-Please verify:
-- The contract is deployed at the correct address
-- The contract has the "${useCreateTournament ? 'createTournament' : 'createPlayerToken'}" function
-- The contract emits events when creating tokens
 
 Transaction hash: ${receipt.hash}`;
-          
-          console.error(errorMsg);
-          throw new Error(errorMsg);
+            
+            console.error(errorMsg);
+            throw new Error(errorMsg);
+          }
         }
       }
       
