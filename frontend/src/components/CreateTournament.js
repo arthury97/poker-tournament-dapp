@@ -121,23 +121,47 @@ const CreateTournament = ({ onTournamentCreated }) => {
       // Use tournament name from selected tournament
       const tournamentName = selectedTournament.name;
 
-      const tx = await tournamentManager.createTournament(
-        tournamentName,
-        formData.symbol.trim().toUpperCase(),
-        parseEther(buyInEth), // Convert USDT to ETH for smart contract
-        parseInt(formData.totalTokens),
-        parseInt(formData.profitSharePercentage)
-      );
+      // Try createTournament first, fallback to createPlayerToken if it doesn't exist
+      let tx;
+      let useCreateTournament = true;
+      
+      try {
+        // Try to call createTournament
+        tx = await tournamentManager.createTournament(
+          tournamentName,
+          formData.symbol.trim().toUpperCase(),
+          parseEther(buyInEth),
+          parseInt(formData.totalTokens),
+          parseInt(formData.profitSharePercentage)
+        );
+      } catch (error) {
+        // If createTournament doesn't exist, try createPlayerToken
+        if (error.message && error.message.includes('createTournament')) {
+          console.log('createTournament not found, trying createPlayerToken...');
+          useCreateTournament = false;
+          tx = await tournamentManager.createPlayerToken(
+            tournamentName,
+            formData.symbol.trim().toUpperCase(),
+            parseEther(buyInEth),
+            parseInt(formData.totalTokens),
+            parseInt(formData.profitSharePercentage)
+          );
+        } else {
+          throw error;
+        }
+      }
 
       toast.loading('Creating tournament token...', { id: 'create-token' });
       
       const receipt = await tx.wait();
       
-      // Find the TournamentCreated event
-      const event = receipt.logs.find(log => {
+      let tournamentAddress = null;
+      
+      // Try to find TournamentCreated event first
+      let event = receipt.logs.find(log => {
         try {
           const parsed = tournamentManager.interface.parseLog(log);
-          return parsed.name === 'TournamentCreated';
+          return parsed && parsed.name === 'TournamentCreated';
         } catch {
           return false;
         }
@@ -145,8 +169,59 @@ const CreateTournament = ({ onTournamentCreated }) => {
 
       if (event) {
         const parsedEvent = tournamentManager.interface.parseLog(event);
-        const tournamentAddress = parsedEvent.args.tournamentAddress;
-        
+        tournamentAddress = parsedEvent.args.tournamentAddress;
+      } else {
+        // Try to find PlayerTokenCreated event
+        event = receipt.logs.find(log => {
+          try {
+            const parsed = tournamentManager.interface.parseLog(log);
+            return parsed && parsed.name === 'PlayerTokenCreated';
+          } catch {
+            return false;
+          }
+        });
+
+        if (event) {
+          const parsedEvent = tournamentManager.interface.parseLog(event);
+          tournamentAddress = parsedEvent.args.playerTokenAddress;
+        }
+      }
+
+      // If still no address from event, try to get it from the array
+      if (!tournamentAddress) {
+        // Get the newly created tournament address from the array
+        try {
+          if (useCreateTournament) {
+            const tournamentsArray = await tournamentManager.getActiveTournaments();
+            if (tournamentsArray && tournamentsArray.length > 0) {
+              tournamentAddress = tournamentsArray[tournamentsArray.length - 1];
+            }
+            // If that doesn't work, try by index
+            if (!tournamentAddress) {
+              const totalCount = await tournamentManager.getTotalTournaments();
+              if (totalCount > 0n) {
+                tournamentAddress = await tournamentManager.tournaments(totalCount - 1n);
+              }
+            }
+          } else {
+            const playerTokensArray = await tournamentManager.getActivePlayerTokens();
+            if (playerTokensArray && playerTokensArray.length > 0) {
+              tournamentAddress = playerTokensArray[playerTokensArray.length - 1];
+            }
+            // If that doesn't work, try by index
+            if (!tournamentAddress) {
+              const totalCount = await tournamentManager.getTotalPlayerTokens();
+              if (totalCount > 0n) {
+                tournamentAddress = await tournamentManager.playerTokens(totalCount - 1n);
+              }
+            }
+          }
+        } catch (e) {
+          console.error('Could not get tournament address from array or index:', e);
+        }
+      }
+
+      if (tournamentAddress) {
         toast.success('Tournament token created successfully!', { id: 'create-token' });
         
         // Reset form
@@ -164,7 +239,7 @@ const CreateTournament = ({ onTournamentCreated }) => {
           onTournamentCreated(tournamentAddress);
         }
       } else {
-        throw new Error('Failed to get tournament address from transaction');
+        throw new Error('Failed to get tournament address from transaction. Transaction was successful but address could not be retrieved.');
       }
 
     } catch (error) {
