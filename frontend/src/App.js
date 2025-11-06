@@ -274,6 +274,13 @@ function App() {
               justifyContent: 'space-between',
               width: '100%',
               gap: '12px',
+              background: '#2563eb',
+              color: '#fff',
+              border: '2px solid #1e40af',
+              borderRadius: '12px',
+              padding: '16px',
+              boxShadow: '0 4px 12px rgba(37, 99, 235, 0.4)',
+              boxSizing: 'border-box',
             }}>
               <div style={{ 
                 flex: 1,
