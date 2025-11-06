@@ -523,7 +523,7 @@ const Marketplace = ({ refreshTrigger }) => {
               cursor: canPurchase ? 'pointer' : 'not-allowed'
             }}
             disabled={!canPurchase}
-            onClick={() => handlePurchaseTokens(tournament.address, tournament.tokenPrice)}
+            onClick={() => handlePurchaseClick(tournament)}
           >
             {!isConnected 
               ? 'CONNECT WALLET' 
