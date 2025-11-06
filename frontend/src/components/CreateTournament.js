@@ -121,74 +121,53 @@ const CreateTournament = ({ onTournamentCreated }) => {
       // Use tournament name from selected tournament
       const tournamentName = selectedTournament.name;
 
-      // Step 1: Try to get the return value BEFORE executing using staticCall
-      // This will tell us which function exists and what address will be created
-      let expectedAddress = null;
+      // Since static calls are failing (ABI mismatch), we'll execute the transaction
+      // and then query the contract state to find the newly created token
+      let tx;
       let useCreateTournament = true;
       
+      // Get the count BEFORE the transaction
+      let totalTokensBefore = 0n;
       try {
-        console.log('Simulating createTournament call to get return value...');
-        expectedAddress = await tournamentManager.createTournament.staticCall(
+        try {
+          totalTokensBefore = await tournamentManager.getTotalTournaments();
+        } catch {
+          try {
+            totalTokensBefore = await tournamentManager.getTotalPlayerTokens();
+            useCreateTournament = false;
+          } catch {
+            console.log('Could not get total count before transaction');
+          }
+        }
+        console.log('Total tokens before transaction:', totalTokensBefore.toString());
+      } catch (e) {
+        console.log('Error getting pre-transaction count:', e.message);
+      }
+
+      // Execute the transaction - try both functions
+      try {
+        console.log('Attempting to call createTournament...');
+        tx = await tournamentManager.createTournament(
           tournamentName,
           formData.symbol.trim().toUpperCase(),
           parseEther(buyInEth),
           parseInt(formData.totalTokens),
           parseInt(formData.profitSharePercentage)
         );
-        console.log('✅ Got address from static call (createTournament):', expectedAddress);
         useCreateTournament = true;
       } catch (error) {
-        console.log('createTournament static call failed, trying createPlayerToken...');
+        console.log('createTournament failed, trying createPlayerToken...', error.message);
         try {
-          expectedAddress = await tournamentManager.createPlayerToken.staticCall(
+          tx = await tournamentManager.createPlayerToken(
             tournamentName,
             formData.symbol.trim().toUpperCase(),
             parseEther(buyInEth),
             parseInt(formData.totalTokens),
             parseInt(formData.profitSharePercentage)
           );
-          console.log('✅ Got address from static call (createPlayerToken):', expectedAddress);
           useCreateTournament = false;
         } catch (e2) {
-          console.warn('Both static calls failed, will execute transaction and try to extract from logs/state');
-          console.warn('Error:', e2.message);
-        }
-      }
-
-      // Step 2: Execute the actual transaction
-      let tx;
-      try {
-        if (useCreateTournament) {
-          tx = await tournamentManager.createTournament(
-            tournamentName,
-            formData.symbol.trim().toUpperCase(),
-            parseEther(buyInEth),
-            parseInt(formData.totalTokens),
-            parseInt(formData.profitSharePercentage)
-          );
-        } else {
-          tx = await tournamentManager.createPlayerToken(
-            tournamentName,
-            formData.symbol.trim().toUpperCase(),
-            parseEther(buyInEth),
-            parseInt(formData.totalTokens),
-            parseInt(formData.profitSharePercentage)
-          );
-        }
-      } catch (error) {
-        // If createTournament doesn't exist, try createPlayerToken
-        if (error.message && error.message.includes('createTournament')) {
-          console.log('createTournament execution failed, trying createPlayerToken...');
-          useCreateTournament = false;
-          tx = await tournamentManager.createPlayerToken(
-            tournamentName,
-            formData.symbol.trim().toUpperCase(),
-            parseEther(buyInEth),
-            parseInt(formData.totalTokens),
-            parseInt(formData.profitSharePercentage)
-          );
-        } else {
-          throw error;
+          throw new Error(`Both createTournament and createPlayerToken failed. Please verify the contract is deployed correctly. Error: ${e2.message}`);
         }
       }
 
@@ -213,59 +192,98 @@ const CreateTournament = ({ onTournamentCreated }) => {
       console.log('Total logs:', receipt.logs?.length || 0);
       console.log('TournamentManager address:', TOURNAMENT_MANAGER_ADDRESS);
       
-      let tournamentAddress = expectedAddress; // Use the address from static call if we got it
+      let tournamentAddress = null;
       
-      // If we didn't get it from static call, try to extract from logs
-      if (!tournamentAddress) {
-        console.log('No address from static call, trying to extract from transaction logs...');
+      // Method 1: Query contract state to get the newly created token
+      // Since we know the count before, we can get the last item after
+      console.log('Querying contract state to find newly created token...');
+      try {
+        if (useCreateTournament) {
+          try {
+            const totalAfter = await tournamentManager.getTotalTournaments();
+            console.log('Total tournaments after:', totalAfter.toString());
+            if (totalAfter > totalTokensBefore) {
+              tournamentAddress = await tournamentManager.tournaments(totalAfter - 1n);
+              console.log('✅ Found address by querying tournaments array:', tournamentAddress);
+            }
+          } catch (e) {
+            console.log('Could not query tournaments array:', e.message);
+          }
+        }
+        
+        // Try playerTokens as fallback
+        if (!tournamentAddress) {
+          try {
+            const totalAfter = await tournamentManager.getTotalPlayerTokens();
+            console.log('Total player tokens after:', totalAfter.toString());
+            if (totalAfter > totalTokensBefore) {
+              tournamentAddress = await tournamentManager.playerTokens(totalAfter - 1n);
+              console.log('✅ Found address by querying playerTokens array:', tournamentAddress);
+            }
+          } catch (e) {
+            console.log('Could not query playerTokens array:', e.message);
+          }
+        }
+      } catch (queryError) {
+        console.error('Error querying contract state:', queryError);
       }
       
-      // If no logs, the transaction might have reverted or the function doesn't emit events
-      if (!receipt.logs || receipt.logs.length === 0) {
-        console.warn('⚠️ WARNING: Transaction has 0 logs! This means no events were emitted.');
-        
-        // If we already have the address from static call, we're good
-        if (tournamentAddress) {
-          console.log('✅ Using address from static call (events not needed):', tournamentAddress);
-        } else {
-          console.warn('No address from static call either. Trying to query contract state...');
-          
-          // Try to query the contract to find the newly created token
-          try {
-            // Try to get from player tokens array
+      // Method 2: Try to extract from logs if we have them
+      if (!tournamentAddress && receipt.logs && receipt.logs.length > 0) {
+        console.log('Trying to extract address from transaction logs...');
+        for (const log of receipt.logs) {
+          if (log.address.toLowerCase() === TOURNAMENT_MANAGER_ADDRESS.toLowerCase()) {
             try {
-              const totalTokens = await tournamentManager.getTotalPlayerTokens();
-              if (totalTokens && totalTokens > 0n) {
-                const lastToken = await tournamentManager.playerTokens(totalTokens - 1n);
-                tournamentAddress = lastToken;
-                console.log('✅ Found address by querying playerTokens array:', tournamentAddress);
+              const parsed = tournamentManager.interface.parseLog(log);
+              if (parsed) {
+                if (parsed.name === 'TournamentCreated' && parsed.args.tournamentAddress) {
+                  tournamentAddress = parsed.args.tournamentAddress;
+                  console.log('✅ Found TournamentCreated event:', tournamentAddress);
+                  break;
+                } else if (parsed.name === 'PlayerTokenCreated' && parsed.args.playerTokenAddress) {
+                  tournamentAddress = parsed.args.playerTokenAddress;
+                  console.log('✅ Found PlayerTokenCreated event:', tournamentAddress);
+                  break;
+                }
               }
             } catch (e) {
-              console.log('Could not query playerTokens array:', e.message);
+              // Try manual extraction from topics
+              if (log.topics && log.topics.length >= 2 && log.topics[1]) {
+                const possibleAddress = '0x' + log.topics[1].slice(-40).toLowerCase();
+                if (/^0x[a-fA-F0-9]{40}$/.test(possibleAddress) && possibleAddress !== '0x0000000000000000000000000000000000000000') {
+                  tournamentAddress = possibleAddress;
+                  console.log('✅ Extracted address from log topic:', tournamentAddress);
+                  break;
+                }
+              }
             }
-          } catch (queryError) {
-            console.error('Error querying contract state:', queryError);
-          }
-          
-          // If still no address, provide helpful error message
-          if (!tournamentAddress) {
-            const errorMsg = `Transaction succeeded but address could not be retrieved.
-            
-Possible causes:
-1. The function "${useCreateTournament ? 'createTournament' : 'createPlayerToken'}" does not exist in the deployed contract
-2. The function exists but does not emit events and return value could not be read
-3. The contract address (${TOURNAMENT_MANAGER_ADDRESS}) is incorrect
-
-Transaction hash: ${receipt.hash}`;
-            
-            console.error(errorMsg);
-            throw new Error(errorMsg);
           }
         }
       }
       
-      // Method 1: Extract address from ALL logs (most reliable - check everything)
-      // First, let's see ALL logs to understand what we're working with
+      // If still no address, provide helpful error message
+      if (!tournamentAddress) {
+        const errorMsg = `Transaction succeeded but address could not be retrieved.
+        
+The transaction was successful (hash: ${receipt.hash}) but we couldn't find the token address.
+
+Possible causes:
+1. The contract functions (getTotalTournaments/getTotalPlayerTokens) don't exist or return empty data
+2. Events are not being emitted
+3. The contract address (${TOURNAMENT_MANAGER_ADDRESS}) might be incorrect
+
+Please check:
+- Verify the contract is deployed at ${TOURNAMENT_MANAGER_ADDRESS}
+- Check if the contract has the createTournament or createPlayerToken function
+- Verify the contract emits events when creating tokens
+
+You can check the transaction on a block explorer: ${receipt.hash}`;
+        
+        console.error(errorMsg);
+        throw new Error(errorMsg);
+      }
+      
+      // Log all receipt logs for debugging
       if (receipt.logs && receipt.logs.length > 0) {
         console.log('=== ALL RECEIPT LOGS ===');
         receipt.logs.forEach((log, index) => {
@@ -278,55 +296,6 @@ Transaction hash: ${receipt.hash}`;
             dataLength: log.data?.length || 0
           });
         });
-      }
-      
-      // Try to parse each log from TournamentManager
-      for (const log of receipt.logs) {
-        if (log.address.toLowerCase() === TOURNAMENT_MANAGER_ADDRESS.toLowerCase()) {
-          console.log('Found log from TournamentManager, attempting to parse...');
-          
-          // Try interface parsing first
-          try {
-            const parsed = tournamentManager.interface.parseLog(log);
-            if (parsed) {
-              console.log('Successfully parsed log:', parsed.name, parsed.args);
-              if (parsed.name === 'TournamentCreated' && parsed.args.tournamentAddress) {
-                tournamentAddress = parsed.args.tournamentAddress;
-                console.log('✅ Found TournamentCreated event:', tournamentAddress);
-                break;
-              } else if (parsed.name === 'PlayerTokenCreated' && parsed.args.playerTokenAddress) {
-                tournamentAddress = parsed.args.playerTokenAddress;
-                console.log('✅ Found PlayerTokenCreated event:', tournamentAddress);
-                break;
-              }
-            }
-          } catch (parseError) {
-            console.log('Interface parseLog failed, trying manual extraction...', parseError.message);
-            
-            // Manual extraction: if we have at least 2 topics, topic[1] is likely the address
-            if (log.topics && log.topics.length >= 2 && log.topics[1]) {
-              const possibleAddress = '0x' + log.topics[1].slice(-40).toLowerCase();
-              if (/^0x[a-fA-F0-9]{40}$/.test(possibleAddress) && possibleAddress !== '0x0000000000000000000000000000000000000000') {
-                // Verify it's a contract address
-                try {
-                  const code = await signer.provider.getCode(possibleAddress);
-                  if (code && code !== '0x') {
-                    tournamentAddress = possibleAddress;
-                    console.log('✅ Extracted and verified contract address from log topic:', tournamentAddress);
-                    break;
-                  } else {
-                    console.log('Address found but not a contract (skipping):', possibleAddress);
-                  }
-                } catch (e) {
-                  // If we can't verify, still use it as it's likely the address
-                  tournamentAddress = possibleAddress;
-                  console.log('✅ Extracted address from log topic (could not verify):', tournamentAddress);
-                  break;
-                }
-              }
-            }
-          }
-        }
       }
 
       // Method 1b: Try parsing logs with interface (fallback)
