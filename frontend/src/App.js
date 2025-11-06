@@ -267,12 +267,53 @@ function App() {
               alignItems: 'center',
               justifyContent: 'space-between',
               width: '100%',
+              gap: '12px',
             }}>
-              <div style={{ flex: 1 }}>
-                {t.icon && <span style={{ marginRight: '8px' }}>{t.icon}</span>}
-                <span>{t.message}</span>
+              <div style={{ 
+                flex: 1,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+              }}>
+                {t.icon && <span>{t.icon}</span>}
+                <span>{typeof t.message === 'string' ? t.message : t.message}</span>
               </div>
-              <CustomCloseButton closeToast={() => t.dismiss()} />
+              <button
+                onClick={() => toast.dismiss(t.id)}
+                style={{
+                  color: '#fff',
+                  background: 'transparent',
+                  border: 'none',
+                  fontSize: '20px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  padding: '4px 8px',
+                  borderRadius: '4px',
+                  opacity: 0.9,
+                  transition: 'all 0.2s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  minWidth: '28px',
+                  minHeight: '28px',
+                  lineHeight: '1',
+                  flexShrink: 0,
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.opacity = '1';
+                  e.target.style.background = 'rgba(255, 255, 255, 0.15)';
+                  e.target.style.borderRadius = '50%';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.opacity = '0.9';
+                  e.target.style.background = 'transparent';
+                  e.target.style.borderRadius = '4px';
+                }}
+                aria-label="Close notification"
+                title="Close"
+              >
+                ×
+              </button>
             </div>
           )}
         </Toaster>
