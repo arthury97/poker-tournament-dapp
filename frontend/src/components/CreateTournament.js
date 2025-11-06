@@ -266,6 +266,8 @@ const CreateTournament = ({ onTournamentCreated }) => {
       // Since we know the count before, we can get the last item after
       if (!tournamentAddress) {
         console.log('Querying contract state to find newly created token...');
+        // Note: These functions may not exist in the deployed contract
+        // We'll try them but won't fail if they don't work
         try {
           if (useCreateTournament) {
             try {
@@ -276,7 +278,8 @@ const CreateTournament = ({ onTournamentCreated }) => {
                 console.log('✅ Found address by querying tournaments array:', tournamentAddress);
               }
             } catch (e) {
-              console.log('Could not query tournaments array:', e.message);
+              // Function doesn't exist - that's okay, we'll try other methods
+              console.log('getTotalTournaments/tournaments not available:', e.message);
             }
           }
           
@@ -290,11 +293,12 @@ const CreateTournament = ({ onTournamentCreated }) => {
                 console.log('✅ Found address by querying playerTokens array:', tournamentAddress);
               }
             } catch (e) {
-              console.log('Could not query playerTokens array:', e.message);
+              // Function doesn't exist - that's okay, we'll try other methods
+              console.log('getTotalPlayerTokens/playerTokens not available:', e.message);
             }
           }
         } catch (queryError) {
-          console.error('Error querying contract state:', queryError);
+          console.log('Error querying contract state (functions may not exist):', queryError.message);
         }
       }
       
@@ -335,17 +339,38 @@ const CreateTournament = ({ onTournamentCreated }) => {
       if (!tournamentAddress) {
         console.log('All methods failed, trying to decode transaction return data...');
         try {
-          // Try to get the transaction result
-          const txResult = await signer.provider.call({
-            to: TOURNAMENT_MANAGER_ADDRESS,
-            data: tx.data
-          });
-          if (txResult && txResult !== '0x' && txResult.length >= 66) {
+          // Try to simulate the call to get return value
+          let callResult;
+          if (useCreateTournament) {
+            callResult = await signer.provider.call({
+              to: TOURNAMENT_MANAGER_ADDRESS,
+              data: tournamentManager.interface.encodeFunctionData('createTournament', [
+                tournamentName,
+                formData.symbol.trim().toUpperCase(),
+                parseEther(buyInEth),
+                parseInt(formData.totalTokens),
+                parseInt(formData.profitSharePercentage)
+              ])
+            });
+          } else {
+            callResult = await signer.provider.call({
+              to: TOURNAMENT_MANAGER_ADDRESS,
+              data: tournamentManager.interface.encodeFunctionData('createPlayerToken', [
+                tournamentName,
+                formData.symbol.trim().toUpperCase(),
+                parseEther(buyInEth),
+                parseInt(formData.totalTokens),
+                parseInt(formData.profitSharePercentage)
+              ])
+            });
+          }
+          
+          if (callResult && callResult !== '0x' && callResult.length >= 66) {
             // Return data should be the address (32 bytes = 64 hex chars + 0x)
-            const possibleAddress = '0x' + txResult.slice(-40);
+            const possibleAddress = '0x' + callResult.slice(-40);
             if (/^0x[a-fA-F0-9]{40}$/.test(possibleAddress)) {
               tournamentAddress = possibleAddress;
-              console.log('✅ Found address from transaction return data:', tournamentAddress);
+              console.log('✅ Found address from call result:', tournamentAddress);
             }
           }
         } catch (e) {
@@ -353,27 +378,19 @@ const CreateTournament = ({ onTournamentCreated }) => {
         }
       }
       
-      // If still no address, provide helpful error message but don't fail completely
+      // If still no address, the transaction succeeded but we can't retrieve the address
+      // This is okay - the token was created, user can check Dashboard
       if (!tournamentAddress) {
-        const errorMsg = `Transaction succeeded but address could not be retrieved automatically.
+        console.warn('⚠️ Could not automatically retrieve token address, but transaction succeeded!');
+        console.warn('Your token was created successfully. Check the Dashboard to see it.');
         
-The transaction was successful (hash: ${receipt.hash}) but we couldn't automatically find the token address.
-
-However, your token WAS created successfully! You can:
-1. Check the transaction on a block explorer: ${receipt.hash}
-2. View your created tokens in the Dashboard (top right)
-3. The token should appear in the Tournaments list
-
-Transaction hash: ${receipt.hash}`;
-        
-        console.warn(errorMsg);
-        // Don't throw error - just show a warning and let the user continue
-        toast.success(`Token creation transaction successful! Hash: ${receipt.hash.slice(0, 10)}...`, { 
+        // Show success message
+        toast.success(`Token created successfully! Check your Dashboard to view it.`, { 
           id: 'create-token',
           duration: 5000
         });
         
-        // Still reset the form
+        // Reset the form
         setSelectedTournament(null);
         setSearchQuery('');
         setFormData({
@@ -383,7 +400,13 @@ Transaction hash: ${receipt.hash}`;
           profitSharePercentage: '80'
         });
         
-        return; // Exit early - we can't get the address but transaction succeeded
+        // Refresh the tournament list if callback exists
+        if (onTournamentCreated) {
+          // Call with null to trigger refresh
+          onTournamentCreated(null);
+        }
+        
+        return; // Exit early - transaction succeeded, address will be found in Dashboard
       }
       
       // Log all receipt logs for debugging
