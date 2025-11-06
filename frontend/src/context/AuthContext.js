@@ -6,7 +6,7 @@ import {
   onAuthStateChanged,
   updateProfile
 } from 'firebase/auth';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
 import { auth, db } from '../config/firebase';
 
 const AuthContext = createContext();
@@ -39,6 +39,7 @@ export const AuthProvider = ({ children }) => {
             name: userData?.name || firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
             emailVerified: firebaseUser.emailVerified,
             createdAt: userData?.createdAt || firebaseUser.metadata.creationTime,
+            walletAddress: userData?.walletAddress || null,
             ...userData
           });
         } catch (error) {
@@ -49,11 +50,12 @@ export const AuthProvider = ({ children }) => {
             email: firebaseUser.email,
             name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
             emailVerified: firebaseUser.emailVerified,
-            createdAt: firebaseUser.metadata.creationTime
+            createdAt: firebaseUser.metadata.creationTime,
+            walletAddress: null
           });
         }
       } else {
-        // User is signed out
+        // User is signed out - clear user state
         setUser(null);
       }
       setIsLoading(false);
@@ -188,6 +190,7 @@ export const AuthProvider = ({ children }) => {
     signUp,
     signIn,
     signOut,
+    saveWalletAddress,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

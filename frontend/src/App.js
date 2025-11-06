@@ -1,12 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Toaster } from 'react-hot-toast';
-import { Web3Provider } from './context/Web3Context';
-import { AuthProvider } from './context/AuthContext';
+import { Web3Provider, useWeb3 } from './context/Web3Context';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import Header from './components/Header';
 import CreateTournament from './components/CreateTournament';
 import TournamentList from './components/TournamentList';
 import Marketplace from './components/Marketplace';
 import Dashboard from './components/Dashboard';
+
+// Component to handle wallet disconnection on user sign out
+const WalletDisconnectHandler = () => {
+  const { isAuthenticated } = useAuth();
+  const { isConnected, disconnectWallet } = useWeb3();
+  const [prevAuthState, setPrevAuthState] = useState(isAuthenticated);
+
+  useEffect(() => {
+    // If user was authenticated and now is not, disconnect wallet
+    if (prevAuthState && !isAuthenticated && isConnected) {
+      disconnectWallet();
+    }
+    setPrevAuthState(isAuthenticated);
+  }, [isAuthenticated, prevAuthState, isConnected, disconnectWallet]);
+
+  return null;
+};
 
 function App() {
   const [activeTab, setActiveTab] = useState('marketplace');
@@ -21,6 +38,7 @@ function App() {
   return (
     <AuthProvider>
       <Web3Provider>
+        <WalletDisconnectHandler />
         <div style={{ minHeight: '100vh' }}>
           <Header 
             onNavigateToDashboard={() => setActiveTab('dashboard')}

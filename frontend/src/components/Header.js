@@ -27,6 +27,17 @@ const Header = ({ onNavigateToDashboard, isDashboardActive = false, onNavigateTo
   const handleWalletSelect = async (walletType) => {
     try {
       await connectWallet(walletType);
+      
+      // Save wallet address to user's Firestore document
+      if (isAuthenticated && account) {
+        try {
+          await saveWalletAddress(account);
+        } catch (error) {
+          console.error('Error saving wallet address:', error);
+          // Don't fail the connection if saving fails
+        }
+      }
+      
       toast.success(`${walletType === 'metamask' ? 'MetaMask' : 'Coinbase Wallet'} connected successfully!`);
     } catch (error) {
       toast.error(error.message || 'Failed to connect wallet');
@@ -38,9 +49,11 @@ const Header = ({ onNavigateToDashboard, isDashboardActive = false, onNavigateTo
     toast.success('Wallet disconnected');
   };
 
-  const handleSignOut = () => {
-    signOut();
+  const handleSignOut = async () => {
+    // Disconnect wallet first
     disconnectWallet();
+    // Then sign out from Firebase
+    await signOut();
     toast.success('Signed out successfully');
   };
 
