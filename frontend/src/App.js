@@ -241,6 +241,8 @@ function App() {
               },
             },
           }}
+          // Ensure close button is always visible
+          closeButton={true}
         />
         </div>
       </Web3Provider>

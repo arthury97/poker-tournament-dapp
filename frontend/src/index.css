@@ -198,6 +198,47 @@ code {
   to { transform: rotate(360deg); }
 }
 
+/* React Hot Toast Close Button Styles */
+button[aria-label*="close"],
+button[aria-label*="Close"],
+[data-close-button],
+div[role="button"][aria-label*="close"],
+div[role="button"][aria-label*="Close"] {
+  color: #fff !important;
+  opacity: 0.8 !important;
+  transition: opacity 0.2s ease !important;
+  cursor: pointer !important;
+  background: transparent !important;
+  border: none !important;
+  padding: 4px !important;
+  margin-left: 8px !important;
+  font-size: 18px !important;
+  line-height: 1 !important;
+  width: 24px !important;
+  height: 24px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-weight: bold !important;
+}
+
+button[aria-label*="close"]:hover,
+button[aria-label*="Close"]:hover,
+[data-close-button]:hover,
+div[role="button"][aria-label*="close"]:hover,
+div[role="button"][aria-label*="Close"]:hover {
+  opacity: 1 !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-radius: 50% !important;
+}
+
+/* Ensure toast container shows close buttons */
+[data-sonner-toast] button,
+[data-sonner-toaster] button {
+  visibility: visible !important;
+  display: flex !important;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .container {
