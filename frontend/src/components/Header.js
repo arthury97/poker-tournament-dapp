@@ -7,10 +7,11 @@ import WalletModal from './WalletModal';
 import toast from 'react-hot-toast';
 
 const Header = ({ onNavigateToDashboard, isDashboardActive = false, onNavigateToHome }) => {
-  const { account, isConnected, connectWallet, disconnectWallet, isLoading, chainId, balance } = useWeb3();
+  const { account, isConnected, connectWallet, disconnectWallet, isLoading: web3IsLoading, chainId, balance, switchNetwork } = useWeb3();
   const { user, isAuthenticated, signOut } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showWalletModal, setShowWalletModal] = useState(false);
+  const [isSwitchingNetwork, setIsSwitchingNetwork] = useState(false);
 
   const handleConnect = () => {
     if (!isAuthenticated) {
@@ -58,6 +59,28 @@ const Header = ({ onNavigateToDashboard, isDashboardActive = false, onNavigateTo
         return 'Localhost';
       default:
         return `Chain ${chainId}`;
+    }
+  };
+
+  const handleNetworkSwitch = async (targetChainId) => {
+    if (!isConnected) {
+      toast.error('Please connect your wallet first');
+      return;
+    }
+
+    if (chainId === targetChainId) {
+      return; // Already on this network
+    }
+
+    try {
+      setIsSwitchingNetwork(true);
+      await switchNetwork(targetChainId);
+      toast.success(`Switching to ${getChainName(targetChainId)}...`);
+      // The page will reload automatically when chain changes
+    } catch (error) {
+      console.error('Error switching network:', error);
+      toast.error(error.message || 'Failed to switch network');
+      setIsSwitchingNetwork(false);
     }
   };
 
@@ -243,7 +266,7 @@ const Header = ({ onNavigateToDashboard, isDashboardActive = false, onNavigateTo
                   <button
                     onClick={handleConnect}
                     className="btn btn-primary"
-                    disabled={isLoading}
+                    disabled={web3IsLoading}
                     style={{ 
                       padding: '8px 16px', 
                       fontSize: '14px',
@@ -253,7 +276,7 @@ const Header = ({ onNavigateToDashboard, isDashboardActive = false, onNavigateTo
                       textTransform: 'uppercase'
                     }}
                   >
-                    {isLoading ? (
+                    {web3IsLoading ? (
                       <>
                         <div className="loading"></div>
                         CONNECTING...

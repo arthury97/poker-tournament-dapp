@@ -215,6 +215,49 @@ export const Web3Provider = ({ children }) => {
     }
   };
 
+  const switchToMainnet = async () => {
+    try {
+      await window.ethereum.request({
+        method: 'wallet_switchEthereumChain',
+        params: [{ chainId: '0x1' }], // Ethereum Mainnet
+      });
+    } catch (switchError) {
+      // This error code indicates that the chain has not been added to MetaMask
+      if (switchError.code === 4902) {
+        try {
+          await window.ethereum.request({
+            method: 'wallet_addEthereumChain',
+            params: [
+              {
+                chainId: '0x1',
+                chainName: 'Ethereum Mainnet',
+                rpcUrls: ['https://mainnet.infura.io/v3/'],
+                nativeCurrency: {
+                  name: 'ETH',
+                  symbol: 'ETH',
+                  decimals: 18,
+                },
+                blockExplorerUrls: ['https://etherscan.io/'],
+              },
+            ],
+          });
+        } catch (addError) {
+          throw addError;
+        }
+      } else {
+        throw switchError;
+      }
+    }
+  };
+
+  const switchNetwork = async (targetChainId) => {
+    if (targetChainId === '1' || targetChainId === '0x1') {
+      await switchToMainnet();
+    } else if (targetChainId === '11155111' || targetChainId === '0xaa36a7') {
+      await switchToSepolia();
+    }
+  };
+
   const value = {
     account,
     provider,
@@ -226,6 +269,8 @@ export const Web3Provider = ({ children }) => {
     connectWallet,
     disconnectWallet,
     switchToSepolia,
+    switchToMainnet,
+    switchNetwork,
     TOURNAMENT_MANAGER_ADDRESS,
   };
 
