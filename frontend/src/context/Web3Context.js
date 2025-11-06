@@ -19,6 +19,7 @@ export const Web3Provider = ({ children }) => {
   const [chainId, setChainId] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [balance, setBalance] = useState(null);
 
   // Contract addresses (update these after deployment)
   // Sepolia deployment: 0x5c4606b4F7b327Bd2996A0BCB5d5578dA2427138
@@ -118,13 +119,22 @@ export const Web3Provider = ({ children }) => {
       setSigner(signer);
       setChainId(network.chainId.toString());
       setIsConnected(true);
+      
+      // Fetch balance
+      const balance = await provider.getBalance(accounts[0]);
+      setBalance(balance);
 
       // Listen for account changes
-      ethereumProvider.on('accountsChanged', (accounts) => {
+      ethereumProvider.on('accountsChanged', async (accounts) => {
         if (accounts.length === 0) {
           disconnectWallet();
         } else {
           setAccount(accounts[0]);
+          // Update balance for new account
+          if (provider) {
+            const newBalance = await provider.getBalance(accounts[0]);
+            setBalance(newBalance);
+          }
         }
       });
 
@@ -148,7 +158,28 @@ export const Web3Provider = ({ children }) => {
     setSigner(null);
     setChainId(null);
     setIsConnected(false);
+    setBalance(null);
   };
+  
+  // Update balance when account changes
+  useEffect(() => {
+    const updateBalance = async () => {
+      if (provider && account) {
+        try {
+          const newBalance = await provider.getBalance(account);
+          setBalance(newBalance);
+        } catch (error) {
+          console.error('Error fetching balance:', error);
+        }
+      }
+    };
+    
+    updateBalance();
+    // Update balance every 10 seconds
+    const interval = setInterval(updateBalance, 10000);
+    
+    return () => clearInterval(interval);
+  }, [provider, account]);
 
   const switchToSepolia = async () => {
     try {

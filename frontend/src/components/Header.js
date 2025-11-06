@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { useWeb3 } from '../context/Web3Context';
 import { useAuth } from '../context/AuthContext';
+import { ethToUSDT, formatUSDT } from '../utils/contracts';
 import AuthModal from './AuthModal';
 import WalletModal from './WalletModal';
 import toast from 'react-hot-toast';
 
 const Header = ({ onNavigateToDashboard, isDashboardActive = false, onNavigateToHome }) => {
-  const { account, isConnected, connectWallet, disconnectWallet, isLoading, chainId } = useWeb3();
+  const { account, isConnected, connectWallet, disconnectWallet, isLoading, chainId, balance } = useWeb3();
   const { user, isAuthenticated, signOut } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showWalletModal, setShowWalletModal] = useState(false);
@@ -182,7 +183,7 @@ const Header = ({ onNavigateToDashboard, isDashboardActive = false, onNavigateTo
                   <div style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '8px',
+                    gap: '12px',
                     background: '#f3f4f6',
                     padding: '8px 16px',
                     borderRadius: '20px',
@@ -197,6 +198,16 @@ const Header = ({ onNavigateToDashboard, isDashboardActive = false, onNavigateTo
                     <span style={{ fontSize: '14px', fontWeight: '600', color: '#1f2937' }}>
                       {user.name || user.email}
                     </span>
+                    {isConnected && balance !== null && (
+                      <span style={{ 
+                        fontSize: '14px', 
+                        fontWeight: '700', 
+                        color: '#2563eb',
+                        fontFamily: '"Bungee", "Impact", "Arial Black", sans-serif'
+                      }}>
+                        {formatUSDT(ethToUSDT(balance))} USDT
+                      </span>
+                    )}
                   </div>
                 )}
                 {isConnected ? (
