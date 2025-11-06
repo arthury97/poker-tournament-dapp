@@ -132,17 +132,88 @@ const Header = ({ onNavigateToDashboard, isDashboardActive = false, onNavigateTo
               STAKED
             </h1>
             {chainId && (
-              <span style={{
-                background: '#e5e7eb',
-                padding: '4px 12px',
-                borderRadius: '20px',
-                fontSize: '12px',
-                color: '#4b5563',
-                border: '1px solid #d1d5db',
-                fontWeight: '600'
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
               }}>
-                {getChainName(chainId)}
-              </span>
+                {/* Network Toggle */}
+                <div style={{
+                  display: 'flex',
+                  background: '#f3f4f6',
+                  padding: '4px',
+                  borderRadius: '20px',
+                  border: '1px solid #d1d5db',
+                  gap: '4px'
+                }}>
+                  <button
+                    onClick={() => handleNetworkSwitch('1')}
+                    disabled={isSwitchingNetwork || web3IsLoading}
+                    style={{
+                      padding: '6px 16px',
+                      borderRadius: '16px',
+                      fontSize: '12px',
+                      fontWeight: '700',
+                      fontFamily: '"Bungee", "Impact", "Arial Black", sans-serif',
+                      letterSpacing: '0.5px',
+                      textTransform: 'uppercase',
+                      border: 'none',
+                      cursor: (isSwitchingNetwork || web3IsLoading) ? 'not-allowed' : 'pointer',
+                      background: chainId === '1' ? '#2563eb' : 'transparent',
+                      color: chainId === '1' ? '#ffffff' : '#6b7280',
+                      transition: 'all 0.2s ease',
+                      opacity: (isSwitchingNetwork || web3IsLoading) ? 0.6 : 1
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isSwitchingNetwork && !web3IsLoading && chainId !== '1') {
+                        e.target.style.background = '#e5e7eb';
+                        e.target.style.color = '#1f2937';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isSwitchingNetwork && !web3IsLoading && chainId !== '1') {
+                        e.target.style.background = 'transparent';
+                        e.target.style.color = '#6b7280';
+                      }
+                    }}
+                  >
+                    Mainnet
+                  </button>
+                  <button
+                    onClick={() => handleNetworkSwitch('11155111')}
+                    disabled={isSwitchingNetwork || web3IsLoading}
+                    style={{
+                      padding: '6px 16px',
+                      borderRadius: '16px',
+                      fontSize: '12px',
+                      fontWeight: '700',
+                      fontFamily: '"Bungee", "Impact", "Arial Black", sans-serif',
+                      letterSpacing: '0.5px',
+                      textTransform: 'uppercase',
+                      border: 'none',
+                      cursor: (isSwitchingNetwork || web3IsLoading) ? 'not-allowed' : 'pointer',
+                      background: chainId === '11155111' ? '#2563eb' : 'transparent',
+                      color: chainId === '11155111' ? '#ffffff' : '#6b7280',
+                      transition: 'all 0.2s ease',
+                      opacity: (isSwitchingNetwork || web3IsLoading) ? 0.6 : 1
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isSwitchingNetwork && !web3IsLoading && chainId !== '11155111') {
+                        e.target.style.background = '#e5e7eb';
+                        e.target.style.color = '#1f2937';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isSwitchingNetwork && !web3IsLoading && chainId !== '11155111') {
+                        e.target.style.background = 'transparent';
+                        e.target.style.color = '#6b7280';
+                      }
+                    }}
+                  >
+                    Sepolia
+                  </button>
+                </div>
+              </div>
             )}
           </div>
 
