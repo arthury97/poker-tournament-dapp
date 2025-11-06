@@ -11,7 +11,7 @@ const Marketplace = ({ refreshTrigger }) => {
   const { isAuthenticated } = useAuth();
   const [onChainTournaments, setOnChainTournaments] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [filter, setFilter] = useState('all'); // 'all', 'active', 'completed', 'available'
+  const [filter, setFilter] = useState('available'); // 'available' - only show purchasable tokens
 
   const loadOnChainTournaments = async () => {
     if (!isConnected || !signer || !TOURNAMENT_MANAGER_ADDRESS) {
@@ -131,12 +131,20 @@ const Marketplace = ({ refreshTrigger }) => {
     }))
   ];
 
-  // Filter tournaments
+  // Filter tournaments - only show available tokens that can be purchased
   const filteredTournaments = allTournaments.filter(tournament => {
-    if (filter === 'active') return tournament.isActive && !tournament.tournamentCompleted;
-    if (filter === 'completed') return tournament.tournamentCompleted;
-    if (filter === 'available') return tournament.remainingTokens > 0 && !tournament.tournamentCompleted;
-    return true; // 'all'
+    // Only show tokens that are:
+    // 1. On-chain (actual purchasable tokens, not just previews)
+    // 2. Active (not deactivated)
+    // 3. Not completed
+    // 4. Have remaining tokens (not sold out)
+    if (!tournament.isOnChain) return false; // Don't show predefined/preview tournaments
+    if (!tournament.isActive) return false; // Don't show inactive tournaments
+    if (tournament.tournamentCompleted) return false; // Don't show completed tournaments
+    if (!tournament.remainingTokens || tournament.remainingTokens <= 0) return false; // Don't show sold out
+    if (tournament.tokensSold >= tournament.totalTokens) return false; // Double check sold out
+    
+    return true; // Only show available, purchasable tokens
   });
 
   const getProgressPercentage = (tokensSold, totalTokens) => {
@@ -174,37 +182,6 @@ const Marketplace = ({ refreshTrigger }) => {
         🛒 MARKETPLACE
       </h2>
 
-      {/* Filter Buttons */}
-      <div style={{
-        display: 'flex',
-        gap: '8px',
-        marginBottom: '24px',
-        justifyContent: 'center',
-        flexWrap: 'wrap'
-      }}>
-        {['all', 'active', 'available', 'completed'].map((filterOption) => (
-          <button
-            key={filterOption}
-            onClick={() => setFilter(filterOption)}
-            className="btn"
-            style={{
-              background: filter === filterOption ? '#2563eb' : 'rgba(255, 255, 255, 0.2)',
-              color: filter === filterOption ? '#ffffff' : '#ffffff',
-              border: `2px solid ${filter === filterOption ? '#2563eb' : 'rgba(255, 255, 255, 0.3)'}`,
-              padding: '8px 16px',
-              borderRadius: '8px',
-              fontWeight: '700',
-              fontFamily: '"Bungee", "Impact", "Arial Black", sans-serif',
-              letterSpacing: '0.5px',
-              textTransform: 'uppercase',
-              fontSize: '12px',
-              transition: 'all 0.2s ease'
-            }}
-          >
-            {filterOption.toUpperCase()}
-          </button>
-        ))}
-      </div>
 
       {isLoading ? (
         <div className="card text-center">
@@ -217,9 +194,7 @@ const Marketplace = ({ refreshTrigger }) => {
             NO TOKENS AVAILABLE
           </h3>
           <p className="text-muted" style={{ fontSize: '16px' }}>
-            {filter === 'all' 
-              ? 'No tokens are available in the marketplace yet.' 
-              : `No ${filter} tokens available.`}
+            No tokens are currently available for purchase.
           </p>
           <p className="text-muted" style={{ fontSize: '14px', marginTop: '8px' }}>
             Create your first token in the "CREATE TOKEN" tab!
