@@ -22,6 +22,17 @@ const Dashboard = () => {
 
     try {
       setIsLoadingCreated(true);
+      
+      // Verify contract exists at this address
+      const code = await signer.provider.getCode(TOURNAMENT_MANAGER_ADDRESS);
+      if (code === '0x' || code === '0x0') {
+        console.warn('⚠️ No contract found at address:', TOURNAMENT_MANAGER_ADDRESS);
+        console.warn('Make sure you are connected to the correct network (localhost:1337)');
+        setCreatedTournaments([]);
+        setIsLoadingCreated(false);
+        return;
+      }
+      
       const tournamentManager = getTournamentManagerContract(TOURNAMENT_MANAGER_ADDRESS, signer);
       
       // Try to get tournaments created by this user (try both function names)
@@ -29,11 +40,28 @@ const Dashboard = () => {
       try {
         creatorTournaments = await tournamentManager.getCreatorTournaments(account);
       } catch (error) {
-        // If getCreatorTournaments doesn't exist, try getPlayerTokens
-        try {
-          creatorTournaments = await tournamentManager.getPlayerTokens(account);
-        } catch (e2) {
-          console.warn('Could not get creator tournaments:', e2);
+        // If getCreatorTournaments doesn't exist or returns BAD_DATA, try getPlayerTokens
+        if (error.code === 'BAD_DATA' || error.message?.includes('could not decode result data')) {
+          console.log('getCreatorTournaments not available, trying getPlayerTokens...');
+          try {
+            creatorTournaments = await tournamentManager.getPlayerTokens(account);
+          } catch (e2) {
+            // If both fail, check if it's a network/contract issue
+            if (e2.code === 'BAD_DATA' || e2.message?.includes('could not decode result data')) {
+              console.warn('⚠️ getPlayerTokens also not available - contract may not be deployed or is old version');
+              console.warn('Contract address:', TOURNAMENT_MANAGER_ADDRESS);
+              console.warn('Error:', e2.message);
+              // Don't show error to user, just return empty array
+            } else {
+              console.warn('Could not get creator tournaments:', e2);
+            }
+            setCreatedTournaments([]);
+            setIsLoadingCreated(false);
+            return;
+          }
+        } else {
+          // Other error (network, etc.)
+          console.warn('Error getting creator tournaments:', error);
           setCreatedTournaments([]);
           setIsLoadingCreated(false);
           return;
@@ -116,6 +144,17 @@ const Dashboard = () => {
 
     try {
       setIsLoadingPortfolio(true);
+      
+      // Verify contract exists at this address
+      const code = await signer.provider.getCode(TOURNAMENT_MANAGER_ADDRESS);
+      if (code === '0x' || code === '0x0') {
+        console.warn('⚠️ No contract found at address:', TOURNAMENT_MANAGER_ADDRESS);
+        console.warn('Make sure you are connected to the correct network (localhost:1337)');
+        setPortfolioTokens([]);
+        setIsLoadingPortfolio(false);
+        return;
+      }
+      
       const tournamentManager = getTournamentManagerContract(TOURNAMENT_MANAGER_ADDRESS, signer);
       
       // Try to get total tournaments (try both function names)
