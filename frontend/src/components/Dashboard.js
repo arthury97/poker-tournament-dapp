@@ -24,8 +24,21 @@ const Dashboard = () => {
       setIsLoadingCreated(true);
       const tournamentManager = getTournamentManagerContract(TOURNAMENT_MANAGER_ADDRESS, signer);
       
-      // Get tournaments created by this user
-      const creatorTournaments = await tournamentManager.getCreatorTournaments(account);
+      // Try to get tournaments created by this user (try both function names)
+      let creatorTournaments = [];
+      try {
+        creatorTournaments = await tournamentManager.getCreatorTournaments(account);
+      } catch (error) {
+        // If getCreatorTournaments doesn't exist, try getPlayerTokens
+        try {
+          creatorTournaments = await tournamentManager.getPlayerTokens(account);
+        } catch (e2) {
+          console.warn('Could not get creator tournaments:', e2);
+          setCreatedTournaments([]);
+          setIsLoadingCreated(false);
+          return;
+        }
+      }
       
       if (creatorTournaments.length === 0) {
         setCreatedTournaments([]);
@@ -36,8 +49,33 @@ const Dashboard = () => {
       // Get details for each tournament
       const detailPromises = creatorTournaments.map(async (address) => {
         try {
-          const details = await tournamentManager.getTournamentDetails(address);
-          const isActive = await tournamentManager.isActiveTournament(address);
+          // Try to get tournament details (try both function names)
+          let details, isActive;
+          try {
+            details = await tournamentManager.getTournamentDetails(address);
+            isActive = await tournamentManager.isActiveTournament(address);
+          } catch (error) {
+            // If getTournamentDetails doesn't exist, try getPlayerTokenDetails
+            try {
+              const playerDetails = await tournamentManager.getPlayerTokenDetails(address);
+              // Map player token details to tournament details format
+              details = {
+                name: playerDetails.playerName,
+                buyInAmount: playerDetails.buyInAmount,
+                totalTokens: playerDetails.totalTokens,
+                tokensSold: playerDetails.tokensSold,
+                profitSharePercentage: playerDetails.profitSharePercentage,
+                tournamentCompleted: playerDetails.tournamentCompleted,
+                totalWinnings: playerDetails.playerWinnings,
+                winningsDistributed: playerDetails.winningsDistributed,
+                tournamentOwner: playerDetails.playerOwner
+              };
+              isActive = await tournamentManager.isActivePlayerToken(address);
+            } catch (e2) {
+              console.error(`Error loading tournament details for ${address}:`, e2);
+              return null;
+            }
+          }
           
           return {
             address,
@@ -80,7 +118,23 @@ const Dashboard = () => {
       setIsLoadingPortfolio(true);
       const tournamentManager = getTournamentManagerContract(TOURNAMENT_MANAGER_ADDRESS, signer);
       
-      const totalTournaments = await tournamentManager.getTotalTournaments();
+      // Try to get total tournaments (try both function names)
+      let totalTournaments = 0n;
+      let useTournaments = true;
+      try {
+        totalTournaments = await tournamentManager.getTotalTournaments();
+      } catch (error) {
+        // If getTotalTournaments doesn't exist, try getTotalPlayerTokens
+        try {
+          totalTournaments = await tournamentManager.getTotalPlayerTokens();
+          useTournaments = false;
+        } catch (e2) {
+          console.warn('Could not get total tournaments:', e2);
+          setPortfolioTokens([]);
+          setIsLoadingPortfolio(false);
+          return;
+        }
+      }
       
       if (totalTournaments === 0n || totalTournaments === 0) {
         setPortfolioTokens([]);
@@ -91,7 +145,11 @@ const Dashboard = () => {
       // Get all tournament addresses
       const tournamentPromises = [];
       for (let i = 0; i < totalTournaments; i++) {
-        tournamentPromises.push(tournamentManager.tournaments(i));
+        if (useTournaments) {
+          tournamentPromises.push(tournamentManager.tournaments(i));
+        } else {
+          tournamentPromises.push(tournamentManager.playerTokens(i));
+        }
       }
       const tournamentAddresses = await Promise.all(tournamentPromises);
 
@@ -103,7 +161,32 @@ const Dashboard = () => {
           
           // Only include tournaments where user has tokens
           if (balance > 0n) {
-            const details = await tournamentManager.getTournamentDetails(address);
+            // Try to get tournament details (try both function names)
+            let details;
+            try {
+              details = await tournamentManager.getTournamentDetails(address);
+            } catch (error) {
+              // If getTournamentDetails doesn't exist, try getPlayerTokenDetails
+              try {
+                const playerDetails = await tournamentManager.getPlayerTokenDetails(address);
+                // Map player token details to tournament details format
+                details = {
+                  name: playerDetails.playerName,
+                  buyInAmount: playerDetails.buyInAmount,
+                  totalTokens: playerDetails.totalTokens,
+                  tokensSold: playerDetails.tokensSold,
+                  profitSharePercentage: playerDetails.profitSharePercentage,
+                  tournamentCompleted: playerDetails.tournamentCompleted,
+                  totalWinnings: playerDetails.playerWinnings,
+                  winningsDistributed: playerDetails.winningsDistributed,
+                  tournamentOwner: playerDetails.playerOwner
+                };
+              } catch (e2) {
+                console.error(`Error loading tournament details for ${address}:`, e2);
+                return null;
+              }
+            }
+            
             const potentialWinnings = await tokenContract.getPotentialWinnings(account);
             const hasClaimed = await tokenContract.hasClaimedWinnings(account);
             const tokenPrice = await tokenContract.getTokenPrice();
