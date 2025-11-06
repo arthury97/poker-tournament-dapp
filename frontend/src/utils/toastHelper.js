@@ -14,10 +14,11 @@ const createToastWithClose = (message, type = 'success', options = {}) => {
           border: '2px solid #2563eb',
           borderRadius: '12px',
           padding: '12px 16px',
-          minWidth: '320px',
-          maxWidth: '420px',
+          width: '100%',
+          maxWidth: '100%',
+          boxSizing: 'border-box',
           boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
-          gap: '16px',
+          gap: '12px',
         }}
       >
         <div
