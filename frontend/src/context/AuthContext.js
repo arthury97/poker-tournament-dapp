@@ -1,4 +1,13 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut as firebaseSignOut,
+  onAuthStateChanged,
+  updateProfile
+} from 'firebase/auth';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { auth, db } from '../config/firebase';
 
 const AuthContext = createContext();
 
@@ -14,83 +23,162 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load user from localStorage on mount
+  // Listen for authentication state changes
   useEffect(() => {
-    const storedUser = localStorage.getItem('staked_user');
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch (error) {
-        console.error('Error loading user from storage:', error);
-        localStorage.removeItem('staked_user');
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        // User is signed in
+        try {
+          // Get additional user data from Firestore
+          const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+          const userData = userDoc.data();
+          
+          setUser({
+            uid: firebaseUser.uid,
+            email: firebaseUser.email,
+            name: userData?.name || firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
+            emailVerified: firebaseUser.emailVerified,
+            createdAt: userData?.createdAt || firebaseUser.metadata.creationTime,
+            ...userData
+          });
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+          // Fallback to basic user info if Firestore fails
+          setUser({
+            uid: firebaseUser.uid,
+            email: firebaseUser.email,
+            name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
+            emailVerified: firebaseUser.emailVerified,
+            createdAt: firebaseUser.metadata.creationTime
+          });
+        }
+      } else {
+        // User is signed out
+        setUser(null);
       }
-    }
-    setIsLoading(false);
+      setIsLoading(false);
+    });
+
+    // Cleanup subscription on unmount
+    return () => unsubscribe();
   }, []);
 
   const signUp = async (name, email, password) => {
     try {
-      // Check if user already exists
-      const existingUsers = JSON.parse(localStorage.getItem('staked_users') || '[]');
-      const userExists = existingUsers.find(u => u.email === email);
-      
-      if (userExists) {
-        throw new Error('An account with this email already exists');
-      }
+      // Create user with Firebase Auth
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const firebaseUser = userCredential.user;
 
-      // Create new user
-      const newUser = {
-        id: Date.now().toString(),
+      // Update display name
+      await updateProfile(firebaseUser, {
+        displayName: name
+      });
+
+      // Create user document in Firestore
+      const userData = {
         name,
         email,
         createdAt: new Date().toISOString(),
+        emailVerified: false
       };
 
-      // Store user in users list (password is hashed in a real app)
-      const hashedPassword = btoa(password); // Simple encoding for demo (use bcrypt in production)
-      existingUsers.push({
-        ...newUser,
-        password: hashedPassword
-      });
-      localStorage.setItem('staked_users', JSON.stringify(existingUsers));
+      await setDoc(doc(db, 'users', firebaseUser.uid), userData);
 
-      // Set current user
-      setUser(newUser);
-      localStorage.setItem('staked_user', JSON.stringify(newUser));
-
-      return { success: true, user: newUser };
+      // Return user object (will be set by onAuthStateChanged)
+      return {
+        success: true,
+        user: {
+          uid: firebaseUser.uid,
+          email: firebaseUser.email,
+          name,
+          emailVerified: false,
+          createdAt: userData.createdAt
+        }
+      };
     } catch (error) {
       console.error('Sign up error:', error);
-      throw error;
+      
+      // Convert Firebase errors to user-friendly messages
+      let errorMessage = 'Failed to create account';
+      switch (error.code) {
+        case 'auth/email-already-in-use':
+          errorMessage = 'An account with this email already exists';
+          break;
+        case 'auth/invalid-email':
+          errorMessage = 'Invalid email address';
+          break;
+        case 'auth/weak-password':
+          errorMessage = 'Password is too weak. Please use at least 6 characters';
+          break;
+        case 'auth/operation-not-allowed':
+          errorMessage = 'Email/password accounts are not enabled. Please contact support';
+          break;
+        default:
+          errorMessage = error.message || 'Failed to create account';
+      }
+      
+      throw new Error(errorMessage);
     }
   };
 
   const signIn = async (email, password) => {
     try {
-      const users = JSON.parse(localStorage.getItem('staked_users') || '[]');
-      const hashedPassword = btoa(password);
-      const user = users.find(u => u.email === email && u.password === hashedPassword);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const firebaseUser = userCredential.user;
 
-      if (!user) {
-        throw new Error('Invalid email or password');
-      }
+      // Get additional user data from Firestore
+      const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+      const userData = userDoc.data();
 
-      // Remove password from user object
-      const { password: _, ...userWithoutPassword } = user;
-      
-      setUser(userWithoutPassword);
-      localStorage.setItem('staked_user', JSON.stringify(userWithoutPassword));
-
-      return { success: true, user: userWithoutPassword };
+      // Return user object (will be set by onAuthStateChanged)
+      return {
+        success: true,
+        user: {
+          uid: firebaseUser.uid,
+          email: firebaseUser.email,
+          name: userData?.name || firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
+          emailVerified: firebaseUser.emailVerified,
+          createdAt: userData?.createdAt || firebaseUser.metadata.creationTime,
+          ...userData
+        }
+      };
     } catch (error) {
       console.error('Sign in error:', error);
-      throw error;
+      
+      // Convert Firebase errors to user-friendly messages
+      let errorMessage = 'Failed to sign in';
+      switch (error.code) {
+        case 'auth/user-not-found':
+          errorMessage = 'No account found with this email';
+          break;
+        case 'auth/wrong-password':
+          errorMessage = 'Incorrect password';
+          break;
+        case 'auth/invalid-email':
+          errorMessage = 'Invalid email address';
+          break;
+        case 'auth/user-disabled':
+          errorMessage = 'This account has been disabled';
+          break;
+        case 'auth/too-many-requests':
+          errorMessage = 'Too many failed attempts. Please try again later';
+          break;
+        default:
+          errorMessage = error.message || 'Failed to sign in';
+      }
+      
+      throw new Error(errorMessage);
     }
   };
 
-  const signOut = () => {
-    setUser(null);
-    localStorage.removeItem('staked_user');
+  const signOut = async () => {
+    try {
+      await firebaseSignOut(auth);
+      // User state will be cleared by onAuthStateChanged
+    } catch (error) {
+      console.error('Sign out error:', error);
+      throw new Error('Failed to sign out');
+    }
   };
 
   const value = {
@@ -104,4 +192,3 @@ export const AuthProvider = ({ children }) => {
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
-

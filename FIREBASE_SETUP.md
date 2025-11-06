@@ -233,3 +233,6 @@ Once configured, your demo will have:
 - ✅ **Production-ready infrastructure**
 
 Your Poker Tournament DApp is now powered by Firebase! 🔥
+
+
+
