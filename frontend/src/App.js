@@ -282,7 +282,15 @@ function App() {
                 {typeof t.message === 'string' ? t.message : t.message}
               </div>
               <button
-                onClick={() => toast.dismiss(t.id)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toast.dismiss(t.id);
+                }}
+                onMouseDown={(e) => {
+                  e.stopPropagation();
+                }}
+                type="button"
+                aria-label="Close"
                 style={{
                   position: 'absolute',
                   right: '12px',
@@ -303,6 +311,7 @@ function App() {
                   padding: 0,
                   transition: 'all 0.2s',
                   flexShrink: 0,
+                  zIndex: 1,
                 }}
                 onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)'}
                 onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)'}
