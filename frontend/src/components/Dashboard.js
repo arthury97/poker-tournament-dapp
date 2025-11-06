@@ -322,17 +322,6 @@ const Dashboard = () => {
 
   return (
     <div>
-      <h2 style={{ 
-        marginBottom: '32px', 
-        color: '#2563eb', 
-        fontSize: '36px',
-        fontFamily: '"Bungee", "Impact", "Arial Black", sans-serif',
-        letterSpacing: '1px',
-        textAlign: 'center'
-      }}>
-        USER DASHBOARD
-      </h2>
-
       {/* Section Navigation */}
       <div style={{
         display: 'flex',
