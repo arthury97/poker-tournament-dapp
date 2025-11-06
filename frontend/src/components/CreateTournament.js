@@ -194,38 +194,108 @@ const CreateTournament = ({ onTournamentCreated }) => {
       
       let tournamentAddress = null;
       
-      // Method 1: Query contract state to get the newly created token
-      // Since we know the count before, we can get the last item after
-      console.log('Querying contract state to find newly created token...');
+      // Method 1: Try to get the transaction trace to find contract creation
+      // In Hardhat/local networks, we can sometimes get the trace
+      console.log('Looking for contract creation in transaction...');
       try {
-        if (useCreateTournament) {
-          try {
-            const totalAfter = await tournamentManager.getTotalTournaments();
-            console.log('Total tournaments after:', totalAfter.toString());
-            if (totalAfter > totalTokensBefore) {
-              tournamentAddress = await tournamentManager.tournaments(totalAfter - 1n);
-              console.log('✅ Found address by querying tournaments array:', tournamentAddress);
+        // Try to get transaction trace (if available on local network)
+        const txHash = receipt.hash;
+        try {
+          // For local Hardhat node, we can try to get the trace
+          const trace = await signer.provider.send('debug_traceTransaction', [txHash, { tracer: 'callTracer' }]);
+          console.log('Transaction trace:', trace);
+          // Look for contract creation in trace
+          if (trace && trace.calls) {
+            const findContractCreation = (calls) => {
+              for (const call of calls) {
+                // Contract creation has 'to' as null and creates a new address
+                if (call.type === 'CREATE' || call.type === 'CREATE2') {
+                  if (call.output && call.output.length >= 40) {
+                    const addr = '0x' + call.output.slice(-40);
+                    if (/^0x[a-fA-F0-9]{40}$/.test(addr)) {
+                      return addr;
+                    }
+                  }
+                }
+                if (call.calls && call.calls.length > 0) {
+                  const found = findContractCreation(call.calls);
+                  if (found) return found;
+                }
+              }
+              return null;
+            };
+            const createdAddress = findContractCreation(trace.calls);
+            if (createdAddress) {
+              tournamentAddress = createdAddress;
+              console.log('✅ Found contract creation from transaction trace:', tournamentAddress);
             }
-          } catch (e) {
-            console.log('Could not query tournaments array:', e.message);
           }
+        } catch (traceError) {
+          console.log('Could not get transaction trace (may not be available):', traceError.message);
         }
         
-        // Try playerTokens as fallback
+        // Also check all log addresses - any new contract will have code
         if (!tournamentAddress) {
-          try {
-            const totalAfter = await tournamentManager.getTotalPlayerTokens();
-            console.log('Total player tokens after:', totalAfter.toString());
-            if (totalAfter > totalTokensBefore) {
-              tournamentAddress = await tournamentManager.playerTokens(totalAfter - 1n);
-              console.log('✅ Found address by querying playerTokens array:', tournamentAddress);
+          const addressesToCheck = new Set();
+          for (const log of receipt.logs || []) {
+            if (log.address && log.address.toLowerCase() !== TOURNAMENT_MANAGER_ADDRESS.toLowerCase()) {
+              addressesToCheck.add(log.address);
             }
-          } catch (e) {
-            console.log('Could not query playerTokens array:', e.message);
+          }
+          
+          // Check each address to see if it's a contract
+          for (const addr of addressesToCheck) {
+            try {
+              const code = await signer.provider.getCode(addr);
+              if (code && code !== '0x') {
+                // This is a contract - likely our newly created token
+                tournamentAddress = addr;
+                console.log('✅ Found contract address from logs:', tournamentAddress);
+                break;
+              }
+            } catch (e) {
+              // Continue checking
+            }
           }
         }
-      } catch (queryError) {
-        console.error('Error querying contract state:', queryError);
+      } catch (e) {
+        console.log('Error checking contract creations:', e.message);
+      }
+      
+      // Method 2: Query contract state to get the newly created token
+      // Since we know the count before, we can get the last item after
+      if (!tournamentAddress) {
+        console.log('Querying contract state to find newly created token...');
+        try {
+          if (useCreateTournament) {
+            try {
+              const totalAfter = await tournamentManager.getTotalTournaments();
+              console.log('Total tournaments after:', totalAfter.toString());
+              if (totalAfter > totalTokensBefore) {
+                tournamentAddress = await tournamentManager.tournaments(totalAfter - 1n);
+                console.log('✅ Found address by querying tournaments array:', tournamentAddress);
+              }
+            } catch (e) {
+              console.log('Could not query tournaments array:', e.message);
+            }
+          }
+          
+          // Try playerTokens as fallback
+          if (!tournamentAddress) {
+            try {
+              const totalAfter = await tournamentManager.getTotalPlayerTokens();
+              console.log('Total player tokens after:', totalAfter.toString());
+              if (totalAfter > totalTokensBefore) {
+                tournamentAddress = await tournamentManager.playerTokens(totalAfter - 1n);
+                console.log('✅ Found address by querying playerTokens array:', tournamentAddress);
+              }
+            } catch (e) {
+              console.log('Could not query playerTokens array:', e.message);
+            }
+          }
+        } catch (queryError) {
+          console.error('Error querying contract state:', queryError);
+        }
       }
       
       // Method 2: Try to extract from logs if we have them
