@@ -203,13 +203,13 @@ code {
 .toast-container {
   position: fixed !important;
   top: 80px !important;
-  right: 16px !important;
+  right: 12px !important;
   left: auto !important;
   bottom: auto !important;
   transform: none !important;
   z-index: 9999 !important;
-  max-width: calc(100vw - 32px) !important;
-  width: 380px !important;
+  max-width: calc(100vw - 24px) !important;
+  width: 360px !important;
   pointer-events: none !important;
 }
 
@@ -221,12 +221,12 @@ code {
 div[data-hot-toast-wrapper] {
   position: fixed !important;
   top: 80px !important;
-  right: 16px !important;
+  right: 12px !important;
   left: auto !important;
   bottom: auto !important;
   transform: none !important;
-  width: 380px !important;
-  max-width: calc(100vw - 32px) !important;
+  width: 360px !important;
+  max-width: calc(100vw - 24px) !important;
   z-index: 9999 !important;
 }
 
@@ -235,12 +235,14 @@ div[role="status"] {
   margin-bottom: 8px !important;
   width: 100% !important;
   max-width: 100% !important;
+  box-sizing: border-box !important;
 }
 
 /* Ensure toast content doesn't overflow */
 div[role="status"] > div {
   max-width: 100% !important;
   box-sizing: border-box !important;
+  overflow: hidden !important;
 }
 
 /* Responsive */

@@ -288,32 +288,29 @@ function App() {
                 onClick={() => toast.dismiss(t.id)}
                 style={{
                   color: '#fff',
-                  background: 'transparent',
-                  border: 'none',
-                  fontSize: '20px',
+                  background: 'rgba(255, 255, 255, 0.2)',
+                  border: '1px solid rgba(255, 255, 255, 0.4)',
+                  fontSize: '18px',
                   fontWeight: 'bold',
                   cursor: 'pointer',
-                  padding: '4px 8px',
+                  padding: '2px',
                   borderRadius: '4px',
-                  opacity: 0.9,
+                  width: '24px',
+                  height: '24px',
                   transition: 'all 0.2s ease',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  minWidth: '28px',
-                  minHeight: '28px',
-                  lineHeight: '1',
                   flexShrink: 0,
+                  lineHeight: '1',
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.opacity = '1';
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
-                  e.currentTarget.style.borderRadius = '50%';
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)';
+                  e.currentTarget.style.transform = 'scale(1.1)';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.opacity = '0.9';
-                  e.currentTarget.style.background = 'transparent';
-                  e.currentTarget.style.borderRadius = '4px';
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
+                  e.currentTarget.style.transform = 'scale(1)';
                 }}
                 aria-label="Close notification"
                 title="Close"
