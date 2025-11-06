@@ -251,81 +251,94 @@ function App() {
             },
           }}
         >
-          {(t) => (
-            <div style={{
-              background: '#2563eb',
-              color: '#fff',
-              border: '2px solid #1e40af',
-              borderRadius: '12px',
-              padding: '16px',
-              paddingRight: '48px',
-              maxWidth: '360px',
-              minWidth: '320px',
-              boxShadow: '0 4px 12px rgba(37, 99, 235, 0.4)',
-              fontSize: '14px',
-              position: 'relative',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px',
-            }}>
-              {t.icon && (
-                <span style={{ 
-                  fontSize: '20px',
-                  flexShrink: 0,
-                  display: 'flex',
-                  alignItems: 'center',
-                }}>
-                  {t.icon}
-                </span>
-              )}
-              <div style={{ flex: 1, lineHeight: '1.5' }}>
-                {typeof t.message === 'string' ? t.message : t.message}
+          {(t) => {
+            console.log('🎨 Toast rendering with ID:', t.id);
+            return (
+              <div style={{
+                background: '#2563eb',
+                color: '#fff',
+                border: '2px solid #1e40af',
+                borderRadius: '12px',
+                padding: '16px',
+                paddingRight: '48px',
+                maxWidth: '360px',
+                minWidth: '320px',
+                boxShadow: '0 4px 12px rgba(37, 99, 235, 0.4)',
+                fontSize: '14px',
+                position: 'relative',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                pointerEvents: 'auto',
+              }}>
+                {t.icon && (
+                  <span style={{ 
+                    fontSize: '20px',
+                    flexShrink: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                  }}>
+                    {t.icon}
+                  </span>
+                )}
+                <div style={{ flex: 1, lineHeight: '1.5' }}>
+                  {typeof t.message === 'string' ? t.message : t.message}
+                </div>
+                <button
+                  ref={(el) => {
+                    if (el) console.log('✨ X button mounted in DOM');
+                  }}
+                  onClick={(e) => {
+                    console.log('🔴 X button CLICKED - dismissing toast:', t.id);
+                    e.preventDefault();
+                    e.stopPropagation();
+                    toast.dismiss(t.id);
+                    console.log('✅ toast.dismiss() called');
+                  }}
+                  onMouseDown={(e) => {
+                    console.log('🔵 X button MOUSEDOWN detected');
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
+                  onMouseEnter={() => {
+                    console.log('👆 Mouse ENTERED X button area');
+                  }}
+                  onMouseOver={() => {
+                    console.log('🖱️ Mouse OVER X button');
+                  }}
+                  type="button"
+                  aria-label="Close"
+                  style={{
+                    position: 'absolute',
+                    right: '12px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'rgba(255, 255, 255, 0.2)',
+                    border: '1px solid rgba(255, 255, 255, 0.3)',
+                    color: '#fff',
+                    borderRadius: '4px',
+                    width: '24px',
+                    height: '24px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    fontSize: '16px',
+                    lineHeight: '1',
+                    padding: 0,
+                    transition: 'all 0.2s',
+                    flexShrink: 0,
+                    zIndex: 99999,
+                    pointerEvents: 'auto',
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)'}
+                >
+                  ×
+                </button>
               </div>
-              <button
-                onClick={(e) => {
-                  console.log('🔴 X button CLICKED - dismissing toast:', t.id);
-                  e.stopPropagation();
-                  toast.dismiss(t.id);
-                  console.log('✅ toast.dismiss() called');
-                }}
-                onMouseDown={(e) => {
-                  console.log('🔵 X button MOUSEDOWN detected');
-                  e.stopPropagation();
-                }}
-                onMouseEnter={() => {
-                  console.log('👆 Mouse ENTERED X button area');
-                }}
-                type="button"
-                aria-label="Close"
-                style={{
-                  position: 'absolute',
-                  right: '12px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  background: 'rgba(255, 255, 255, 0.2)',
-                  border: '1px solid rgba(255, 255, 255, 0.3)',
-                  color: '#fff',
-                  borderRadius: '4px',
-                  width: '24px',
-                  height: '24px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  fontSize: '16px',
-                  lineHeight: '1',
-                  padding: 0,
-                  transition: 'all 0.2s',
-                  flexShrink: 0,
-                  zIndex: 1,
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)'}
-                onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)'}
-              >
-                ×
-              </button>
-            </div>
-          )}
+            );
+          }}
         </Toaster>
         </div>
       </Web3Provider>
