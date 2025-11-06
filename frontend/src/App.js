@@ -293,17 +293,19 @@ function App() {
                 {t.icon && <span>{t.icon}</span>}
                 <span>{typeof t.message === 'string' ? t.message : t.message}</span>
               </div>
-              <button
+              <div
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  toast.dismiss(t.id);
+                }}
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
                   toast.dismiss(t.id);
                 }}
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                }}
-                type="button"
+                role="button"
+                tabIndex={0}
                 style={{
                   color: '#fff',
                   background: 'rgba(255, 255, 255, 0.2)',
@@ -311,19 +313,17 @@ function App() {
                   fontSize: '18px',
                   fontWeight: 'bold',
                   cursor: 'pointer',
-                  padding: '2px',
+                  padding: '8px',
                   borderRadius: '4px',
-                  width: '24px',
-                  height: '24px',
+                  width: '32px',
+                  height: '32px',
                   transition: 'all 0.2s ease',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   flexShrink: 0,
                   lineHeight: '1',
-                  pointerEvents: 'all',
-                  zIndex: 10000,
-                  position: 'relative',
+                  userSelect: 'none',
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)';
@@ -337,7 +337,7 @@ function App() {
                 title="Close"
               >
                 ×
-              </button>
+              </div>
             </div>
           )}
         </Toaster>
