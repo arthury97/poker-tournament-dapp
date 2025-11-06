@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Toaster } from 'react-hot-toast';
+import { Toaster, toast } from 'react-hot-toast';
 import { Web3Provider, useWeb3 } from './context/Web3Context';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Header from './components/Header';
@@ -7,46 +7,6 @@ import CreateTournament from './components/CreateTournament';
 import TournamentList from './components/TournamentList';
 import Marketplace from './components/Marketplace';
 import Dashboard from './components/Dashboard';
-
-// Custom close button component for toasts
-const CustomCloseButton = ({ closeToast }) => (
-  <button
-    onClick={closeToast}
-    style={{
-      color: '#fff',
-      background: 'transparent',
-      border: 'none',
-      fontSize: '20px',
-      fontWeight: 'bold',
-      cursor: 'pointer',
-      padding: '4px 8px',
-      borderRadius: '4px',
-      opacity: 0.9,
-      transition: 'all 0.2s ease',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      minWidth: '28px',
-      minHeight: '28px',
-      lineHeight: '1',
-      marginLeft: '8px',
-    }}
-    onMouseEnter={(e) => {
-      e.target.style.opacity = '1';
-      e.target.style.background = 'rgba(255, 255, 255, 0.15)';
-      e.target.style.borderRadius = '50%';
-    }}
-    onMouseLeave={(e) => {
-      e.target.style.opacity = '0.9';
-      e.target.style.background = 'transparent';
-      e.target.style.borderRadius = '4px';
-    }}
-    aria-label="Close notification"
-    title="Close"
-  >
-    ×
-  </button>
-);
 
 // Component to handle wallet disconnection on user sign out
 const WalletDisconnectHandler = () => {
