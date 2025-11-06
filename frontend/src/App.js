@@ -241,6 +241,10 @@ function App() {
             duration: 4000,
             position: 'top-right',
             className: 'custom-toast',
+            onClick: (event, toast_id) => {
+              // Dismiss when clicking anywhere on the toast (especially the X button)
+              toast.dismiss(toast_id);
+            },
             style: {
               background: '#2563eb',
               color: '#fff',
