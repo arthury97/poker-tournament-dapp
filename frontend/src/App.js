@@ -273,23 +273,20 @@ function App() {
               alignItems: 'center',
               justifyContent: 'space-between',
               width: '100%',
-              gap: '12px',
+              gap: '16px',
               boxSizing: 'border-box',
             }}>
               <div style={{ 
                 flex: 1,
                 display: 'flex',
                 alignItems: 'center',
-                gap: '8px',
+                gap: '10px',
                 minWidth: 0,
-                overflow: 'hidden',
               }}>
-                {t.icon && <span style={{ fontSize: '18px', flexShrink: 0 }}>{t.icon}</span>}
+                {t.icon && <span style={{ fontSize: '20px', flexShrink: 0 }}>{t.icon}</span>}
                 <span style={{ 
                   fontSize: '14px', 
-                  lineHeight: '1.4',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
+                  lineHeight: '1.5',
                 }}>
                   {typeof t.message === 'string' ? t.message : t.message}
                 </span>
@@ -298,15 +295,15 @@ function App() {
                 onClick={() => toast.dismiss(t.id)}
                 style={{
                   color: '#fff',
-                  background: 'rgba(255, 255, 255, 0.15)',
-                  border: '1px solid rgba(255, 255, 255, 0.3)',
-                  fontSize: '20px',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  fontSize: '24px',
                   fontWeight: 'bold',
                   cursor: 'pointer',
-                  padding: '2px',
-                  borderRadius: '4px',
-                  width: '28px',
-                  height: '28px',
+                  padding: '4px',
+                  borderRadius: '6px',
+                  width: '32px',
+                  height: '32px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -315,11 +312,11 @@ function App() {
                   lineHeight: '1',
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.25)';
-                  e.currentTarget.style.transform = 'scale(1.05)';
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
+                  e.currentTarget.style.transform = 'scale(1.1)';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
                   e.currentTarget.style.transform = 'scale(1)';
                 }}
                 aria-label="Close notification"
