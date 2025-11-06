@@ -238,7 +238,9 @@ function App() {
           containerStyle={{
             top: '80px',
             right: '20px',
+            zIndex: 9999,
           }}
+          gutter={8}
           toastOptions={{
             duration: 4000,
             style: {
@@ -246,8 +248,9 @@ function App() {
               color: '#fff',
               border: '2px solid #2563eb',
               borderRadius: '12px',
-              padding: '16px',
-              maxWidth: '500px',
+              padding: '12px 16px',
+              minWidth: '320px',
+              maxWidth: '420px',
               boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
             },
             success: {
