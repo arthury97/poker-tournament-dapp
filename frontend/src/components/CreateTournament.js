@@ -157,36 +157,118 @@ const CreateTournament = ({ onTournamentCreated }) => {
       
       let tournamentAddress = null;
       
-      // Method 1: Try to parse events from receipt logs
+      // Method 1: Query events directly from the transaction hash
+      console.log('Transaction hash:', receipt.hash);
       console.log('Receipt logs:', receipt.logs.length);
-      console.log('Receipt logs details:', receipt.logs);
       
-      // Try to find TournamentCreated event first
-      for (const log of receipt.logs) {
+      try {
+        // Define event topic hashes (manually calculated or from interface)
+        let tournamentCreatedTopic = null;
+        let playerTokenCreatedTopic = null;
+        
         try {
-          const parsed = tournamentManager.interface.parseLog(log);
-          if (parsed && parsed.name === 'TournamentCreated') {
-            console.log('Found TournamentCreated event:', parsed.args);
-            tournamentAddress = parsed.args.tournamentAddress;
-            break;
-          }
+          tournamentCreatedTopic = tournamentManager.interface.getEvent('TournamentCreated').topicHash;
         } catch (e) {
-          // Continue to next log
+          console.log('TournamentCreated event not in ABI, will try manual extraction');
+        }
+        
+        try {
+          playerTokenCreatedTopic = tournamentManager.interface.getEvent('PlayerTokenCreated').topicHash;
+        } catch (e) {
+          console.log('PlayerTokenCreated event not in ABI, will try manual extraction');
+        }
+        
+        // Look for events in logs by topic
+        for (const log of receipt.logs) {
+          // Check if this log is from our TournamentManager contract
+          if (log.address.toLowerCase() === TOURNAMENT_MANAGER_ADDRESS.toLowerCase()) {
+            if (log.topics && log.topics[0]) {
+              let isRelevantEvent = false;
+              
+              // Check if it matches TournamentCreated event
+              if (tournamentCreatedTopic && log.topics[0] === tournamentCreatedTopic) {
+                isRelevantEvent = true;
+              }
+              // Check if it matches PlayerTokenCreated event
+              else if (playerTokenCreatedTopic && log.topics[0] === playerTokenCreatedTopic) {
+                isRelevantEvent = true;
+              }
+              
+              if (isRelevantEvent) {
+                try {
+                  const parsed = tournamentManager.interface.parseLog(log);
+                  if (parsed) {
+                    if (parsed.name === 'TournamentCreated' && parsed.args.tournamentAddress) {
+                      tournamentAddress = parsed.args.tournamentAddress;
+                      console.log('Found TournamentCreated event from topic:', tournamentAddress);
+                      break;
+                    } else if (parsed.name === 'PlayerTokenCreated' && parsed.args.playerTokenAddress) {
+                      tournamentAddress = parsed.args.playerTokenAddress;
+                      console.log('Found PlayerTokenCreated event from topic:', tournamentAddress);
+                      break;
+                    }
+                  }
+                } catch (e) {
+                  // Try to extract address from topics (indexed parameter is in topics[1])
+                  // First indexed parameter (playerTokenAddress/tournamentAddress) is in topics[1]
+                  if (log.topics[1]) {
+                    // topics[1] contains the address, but it's padded to 32 bytes
+                    // We need to extract the last 20 bytes (40 hex chars) for the address
+                    const addressFromTopic = '0x' + log.topics[1].slice(-40).toLowerCase();
+                    tournamentAddress = addressFromTopic;
+                    console.log('Extracted address from topic:', tournamentAddress);
+                    break;
+                  }
+                }
+              }
+            }
+          }
+        }
+      } catch (e) {
+        console.error('Error parsing events by topic:', e);
+      }
+
+      // Method 1b: Try parsing logs with interface (fallback)
+      if (!tournamentAddress) {
+        console.log('Topic parsing failed, trying interface parseLog...');
+        for (const log of receipt.logs) {
+          if (log.address.toLowerCase() === TOURNAMENT_MANAGER_ADDRESS.toLowerCase()) {
+            try {
+              const parsed = tournamentManager.interface.parseLog(log);
+              if (parsed) {
+                if (parsed.name === 'TournamentCreated' && parsed.args.tournamentAddress) {
+                  tournamentAddress = parsed.args.tournamentAddress;
+                  console.log('Found TournamentCreated via parseLog:', tournamentAddress);
+                  break;
+                } else if (parsed.name === 'PlayerTokenCreated' && parsed.args.playerTokenAddress) {
+                  tournamentAddress = parsed.args.playerTokenAddress;
+                  console.log('Found PlayerTokenCreated via parseLog:', tournamentAddress);
+                  break;
+                }
+              }
+            } catch (e) {
+              // Continue to next log
+            }
+          }
         }
       }
 
-      // Try to find PlayerTokenCreated event
+      // Method 1c: Extract address from any TournamentManager log (last resort for event parsing)
       if (!tournamentAddress) {
+        console.log('Interface parseLog failed, trying to extract from any TournamentManager log...');
         for (const log of receipt.logs) {
-          try {
-            const parsed = tournamentManager.interface.parseLog(log);
-            if (parsed && parsed.name === 'PlayerTokenCreated') {
-              console.log('Found PlayerTokenCreated event:', parsed.args);
-              tournamentAddress = parsed.args.playerTokenAddress;
-              break;
+          if (log.address.toLowerCase() === TOURNAMENT_MANAGER_ADDRESS.toLowerCase()) {
+            // If we have topics and at least 2 topics (event signature + first indexed param)
+            // The first indexed param (topic[1]) should be the token address
+            if (log.topics && log.topics.length >= 2 && log.topics[1]) {
+              const possibleAddress = '0x' + log.topics[1].slice(-40).toLowerCase();
+              // Validate it's a valid address (20 bytes = 40 hex chars)
+              if (/^0x[a-fA-F0-9]{40}$/.test(possibleAddress) && possibleAddress !== '0x0000000000000000000000000000000000000000') {
+                tournamentAddress = possibleAddress;
+                console.log('Extracted address from TournamentManager log topic:', tournamentAddress);
+                break;
+              }
             }
-          } catch (e) {
-            // Continue to next log
           }
         }
       }
