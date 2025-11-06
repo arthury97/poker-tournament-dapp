@@ -54,11 +54,11 @@ contract PokerTournamentToken is ERC20, Ownable, ReentrancyGuard {
 
     constructor(
         string memory _playerName,
-        string memory _symbol,
+        string memory _tokenSymbol,
         uint256 _buyInAmount,
         uint256 _totalTokens,
         uint256 _profitSharePercentage
-    ) ERC20(_playerName, _symbol) Ownable(msg.sender) {
+    ) ERC20(_playerName, _tokenSymbol) Ownable(msg.sender) {
         require(_totalTokens > 0, "Total tokens must be greater than 0");
         require(_profitSharePercentage <= 100, "Profit share cannot exceed 100%");
         require(_buyInAmount > 0, "Buy-in amount must be greater than 0");
@@ -80,9 +80,10 @@ contract PokerTournamentToken is ERC20, Ownable, ReentrancyGuard {
 
     /**
      * @dev Purchase tokens representing shares in player's potential winnings
+     * @notice Maximum purchase: 10,000 tokens per transaction to prevent griefing
      */
     function purchaseTokens() external payable nonReentrant {
-        require(!playerInfo.tournamentCompleted, "Player's tournament already completed");
+        require(!playerInfo.tournamentCompleted, "Tournament already completed");
         require(playerInfo.tokensSold < playerInfo.totalTokens, "All tokens sold");
         require(msg.value > 0, "Must send ETH to purchase tokens");
 
@@ -95,6 +96,12 @@ contract PokerTournamentToken is ERC20, Ownable, ReentrancyGuard {
             tokensToBuy = availableTokens;
         }
 
+        // Maximum tokens per transaction to prevent griefing
+        uint256 maxTokensPerPurchase = 10_000;
+        if (tokensToBuy > maxTokensPerPurchase) {
+            tokensToBuy = maxTokensPerPurchase;
+        }
+
         // Calculate actual ETH cost for the tokens
         uint256 actualEthCost = (tokensToBuy * playerInfo.buyInAmount) / playerInfo.totalTokens;
         
@@ -103,7 +110,7 @@ contract PokerTournamentToken is ERC20, Ownable, ReentrancyGuard {
             payable(msg.sender).transfer(msg.value - actualEthCost);
         }
 
-        // Transfer tokens to buyer
+        // Transfer tokens to buyer (state change after external call check)
         _transfer(address(this), msg.sender, tokensToBuy);
         playerInfo.tokensSold += tokensToBuy;
 
@@ -125,9 +132,20 @@ contract PokerTournamentToken is ERC20, Ownable, ReentrancyGuard {
 
     /**
      * @dev Mark player's tournament as completed and set player's winnings (only player/owner)
+     * @notice Winnings must be >= 0 and <= buyInAmount * 1000 (reasonable maximum for tournament winnings)
+     * @param _playerWinnings The amount of winnings from the tournament (in wei)
      */
     function completePlayerTournament(uint256 _playerWinnings) external onlyOwner {
-        require(!playerInfo.tournamentCompleted, "Player's tournament already completed");
+        require(!playerInfo.tournamentCompleted, "Tournament already completed");
+        require(address(this).balance >= _playerWinnings, "Insufficient contract balance");
+        
+        // Maximum winnings validation: reasonable cap at 1000x buy-in amount
+        // This prevents unrealistic winnings from being set
+        uint256 maxWinnings = playerInfo.buyInAmount * 1000;
+        require(_playerWinnings <= maxWinnings, "Winnings exceed maximum allowed");
+        
+        // Note: uint256 cannot be negative, so no need to check >= 0
+        // This allows for tournament losses (0 winnings is valid)
         
         playerInfo.tournamentCompleted = true;
         playerInfo.playerWinnings = _playerWinnings;
@@ -230,11 +248,13 @@ contract PokerTournamentToken is ERC20, Ownable, ReentrancyGuard {
 
     /**
      * @dev Create a buy order for tokens
+     * @notice Maximum order size: 10,000 tokens to prevent griefing
      */
     function createBuyOrder(uint256 _tokenAmount, uint256 _pricePerToken) external payable nonReentrant {
+        require(!playerInfo.tournamentCompleted, "Tournament already completed");
         require(_tokenAmount > 0, "Token amount must be greater than 0");
+        require(_tokenAmount <= 10_000, "Token amount exceeds maximum (10,000)");
         require(_pricePerToken > 0, "Price per token must be greater than 0");
-        require(!playerInfo.tournamentCompleted, "Cannot trade after tournament completion");
         
         uint256 totalCost = _tokenAmount * _pricePerToken;
         require(msg.value >= totalCost, "Insufficient ETH sent for buy order");
@@ -260,11 +280,13 @@ contract PokerTournamentToken is ERC20, Ownable, ReentrancyGuard {
     
     /**
      * @dev Create a sell order for tokens
+     * @notice Maximum order size: 10,000 tokens to prevent griefing
      */
     function createSellOrder(uint256 _tokenAmount, uint256 _pricePerToken) external nonReentrant {
+        require(!playerInfo.tournamentCompleted, "Tournament already completed");
         require(_tokenAmount > 0, "Token amount must be greater than 0");
+        require(_tokenAmount <= 10_000, "Token amount exceeds maximum (10,000)");
         require(_pricePerToken > 0, "Price per token must be greater than 0");
-        require(!playerInfo.tournamentCompleted, "Cannot trade after tournament completion");
         require(balanceOf(msg.sender) >= _tokenAmount, "Insufficient token balance");
         
         // Lock tokens for the sell order

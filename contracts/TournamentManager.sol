@@ -47,6 +47,7 @@ contract TournamentManager is Ownable, ReentrancyGuard {
 
     /**
      * @dev Create a new poker player token
+     * @notice Maximum limits: totalTokens <= 1,000,000, buyInAmount <= 1000 ETH
      */
     function createPlayerToken(
         string memory _playerName,
@@ -54,10 +55,12 @@ contract TournamentManager is Ownable, ReentrancyGuard {
         uint256 _buyInAmount,
         uint256 _totalTokens,
         uint256 _profitSharePercentage
-    ) external returns (address) {
+    ) external nonReentrant returns (address) {
         require(_totalTokens > 0, "Total tokens must be greater than 0");
+        require(_totalTokens <= 1_000_000, "Total tokens exceeds maximum (1,000,000)");
         require(_profitSharePercentage <= 100, "Profit share cannot exceed 100%");
         require(_buyInAmount > 0, "Buy-in amount must be greater than 0");
+        require(_buyInAmount <= 1000 ether, "Buy-in amount exceeds maximum (1000 ETH)");
         require(bytes(_playerName).length > 0, "Player name cannot be empty");
         require(bytes(_symbol).length > 0, "Token symbol cannot be empty");
 
@@ -70,19 +73,16 @@ contract TournamentManager is Ownable, ReentrancyGuard {
             _profitSharePercentage
         );
 
-        // Transfer ownership to the player
-        newPlayerToken.transferOwnership(msg.sender);
-
+        // Get address before external call
         address playerTokenAddress = address(newPlayerToken);
         
-        // Add to player tokens array
+        // Update state BEFORE external call to prevent reentrancy
         playerTokens.push(playerTokenAddress);
-        
-        // Track player's tokens
         playerTokenCreators[msg.sender].push(playerTokenAddress);
-        
-        // Mark as active
         isActivePlayerToken[playerTokenAddress] = true;
+
+        // Transfer ownership AFTER state updates (external call)
+        newPlayerToken.transferOwnership(msg.sender);
 
         emit PlayerTokenCreated(
             playerTokenAddress,
@@ -109,6 +109,7 @@ contract TournamentManager is Ownable, ReentrancyGuard {
     /**
      * @dev Alias for createPlayerToken - creates a tournament token
      * @notice This is an alias function for frontend compatibility
+     * @notice Maximum limits: totalTokens <= 1,000,000, buyInAmount <= 1000 ETH
      */
     function createTournament(
         string memory _name,
@@ -116,11 +117,13 @@ contract TournamentManager is Ownable, ReentrancyGuard {
         uint256 _buyInAmount,
         uint256 _totalTokens,
         uint256 _profitSharePercentage
-    ) external returns (address) {
+    ) external nonReentrant returns (address) {
         require(_totalTokens > 0, "Total tokens must be greater than 0");
+        require(_totalTokens <= 1_000_000, "Total tokens exceeds maximum (1,000,000)");
         require(_profitSharePercentage <= 100, "Profit share cannot exceed 100%");
         require(_buyInAmount > 0, "Buy-in amount must be greater than 0");
-        require(bytes(_name).length > 0, "Player name cannot be empty");
+        require(_buyInAmount <= 1000 ether, "Buy-in amount exceeds maximum (1000 ETH)");
+        require(bytes(_name).length > 0, "Tournament name cannot be empty");
         require(bytes(_symbol).length > 0, "Token symbol cannot be empty");
 
         PokerTournamentToken newPlayerToken = new PokerTournamentToken(
@@ -131,12 +134,16 @@ contract TournamentManager is Ownable, ReentrancyGuard {
             _profitSharePercentage
         );
 
-        newPlayerToken.transferOwnership(msg.sender);
-
+        // Get address before external call
         address playerTokenAddress = address(newPlayerToken);
+        
+        // Update state BEFORE external call to prevent reentrancy
         playerTokens.push(playerTokenAddress);
         playerTokenCreators[msg.sender].push(playerTokenAddress);
         isActivePlayerToken[playerTokenAddress] = true;
+
+        // Transfer ownership AFTER state updates (external call)
+        newPlayerToken.transferOwnership(msg.sender);
 
         emit PlayerTokenCreated(
             playerTokenAddress,
