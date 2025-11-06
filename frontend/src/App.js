@@ -243,6 +243,7 @@ function App() {
               border: '2px solid #2563eb',
               borderRadius: '12px',
               padding: '16px',
+              position: 'relative',
             },
             success: {
               duration: 3000,
@@ -259,8 +260,6 @@ function App() {
               },
             },
           }}
-          // Ensure close button is always visible
-          closeButton={true}
         />
         </div>
       </Web3Provider>
