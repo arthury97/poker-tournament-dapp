@@ -7,7 +7,7 @@ import { formatDateRange } from '../utils/dateFormat';
 import toast from 'react-hot-toast';
 
 const Marketplace = ({ refreshTrigger }) => {
-  const { signer, TOURNAMENT_MANAGER_ADDRESS, isConnected, account } = useWeb3();
+  const { signer, TOURNAMENT_MANAGER_ADDRESS, isConnected } = useWeb3();
   const { isAuthenticated } = useAuth();
   const [onChainTournaments, setOnChainTournaments] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
