@@ -223,6 +223,8 @@ function App() {
               background: '#1f2937',
               color: '#fff',
               border: '2px solid #2563eb',
+              borderRadius: '12px',
+              padding: '16px',
             },
             success: {
               duration: 3000,
@@ -237,6 +239,21 @@ function App() {
                 primary: '#dc2626',
                 secondary: '#fff',
               },
+            },
+            // Enable close button
+            closeButton: {
+              style: {
+                color: '#fff',
+                background: 'transparent',
+                borderRadius: '50%',
+                width: '24px',
+                height: '24px',
+                padding: '0',
+                marginLeft: '8px',
+                opacity: 0.8,
+                transition: 'all 0.2s ease',
+              },
+              ariaLabel: 'Close notification',
             },
           }}
         />
