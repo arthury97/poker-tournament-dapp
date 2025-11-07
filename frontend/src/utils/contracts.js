@@ -79,4 +79,4 @@ export const parseUnits = (value, decimals = 18) => {
 };
 
 // Export USDT conversion utilities
-export { ethToUSDT, ethDecimalToUSDT, formatUSDT, usdtToEth, getEthToUsdtRate } from './usdtConversion';
+export { ethToUSDT, ethDecimalToUSDT, formatUSDT, usdtToEth, getEthToUsdtRate, updateConversionRate } from './usdtConversion';

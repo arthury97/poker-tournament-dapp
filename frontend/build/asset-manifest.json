@@ -1,13 +1,13 @@
 {
   "files": {
-    "main.css": "/poker-tournament-dapp/static/css/main.18a1fa4b.css",
-    "main.js": "/poker-tournament-dapp/static/js/main.1bd9b1ee.js",
+    "main.css": "/poker-tournament-dapp/static/css/main.7d20092f.css",
+    "main.js": "/poker-tournament-dapp/static/js/main.7886002d.js",
     "index.html": "/poker-tournament-dapp/index.html",
-    "main.18a1fa4b.css.map": "/poker-tournament-dapp/static/css/main.18a1fa4b.css.map",
-    "main.1bd9b1ee.js.map": "/poker-tournament-dapp/static/js/main.1bd9b1ee.js.map"
+    "main.7d20092f.css.map": "/poker-tournament-dapp/static/css/main.7d20092f.css.map",
+    "main.7886002d.js.map": "/poker-tournament-dapp/static/js/main.7886002d.js.map"
   },
   "entrypoints": [
-    "static/css/main.18a1fa4b.css",
-    "static/js/main.1bd9b1ee.js"
+    "static/css/main.7d20092f.css",
+    "static/js/main.7886002d.js"
   ]
 }

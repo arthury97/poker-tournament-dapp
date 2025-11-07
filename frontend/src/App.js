@@ -301,8 +301,12 @@ function App() {
                     e.preventDefault();
                     e.stopPropagation();
                   }}
-                  onMouseEnter={() => {
+                  onMouseEnter={(e) => {
                     console.log('👆 Mouse ENTERED X button area');
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
                   }}
                   onMouseOver={() => {
                     console.log('🖱️ Mouse OVER X button');
@@ -332,8 +336,6 @@ function App() {
                     zIndex: 99999,
                     pointerEvents: 'auto',
                   }}
-                  onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)'}
-                  onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)'}
                 >
                   ×
                 </button>
