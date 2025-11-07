@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useWeb3 } from '../context/Web3Context';
 import { useAuth } from '../context/AuthContext';
-import { ethToUSDT, formatUSDT } from '../utils/contracts';
+import { ethToUSDT, formatUSDT, updateConversionRate, getEthToUsdtRate } from '../utils/contracts';
+import { priceService } from '../services/priceService';
 import AuthModal from './AuthModal';
 import WalletModal from './WalletModal';
 import toast from 'react-hot-toast';
@@ -12,6 +13,23 @@ const Header = ({ onNavigateToDashboard, isDashboardActive = false, onNavigateTo
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showWalletModal, setShowWalletModal] = useState(false);
   const [isSwitchingNetwork, setIsSwitchingNetwork] = useState(false);
+  const [ethPrice, setEthPrice] = useState(getEthToUsdtRate());
+
+  // Update ETH price every 60 seconds
+  useEffect(() => {
+    const updatePrice = async () => {
+      await updateConversionRate();
+      setEthPrice(getEthToUsdtRate());
+    };
+
+    // Initial update
+    updatePrice();
+
+    // Set up interval for updates every 60 seconds
+    const interval = setInterval(updatePrice, 60000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   const handleConnect = () => {
     if (!isAuthenticated) {
@@ -228,6 +246,32 @@ const Header = ({ onNavigateToDashboard, isDashboardActive = false, onNavigateTo
                 </div>
               </div>
             )}
+            
+            {/* Price Indicator */}
+            <div style={{
+              background: '#f3f4f6',
+              padding: '6px 12px',
+              borderRadius: '16px',
+              border: '1px solid #d1d5db',
+              fontSize: '12px',
+              fontWeight: '600',
+              color: '#1f2937',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}>
+              <span style={{ fontSize: '14px' }}>💰</span>
+              <span>ETH: ${ethPrice.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
+              {priceService.isUsingLivePrice() && (
+                <span style={{ 
+                  width: '6px', 
+                  height: '6px', 
+                  borderRadius: '50%', 
+                  background: '#10b981',
+                  animation: 'pulse 2s ease-in-out infinite'
+                }}></span>
+              )}
+            </div>
           </div>
 
           <div style={{

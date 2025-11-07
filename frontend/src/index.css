@@ -244,6 +244,16 @@ div[role="status"] > div {
   overflow: visible !important;
 }
 
+/* Animations */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .container {

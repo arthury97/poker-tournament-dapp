@@ -7,6 +7,7 @@ import CreateTournament from './components/CreateTournament';
 import TournamentList from './components/TournamentList';
 import Marketplace from './components/Marketplace';
 import Dashboard from './components/Dashboard';
+import DisclaimerBanner from './components/DisclaimerBanner';
 
 // Component to handle wallet disconnection on user sign out
 const WalletDisconnectHandler = () => {
@@ -340,6 +341,9 @@ function App() {
             );
           }}
         </Toaster>
+        
+        {/* Disclaimer Banner */}
+        <DisclaimerBanner />
         </div>
       </Web3Provider>
     </AuthProvider>
