@@ -13,13 +13,14 @@ const Header = ({ onNavigateToDashboard, isDashboardActive = false, onNavigateTo
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showWalletModal, setShowWalletModal] = useState(false);
   const [isSwitchingNetwork, setIsSwitchingNetwork] = useState(false);
-  const [ethPrice, setEthPrice] = useState(getEthToUsdtRate());
+  const [usdtPrice, setUsdtPrice] = useState(1.00);
 
-  // Update ETH price every 60 seconds
+  // Update USDT price every 60 seconds
   useEffect(() => {
     const updatePrice = async () => {
       await updateConversionRate();
-      setEthPrice(getEthToUsdtRate());
+      const rate = await priceService.getUsdtToUsdRate();
+      setUsdtPrice(rate);
     };
 
     // Initial update
@@ -247,7 +248,7 @@ const Header = ({ onNavigateToDashboard, isDashboardActive = false, onNavigateTo
               </div>
             )}
             
-            {/* Price Indicator */}
+            {/* Price Indicator - USDT to USD conversion */}
             <div style={{
               background: '#f3f4f6',
               padding: '6px 12px',
@@ -260,8 +261,8 @@ const Header = ({ onNavigateToDashboard, isDashboardActive = false, onNavigateTo
               alignItems: 'center',
               gap: '6px'
             }}>
-              <span style={{ fontSize: '14px' }}>💰</span>
-              <span>ETH: ${ethPrice.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
+              <span style={{ fontSize: '14px' }}>💵</span>
+              <span>1 USDT = ${usdtPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })} USD</span>
               {priceService.isUsingLivePrice() && (
                 <span style={{ 
                   width: '6px', 
