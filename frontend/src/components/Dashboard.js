@@ -125,7 +125,8 @@ const Dashboard = () => {
       });
 
       const tournamentDetails = await Promise.all(detailPromises);
-      setCreatedTournaments(tournamentDetails.filter(t => t !== null));
+      // Filter out null values AND inactive tokens (deleted tokens)
+      setCreatedTournaments(tournamentDetails.filter(t => t !== null && t.isActive === true));
 
     } catch (error) {
       console.warn('Could not load created tournaments:', error.message || error);

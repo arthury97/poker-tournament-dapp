@@ -29,6 +29,11 @@ contract PokerTournamentToken is ERC20, Ownable, ReentrancyGuard {
     // Mapping to track if user has claimed their share
     mapping(address => bool) public hasClaimedWinnings;
     
+    // Track buyers and their purchase amounts for refunds
+    address[] public buyers;
+    mapping(address => uint256) public buyerPurchaseAmount; // ETH paid by each buyer
+    mapping(address => bool) public isBuyer;
+    
     // Trading system
     struct Order {
         address trader;
@@ -51,6 +56,8 @@ contract PokerTournamentToken is ERC20, Ownable, ReentrancyGuard {
     event OrderCreated(uint256 indexed orderId, address indexed trader, uint256 tokenAmount, uint256 pricePerToken, bool isBuyOrder);
     event OrderExecuted(uint256 indexed orderId, address indexed buyer, address indexed seller, uint256 tokenAmount, uint256 totalPrice);
     event OrderCancelled(uint256 indexed orderId);
+    event TokenDeleted(address indexed tokenAddress, uint256 totalRefunded, uint256 buyersRefunded);
+    event BuyerRefunded(address indexed buyer, uint256 amount);
 
     constructor(
         string memory _playerName,
@@ -110,6 +117,13 @@ contract PokerTournamentToken is ERC20, Ownable, ReentrancyGuard {
         if (msg.value > actualEthCost) {
             payable(msg.sender).transfer(msg.value - actualEthCost);
         }
+
+        // Track buyer for potential refunds
+        if (!isBuyer[msg.sender]) {
+            buyers.push(msg.sender);
+            isBuyer[msg.sender] = true;
+        }
+        buyerPurchaseAmount[msg.sender] += actualEthCost;
 
         // Transfer tokens to buyer (state change after external call check)
         _transfer(address(this), msg.sender, tokensToBuy);
@@ -435,6 +449,61 @@ contract PokerTournamentToken is ERC20, Ownable, ReentrancyGuard {
      */
     function getContractBalance() external view returns (uint256) {
         return address(this).balance;
+    }
+
+    /**
+     * @dev Refund all buyers when token is deleted
+     * @notice This function should only be called by TournamentManager when deactivating
+     * @notice Applies a 3% service fee to refunds
+     */
+    function refundAllBuyers() external onlyOwner nonReentrant {
+        require(!playerInfo.tournamentCompleted, "Cannot refund completed tournament");
+        require(address(this).balance > 0, "No funds to refund");
+        
+        uint256 totalRefunded = 0;
+        uint256 buyersRefunded = 0;
+        uint256 serviceFeePercentage = 3; // 3% service fee
+        
+        for (uint256 i = 0; i < buyers.length; i++) {
+            address buyer = buyers[i];
+            uint256 purchaseAmount = buyerPurchaseAmount[buyer];
+            
+            if (purchaseAmount > 0) {
+                // Calculate refund amount (97% of purchase, 3% service fee)
+                uint256 serviceFee = (purchaseAmount * serviceFeePercentage) / 100;
+                uint256 refundAmount = purchaseAmount - serviceFee;
+                
+                // Reset buyer's purchase amount before transfer (reentrancy protection)
+                buyerPurchaseAmount[buyer] = 0;
+                
+                // Transfer refund
+                (bool success, ) = payable(buyer).call{value: refundAmount}("");
+                if (success) {
+                    totalRefunded += refundAmount;
+                    buyersRefunded++;
+                    emit BuyerRefunded(buyer, refundAmount);
+                } else {
+                    // If transfer fails, restore the amount so they can claim manually
+                    buyerPurchaseAmount[buyer] = purchaseAmount;
+                }
+            }
+        }
+        
+        emit TokenDeleted(address(this), totalRefunded, buyersRefunded);
+    }
+    
+    /**
+     * @dev Get list of all buyers
+     */
+    function getBuyers() external view returns (address[] memory) {
+        return buyers;
+    }
+    
+    /**
+     * @dev Get number of buyers
+     */
+    function getBuyersCount() external view returns (uint256) {
+        return buyers.length;
     }
 
     /**

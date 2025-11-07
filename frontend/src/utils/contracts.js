@@ -37,6 +37,9 @@ export const POKER_TOKEN_ABI = [
   "function hasClaimedWinnings(address) external view returns (bool)",
   "function owner() external view returns (address)",
   "function transferOwnership(address newOwner) external",
+  "function refundAllBuyers() external",
+  "function getBuyers() external view returns (address[] memory)",
+  "function getBuyersCount() external view returns (uint256)",
   "function createBuyOrder(uint256 _tokenAmount, uint256 _pricePerToken) external payable",
   "function createSellOrder(uint256 _tokenAmount, uint256 _pricePerToken) external",
   "function executeBuyOrder(uint256 _orderId) external payable",
@@ -53,7 +56,9 @@ export const POKER_TOKEN_ABI = [
   "event ProfitShareUpdated(uint256 newPercentage)",
   "event OrderCreated(uint256 indexed orderId, address indexed trader, uint256 tokenAmount, uint256 pricePerToken, bool isBuyOrder)",
   "event OrderExecuted(uint256 indexed orderId, address indexed buyer, address indexed seller, uint256 tokenAmount, uint256 totalPrice)",
-  "event OrderCancelled(uint256 indexed orderId)"
+  "event OrderCancelled(uint256 indexed orderId)",
+  "event TokenDeleted(address indexed tokenAddress, uint256 totalRefunded, uint256 buyersRefunded)",
+  "event BuyerRefunded(address indexed buyer, uint256 amount)"
 ];
 
 export const getTournamentManagerContract = (address, signer) => {

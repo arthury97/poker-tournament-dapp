@@ -276,6 +276,15 @@ contract TournamentManager is Ownable, ReentrancyGuard {
             "Not authorized to deactivate this player token"
         );
         
+        // Refund all buyers before deactivating (97% refund, 3% service fee)
+        // This will only work if the tournament is not completed
+        try playerToken.refundAllBuyers() {
+            // Refunds processed successfully
+        } catch {
+            // If refund fails (e.g., tournament completed), continue with deactivation
+            // Users can still keep their tokens
+        }
+        
         isActivePlayerToken[playerTokenAddress] = false;
         
         emit PlayerTokenDeactivated(playerTokenAddress);
@@ -361,6 +370,15 @@ contract TournamentManager is Ownable, ReentrancyGuard {
             msg.sender == owner() || msg.sender == playerToken.owner(),
             "Not authorized to deactivate this player token"
         );
+        
+        // Refund all buyers before deactivating (97% refund, 3% service fee)
+        // This will only work if the tournament is not completed
+        try playerToken.refundAllBuyers() {
+            // Refunds processed successfully
+        } catch {
+            // If refund fails (e.g., tournament completed), continue with deactivation
+            // Users can still keep their tokens
+        }
         
         isActivePlayerToken[tournamentAddress] = false;
         
