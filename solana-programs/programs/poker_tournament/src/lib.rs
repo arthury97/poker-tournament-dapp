@@ -55,23 +55,27 @@ pub mod poker_tournament {
         ctx: Context<PurchaseTokens>,
         token_amount: u64,
     ) -> Result<()> {
-        let tournament = &mut ctx.accounts.tournament;
+        // Validation checks
+        {
+            let tournament = &ctx.accounts.tournament;
+            require!(tournament.is_active, TournamentError::TournamentInactive);
+            require!(!tournament.tournament_completed, TournamentError::TournamentCompleted);
+            require!(tournament.tokens_sold < tournament.total_tokens, TournamentError::AllTokensSold);
+            require!(ctx.accounts.buyer.key() != tournament.authority, TournamentError::CreatorCannotPurchase);
+        }
         
-        require!(tournament.is_active, TournamentError::TournamentInactive);
-        require!(!tournament.tournament_completed, TournamentError::TournamentCompleted);
-        require!(tournament.tokens_sold < tournament.total_tokens, TournamentError::AllTokensSold);
-        require!(ctx.accounts.buyer.key() != tournament.authority, TournamentError::CreatorCannotPurchase);
         require!(token_amount > 0, TournamentError::InvalidAmount);
-        
-        // Maximum tokens per transaction (anti-griefing)
         require!(token_amount <= 10_000, TournamentError::ExceedsMaxPerTransaction);
         
         // Calculate cost in lamports
-        let cost_in_lamports = (token_amount as u128)
-            .checked_mul(tournament.buy_in_amount as u128)
-            .unwrap()
-            .checked_div(tournament.total_tokens as u128)
-            .unwrap() as u64;
+        let cost_in_lamports = {
+            let tournament = &ctx.accounts.tournament;
+            (token_amount as u128)
+                .checked_mul(tournament.buy_in_amount as u128)
+                .unwrap()
+                .checked_div(tournament.total_tokens as u128)
+                .unwrap() as u64
+        };
         
         // Transfer SOL from buyer to tournament vault
         let ix = anchor_lang::solana_program::system_instruction::transfer(
@@ -88,29 +92,32 @@ pub mod poker_tournament {
         )?;
         
         // Transfer SPL tokens to buyer
-        let seeds = &[
-            b"tournament",
-            tournament.authority.as_ref(),
-            &[tournament.bump],
-        ];
-        let signer = &[&seeds[..]];
-        
-        let cpi_accounts = Transfer {
-            from: ctx.accounts.token_vault.to_account_info(),
-            to: ctx.accounts.buyer_token_account.to_account_info(),
-            authority: ctx.accounts.tournament.to_account_info(),
-        };
-        let cpi_program = ctx.accounts.token_program.to_account_info();
-        let cpi_ctx = CpiContext::new_with_signer(cpi_program, cpi_accounts, signer);
-        token::transfer(cpi_ctx, token_amount)?;
+        {
+            let tournament = &ctx.accounts.tournament;
+            let seeds = &[
+                b"tournament",
+                tournament.authority.as_ref(),
+                &[tournament.bump],
+            ];
+            let signer = &[&seeds[..]];
+            
+            let cpi_accounts = Transfer {
+                from: ctx.accounts.token_vault.to_account_info(),
+                to: ctx.accounts.buyer_token_account.to_account_info(),
+                authority: ctx.accounts.tournament.to_account_info(),
+            };
+            let cpi_program = ctx.accounts.token_program.to_account_info();
+            let cpi_ctx = CpiContext::new_with_signer(cpi_program, cpi_accounts, signer);
+            token::transfer(cpi_ctx, token_amount)?;
+        }
         
         // Update tournament state
+        let tournament = &mut ctx.accounts.tournament;
         tournament.tokens_sold += token_amount;
         
         // Track buyer for refunds
         let buyer_data = &mut ctx.accounts.buyer_data;
         if buyer_data.purchase_amount == 0 {
-            // First purchase from this buyer
             tournament.buyer_count += 1;
         }
         buyer_data.buyer = ctx.accounts.buyer.key();
@@ -172,14 +179,7 @@ pub mod poker_tournament {
             .unwrap();
         let refund_amount = buyer_data.purchase_amount.checked_sub(service_fee).unwrap();
         
-        // Transfer refund from tournament vault to buyer
-        let seeds = &[
-            b"vault",
-            tournament.key().as_ref(),
-            &[ctx.bumps.tournament_vault],
-        ];
-        let signer = &[&seeds[..]];
-        
+        // Transfer refund from tournament vault to buyer (no signer needed for lamport transfer)
         **ctx.accounts.tournament_vault.to_account_info().try_borrow_mut_lamports()? -= refund_amount;
         **ctx.accounts.buyer.to_account_info().try_borrow_mut_lamports()? += refund_amount;
         
@@ -249,14 +249,7 @@ pub mod poker_tournament {
         
         require!(user_share > 0, TournamentError::NoWinnings);
         
-        // Transfer winnings from vault to user
-        let seeds = &[
-            b"vault",
-            tournament.key().as_ref(),
-            &[ctx.bumps.tournament_vault],
-        ];
-        let signer = &[&seeds[..]];
-        
+        // Transfer winnings from vault to user (no signer needed for lamport transfer)
         **ctx.accounts.tournament_vault.to_account_info().try_borrow_mut_lamports()? -= user_share;
         **ctx.accounts.buyer.to_account_info().try_borrow_mut_lamports()? += user_share;
         
@@ -367,9 +360,11 @@ pub struct PurchaseTokens<'info> {
     )]
     pub buyer_data: Account<'info, BuyerData>,
     
+    pub token_mint: Account<'info, Mint>,
+    
     #[account(
         mut,
-        token::mint = tournament.token_mint,
+        token::mint = token_mint,
         token::authority = tournament,
     )]
     pub token_vault: Account<'info, TokenAccount>,
@@ -377,25 +372,21 @@ pub struct PurchaseTokens<'info> {
     #[account(
         init_if_needed,
         payer = buyer,
-        token::mint = tournament.token_mint,
-        token::authority = buyer,
+        associated_token::mint = token_mint,
+        associated_token::authority = buyer,
     )]
     pub buyer_token_account: Account<'info, TokenAccount>,
     
-    /// CHECK: Tournament vault for SOL
-    #[account(
-        mut,
-        seeds = [b"vault", tournament.key().as_ref()],
-        bump
-    )]
+    /// CHECK: Tournament vault for SOL - checked via seeds
+    #[account(mut)]
     pub tournament_vault: AccountInfo<'info>,
     
     #[account(mut)]
     pub buyer: Signer<'info>,
     
     pub token_program: Program<'info, Token>,
+    pub associated_token_program: Program<'info, anchor_spl::associated_token::AssociatedToken>,
     pub system_program: Program<'info, System>,
-    pub rent: Sysvar<'info, Rent>,
 }
 
 #[derive(Accounts)]
@@ -418,12 +409,8 @@ pub struct ProcessBuyerRefund<'info> {
     )]
     pub buyer_data: Account<'info, BuyerData>,
     
-    /// CHECK: Tournament vault for SOL
-    #[account(
-        mut,
-        seeds = [b"vault", tournament.key().as_ref()],
-        bump
-    )]
+    /// CHECK: Tournament vault for SOL - checked via seeds
+    #[account(mut)]
     pub tournament_vault: AccountInfo<'info>,
     
     /// CHECK: Buyer receiving refund
@@ -453,12 +440,8 @@ pub struct ClaimWinnings<'info> {
     )]
     pub buyer_data: Account<'info, BuyerData>,
     
-    /// CHECK: Tournament vault for SOL
-    #[account(
-        mut,
-        seeds = [b"vault", tournament.key().as_ref()],
-        bump
-    )]
+    /// CHECK: Tournament vault for SOL - checked via seeds
+    #[account(mut)]
     pub tournament_vault: AccountInfo<'info>,
     
     #[account(mut)]

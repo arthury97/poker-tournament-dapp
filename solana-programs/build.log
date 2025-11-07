@@ -1,0 +1,18 @@
+WARNING: `anchor-lang` version(0.29.0) and the current CLI version(0.32.1) don't match.
+
+	This can lead to unwanted behavior. To use the same CLI version, add:
+
+	[toolchain]
+	anchor_version = "0.29.0"
+
+	to Anchor.toml
+
+WARNING: Adding `solana-program` as a separate dependency might cause conflicts.
+To solve, remove the `solana-program` dependency and use the exported crate from `anchor-lang`.
+`use solana_program` becomes `use anchor_lang::solana_program`.
+Program name: `poker_tournament`
+
+error: no such command: `build-sbf`
+
+help: view all installed commands with `cargo --list`
+help: find a package to install `build-sbf` with `cargo search cargo-build-sbf`
