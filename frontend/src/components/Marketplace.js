@@ -7,7 +7,7 @@ import toast from 'react-hot-toast';
 
 const Marketplace = ({ refreshTrigger }) => {
   const { signer, TOURNAMENT_MANAGER_ADDRESS, isConnected, account } = useWeb3();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, canPurchaseToken } = useAuth();
   const [onChainTournaments, setOnChainTournaments] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [activeSubTab, setActiveSubTab] = useState('available'); // 'available', 'orders', 'newlyMinted'
@@ -217,6 +217,13 @@ const Marketplace = ({ refreshTrigger }) => {
       return;
     }
 
+    // Check if user can purchase (not their own token)
+    const canPurchase = await canPurchaseToken(selectedTournament.tournamentOwner);
+    if (!canPurchase) {
+      toast.error('You cannot purchase your own tokens', { id: 'purchase-tokens' });
+      return;
+    }
+
     try {
       const pokerToken = getPokerTokenContract(selectedTournament.address, signer);
       const tokensToBuy = BigInt(quantity);
@@ -241,7 +248,13 @@ const Marketplace = ({ refreshTrigger }) => {
       }
     } catch (error) {
       console.error('Error purchasing tokens:', error);
-      toast.error(error.reason || error.message || 'Failed to purchase tokens', { id: 'purchase-tokens' });
+      
+      // Check if error is from smart contract self-purchase prevention
+      if (error.message?.includes('Token creator cannot purchase')) {
+        toast.error('You cannot purchase your own tokens', { id: 'purchase-tokens' });
+      } else {
+        toast.error(error.reason || error.message || 'Failed to purchase tokens', { id: 'purchase-tokens' });
+      }
     }
   };
 

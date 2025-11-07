@@ -207,6 +207,38 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Function to check if user can purchase a token (prevent self-purchase)
+  const canPurchaseToken = async (tokenCreatorAddress) => {
+    if (!user || !user.uid) {
+      return false; // Must be signed in to purchase
+    }
+    
+    try {
+      const userRef = doc(db, 'users', user.uid);
+      const userDoc = await getDoc(userRef);
+      
+      if (!userDoc.exists()) {
+        return true; // New user without saved data, allow purchase
+      }
+      
+      const userData = userDoc.data();
+      const userWallet = userData.walletAddress?.toLowerCase();
+      const creatorWallet = tokenCreatorAddress?.toLowerCase();
+      
+      // Check if user's linked wallet matches the token creator's wallet
+      if (userWallet && creatorWallet && userWallet === creatorWallet) {
+        console.log('❌ Self-purchase prevented: User wallet matches token creator');
+        return false; // Same wallet, prevent purchase
+      }
+      
+      console.log('✅ Purchase allowed: Different wallets');
+      return true;
+    } catch (error) {
+      console.error('Error checking purchase eligibility:', error);
+      return true; // Allow on error to not block legitimate users
+    }
+  };
+
   const value = {
     user,
     isAuthenticated: !!user,
@@ -215,6 +247,7 @@ export const AuthProvider = ({ children }) => {
     signIn,
     signOut,
     saveWalletAddress,
+    canPurchaseToken,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

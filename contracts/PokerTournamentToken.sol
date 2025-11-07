@@ -86,6 +86,7 @@ contract PokerTournamentToken is ERC20, Ownable, ReentrancyGuard {
         require(!playerInfo.tournamentCompleted, "Tournament already completed");
         require(playerInfo.tokensSold < playerInfo.totalTokens, "All tokens sold");
         require(msg.value > 0, "Must send ETH to purchase tokens");
+        require(msg.sender != owner(), "Token creator cannot purchase their own tokens");
 
         // Calculate how many tokens can be bought with the sent ETH
         uint256 tokensToBuy = (msg.value * playerInfo.totalTokens) / playerInfo.buyInAmount;
@@ -314,6 +315,7 @@ contract PokerTournamentToken is ERC20, Ownable, ReentrancyGuard {
         require(order.isActive, "Order is not active");
         require(!order.isBuyOrder, "Cannot execute buy order with this function");
         require(!playerInfo.tournamentCompleted, "Cannot trade after tournament completion");
+        require(msg.sender != owner(), "Token creator cannot purchase their own tokens");
         
         uint256 totalCost = order.tokenAmount * order.pricePerToken;
         require(msg.value >= totalCost, "Insufficient ETH sent");
@@ -344,6 +346,7 @@ contract PokerTournamentToken is ERC20, Ownable, ReentrancyGuard {
         require(order.isBuyOrder, "Cannot execute sell order with this function");
         require(!playerInfo.tournamentCompleted, "Cannot trade after tournament completion");
         require(balanceOf(msg.sender) >= order.tokenAmount, "Insufficient token balance");
+        require(order.trader != owner(), "Token creator cannot purchase their own tokens");
         
         uint256 totalCost = order.tokenAmount * order.pricePerToken;
         require(address(this).balance >= totalCost, "Insufficient contract balance");
