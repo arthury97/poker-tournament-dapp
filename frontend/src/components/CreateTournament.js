@@ -36,11 +36,13 @@ const CreateTournament = ({ onTournamentCreated }) => {
   }, []);
 
   const [formData, setFormData] = useState({
+    playerName: '',
     symbol: '',
     buyInAmount: '',
     totalTokens: '',
     profitSharePercentage: '80'
   });
+  const [generatedISIN, setGeneratedISIN] = useState('');
 
   // Filter tournaments based on search query
   const filteredTournaments = useMemo(() => {
@@ -50,27 +52,97 @@ const CreateTournament = ({ onTournamentCreated }) => {
     return searchTournaments(searchQuery);
   }, [searchQuery]);
 
+  // Generate unique ISIN-like identifier
+  const generateISIN = (playerName, tournamentName, timestamp) => {
+    // Format: PT-XXXXXXXX-XX (12 characters total)
+    // PT = Poker Tournament
+    // XXXXXXXX = 8 char hash of player+tournament+timestamp
+    // XX = 2 char checksum
+    
+    const input = `${playerName}${tournamentName}${timestamp}`;
+    let hash = 0;
+    for (let i = 0; i < input.length; i++) {
+      const char = input.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32bit integer
+    }
+    
+    // Convert to alphanumeric (base 36)
+    const hashStr = Math.abs(hash).toString(36).toUpperCase().padStart(8, '0').substring(0, 8);
+    
+    // Calculate checksum (sum of character codes mod 100)
+    let checksum = 0;
+    for (let i = 0; i < hashStr.length; i++) {
+      checksum += hashStr.charCodeAt(i);
+    }
+    const checksumStr = (checksum % 100).toString().padStart(2, '0');
+    
+    return `PT-${hashStr}-${checksumStr}`;
+  };
+
+  // Auto-generate token symbol from player name + tournament
+  const generateSymbol = (playerName, tournament) => {
+    if (!playerName || !tournament) return '';
+    
+    // Clean player name: remove spaces, special chars, take first 4 letters
+    const cleanPlayerName = playerName.trim().replace(/[^a-zA-Z]/g, '').substring(0, 4).toUpperCase();
+    
+    // Clean tournament: take first 3 letters of series or name
+    const tournamentIdentifier = (tournament.series || tournament.name)
+      .trim()
+      .replace(/[^a-zA-Z]/g, '')
+      .substring(0, 3)
+      .toUpperCase();
+    
+    // Format: PLAYTOURN (e.g., PHILWSO for Phil Ivey at WSOP)
+    return `${cleanPlayerName}${tournamentIdentifier}`;
+  };
+
   const handleTournamentSelect = (tournament) => {
     setSelectedTournament(tournament);
     setSearchQuery(tournament.name);
     setShowDropdown(false);
     
     // Pre-fill form with tournament data
-    // Convert tournament buy-in (USD) to USDT equivalent, then to ETH for smart contract
     const buyInUSDT = tournament.buyIn ? tournament.buyIn.toString() : '';
+    
+    // Regenerate symbol if player name already entered
+    const newSymbol = formData.playerName ? generateSymbol(formData.playerName, tournament) : '';
+    
     setFormData(prev => ({
       ...prev,
-      symbol: tournament.series.split(' ').map(word => word[0]).join('').toUpperCase() || tournament.name.substring(0, 4).toUpperCase(),
-      buyInAmount: buyInUSDT, // Store as USDT in form
+      symbol: newSymbol,
+      buyInAmount: buyInUSDT,
     }));
+
+    // Generate ISIN if we have player name
+    if (formData.playerName) {
+      const isin = generateISIN(formData.playerName, tournament.name, Date.now());
+      setGeneratedISIN(isin);
+    }
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    
+    // Update form data
     setFormData(prev => ({
       ...prev,
       [name]: value
     }));
+
+    // If player name changed, regenerate symbol and ISIN
+    if (name === 'playerName' && value && selectedTournament) {
+      const newSymbol = generateSymbol(value, selectedTournament);
+      setFormData(prev => ({
+        ...prev,
+        playerName: value,
+        symbol: newSymbol
+      }));
+      
+      const isin = generateISIN(value, selectedTournament.name, Date.now());
+      setGeneratedISIN(isin);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -93,6 +165,16 @@ const CreateTournament = ({ onTournamentCreated }) => {
 
     if (!selectedTournament) {
       toast.error('Please select a tournament first');
+      return;
+    }
+
+    if (!formData.playerName || !formData.playerName.trim()) {
+      toast.error('Please enter the player name');
+      return;
+    }
+
+    if (!generatedISIN) {
+      toast.error('Token identifier not generated. Please re-enter player name.');
       return;
     }
 
@@ -119,7 +201,11 @@ const CreateTournament = ({ onTournamentCreated }) => {
       const tournamentManager = getTournamentManagerContract(TOURNAMENT_MANAGER_ADDRESS, signer);
 
       // Use tournament name from selected tournament
-      const tournamentName = selectedTournament.name;
+      // Create full token name: "Player Name - Tournament Name"
+      const fullTokenName = `${formData.playerName.trim()} - ${selectedTournament.name}`;
+      
+      // Add ISIN to token name for uniqueness and verification
+      const tokenNameWithISIN = `${fullTokenName} [${generatedISIN}]`;
 
       // Since static calls are failing (ABI mismatch), we'll execute the transaction
       // and then query the contract state to find the newly created token
@@ -148,7 +234,7 @@ const CreateTournament = ({ onTournamentCreated }) => {
       try {
         console.log('Attempting to call createTournament...');
         tx = await tournamentManager.createTournament(
-          tournamentName,
+          tokenNameWithISIN,
           formData.symbol.trim().toUpperCase(),
           parseEther(buyInEth),
           parseInt(formData.totalTokens),
@@ -159,7 +245,7 @@ const CreateTournament = ({ onTournamentCreated }) => {
         console.log('createTournament failed, trying createPlayerToken...', error.message);
         try {
           tx = await tournamentManager.createPlayerToken(
-            tournamentName,
+            tokenNameWithISIN,
             formData.symbol.trim().toUpperCase(),
             parseEther(buyInEth),
             parseInt(formData.totalTokens),
@@ -804,9 +890,31 @@ const CreateTournament = ({ onTournamentCreated }) => {
           )}
         </div>
 
+        {/* Player Name */}
+        <div className="form-group">
+          <label className="form-label" htmlFor="playerName">
+            PLAYER NAME *
+          </label>
+          <input
+            type="text"
+            id="playerName"
+            name="playerName"
+            className="form-input"
+            value={formData.playerName}
+            onChange={handleInputChange}
+            placeholder="e.g., Phil Ivey"
+            required
+            maxLength="50"
+          />
+          <small className="text-muted" style={{ fontSize: '12px', display: 'block', marginTop: '4px' }}>
+            Enter the name of the player competing in this tournament
+          </small>
+        </div>
+
+        {/* Token Symbol - Auto-generated, Read-only */}
         <div className="form-group">
           <label className="form-label" htmlFor="symbol">
-            TOKEN SYMBOL *
+            TOKEN SYMBOL (AUTO-GENERATED)
           </label>
           <input
             type="text"
@@ -814,15 +922,45 @@ const CreateTournament = ({ onTournamentCreated }) => {
             name="symbol"
             className="form-input"
             value={formData.symbol}
-            onChange={handleInputChange}
-            placeholder="e.g., WSOP, APT, EPT"
-            maxLength="10"
+            readOnly
+            placeholder="Will be auto-generated from player + tournament"
             required
+            style={{ 
+              textTransform: 'uppercase',
+              background: '#f9fafb',
+              cursor: 'not-allowed'
+            }}
           />
           <small className="text-muted" style={{ fontSize: '12px', display: 'block', marginTop: '4px' }}>
-            Short symbol for your token (auto-filled from tournament selection)
+            Format: First 4 letters of player name + First 3 letters of tournament
           </small>
         </div>
+
+        {/* ISIN Identifier - Display only */}
+        {generatedISIN && (
+          <div className="form-group">
+            <label className="form-label">
+              UNIQUE IDENTIFIER (ISIN)
+            </label>
+            <div style={{
+              padding: '12px 16px',
+              background: '#eff6ff',
+              border: '2px solid #3b82f6',
+              borderRadius: '8px',
+              fontFamily: 'monospace',
+              fontSize: '16px',
+              fontWeight: '700',
+              color: '#1e40af',
+              textAlign: 'center',
+              letterSpacing: '1px'
+            }}>
+              {generatedISIN}
+            </div>
+            <small className="text-muted" style={{ fontSize: '12px', display: 'block', marginTop: '4px' }}>
+              ✓ This unique identifier prevents token impersonation
+            </small>
+          </div>
+        )}
 
         <div className="form-group">
           <label className="form-label" htmlFor="buyInAmount">
