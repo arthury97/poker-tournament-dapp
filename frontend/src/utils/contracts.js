@@ -17,7 +17,9 @@ export const TOURNAMENT_MANAGER_ABI = [
   "function isActiveTournament(address) external view returns (bool)",
   "function isActivePlayerToken(address) external view returns (bool)",
   "function deactivateTournament(address tournamentAddress) external",
+  "function deactivatePlayerToken(address playerTokenAddress) external",
   "event TournamentCreated(address indexed tournamentAddress, address indexed creator, string name, uint256 buyInAmount, uint256 totalTokens, uint256 profitSharePercentage)",
+  "event TournamentDeactivated(address indexed tournamentAddress)",
   "event PlayerTokenCreated(address indexed playerTokenAddress, address indexed player, string playerName, uint256 buyInAmount, uint256 totalTokens, uint256 profitSharePercentage)"
 ];
 

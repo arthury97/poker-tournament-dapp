@@ -294,6 +294,59 @@ const Dashboard = () => {
     }
   };
 
+  const handleDeleteToken = async (tournamentAddress, tournamentName) => {
+    if (!isConnected || !signer) {
+      toast.error('Please connect your wallet first');
+      return;
+    }
+
+    // Confirm deletion
+    const confirmed = window.confirm(
+      `Are you sure you want to delete this token?\n\n` +
+      `Token: ${tournamentName}\n` +
+      `Address: ${tournamentAddress}\n\n` +
+      `⚠️ This action will deactivate the token and remove it from the marketplace. This cannot be undone.`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      const tournamentManager = getTournamentManagerContract(TOURNAMENT_MANAGER_ADDRESS, signer);
+      
+      toast.loading('Deleting token...', { id: 'delete-token' });
+      
+      // Try both function names for compatibility
+      let tx;
+      try {
+        tx = await tournamentManager.deactivatePlayerToken(tournamentAddress);
+      } catch (error) {
+        // Fallback to deactivateTournament if deactivatePlayerToken doesn't exist
+        tx = await tournamentManager.deactivateTournament(tournamentAddress);
+      }
+      
+      await tx.wait();
+      toast.success('Token deleted successfully!', { id: 'delete-token' });
+      
+      // Reload created tokens
+      loadCreatedTournaments();
+    } catch (error) {
+      console.error('Error deleting token:', error);
+      
+      let errorMessage = 'Failed to delete token';
+      if (error.message.includes('Not authorized')) {
+        errorMessage = 'You are not authorized to delete this token';
+      } else if (error.message.includes('not active')) {
+        errorMessage = 'This token is already inactive';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      toast.error(errorMessage, { id: 'delete-token' });
+    }
+  };
+
   const getProgressPercentage = (tokensSold, totalTokens) => {
     if (!tokensSold || !totalTokens) return 0;
     return Math.round((Number(tokensSold) / Number(totalTokens)) * 100);
@@ -571,10 +624,46 @@ const Dashboard = () => {
                       background: '#f8f9fa', 
                       borderRadius: '4px',
                       fontSize: '12px',
-                      color: '#6c757d'
+                      color: '#6c757d',
+                      marginBottom: '16px'
                     }}>
                       <div>Contract: {tournament.address?.slice(0, 10)}...{tournament.address?.slice(-8)}</div>
                     </div>
+
+                    {/* Delete Button - Only show for active tokens */}
+                    {!tournament.tournamentCompleted && (
+                      <button
+                        onClick={() => handleDeleteToken(tournament.address, tournament.name)}
+                        className="btn"
+                        style={{
+                          width: '100%',
+                          background: '#dc2626',
+                          color: '#ffffff',
+                          border: '2px solid #b91c1c',
+                          padding: '12px',
+                          borderRadius: '8px',
+                          fontSize: '14px',
+                          fontWeight: '700',
+                          fontFamily: '"Bungee", "Impact", "Arial Black", sans-serif',
+                          letterSpacing: '0.5px',
+                          textTransform: 'uppercase',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.target.style.background = '#b91c1c';
+                          e.target.style.transform = 'translateY(-2px)';
+                          e.target.style.boxShadow = '0 4px 12px rgba(220, 38, 38, 0.4)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.target.style.background = '#dc2626';
+                          e.target.style.transform = 'translateY(0)';
+                          e.target.style.boxShadow = 'none';
+                        }}
+                      >
+                        🗑️ DELETE TOKEN
+                      </button>
+                    )}
                   </div>
                 );
               })}
