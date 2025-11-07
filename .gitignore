@@ -1,3 +1,5 @@
 node_modules
 .env
 frontend/.env
+solana-installer.tar.bz2
+solana-release/
